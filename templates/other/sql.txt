@@ -1,7 +1,0 @@
-select * from Transitions where T_Name = 'CH3CN;v=0;'
-
-select * from Partitionfunctions where PF_Name = 'CH3CN;v=0;'
-
-alter table Transitions 
-	add T_PressureAlpha REAL default 0.0 
-	add T_PressureDelta REAL default 0.0

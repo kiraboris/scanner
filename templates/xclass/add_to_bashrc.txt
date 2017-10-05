@@ -1,9 +1,0 @@
-# Changes to PATH
-export PATH=$PATH:'/software/CASA/casapy-42.2.30986-pipe-1-64b':'/usr/lib64/mpi/gcc/openmpi/bin/'
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/lib64/mpi/gcc/openmpi/lib64
-
-# setup CASA and XCLASS
-export XCLASSRootDir="/home/ngo/XClass"
-export myXCLASSRunDirectory="/home/ngo/work"
-export PYTHONPATH=$PYTHONPATH:$XCLASSRootDir'/build_tasks'
-export PYTHONSTARTUP='/home/ngo/.python/pythonstart' 
