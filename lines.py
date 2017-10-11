@@ -61,9 +61,13 @@ class CatConverter:
     """Manages entries of .cat files"""
     
     def get_str_quanta(str_line):
+        """get the unque quanta of transition"""
+        
+        return str_line[55:79]
+    
     
     def update_line(str_line, obj_line):
-        """str to Line object"""
+        """str to Line object (except quanta)"""
         
         try:
             flag_success = True
@@ -79,13 +83,6 @@ class CatConverter:
             obj_line.tag     = str_line[44:55]
             
             obj_line.flagLab = (MINUS in obj_line.tagExt)
-            
-            for i in range(0, 6): # max 6 quanta
-                obj_line.qUpper.append(str_line[55 + i * 2 : 55 + i * 2 + 2])
-                obj_line.qLower.append(str_line[67 + i * 2: 67 + i * 2 + 2])
-                
-            self.strLowerState = ','.join(self.qLower)
-            self.strUpperState = ','.join(self.qUpper)
             
         except:
             flag_success = False
@@ -111,8 +108,14 @@ class CatConverter:
 class EgyConverter:
     """Manages entries of .egy files"""
     
+    def get_str_quanta(str_line):
+        """get the unque quanta of transition"""
+        
+        return str_line[55:79]
+    
+    
     def update_line(obj_line, str_line):
-        """str to Line object"""
+        """str to Line object (except quanta)"""
         
         try:
             flag_success = True
@@ -140,7 +143,7 @@ class EgyConverter:
             return flag_success
         
         
-    def render(obj_line):
+    def render_line(obj_line):
         """Line object to str"""
         
         str_out = ""
