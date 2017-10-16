@@ -40,7 +40,7 @@ class Line:
             self.flt_freq_err  = None
 
             # base10 log of the integrated intensity at 300 K (in nm2MHz)
-            self.flt_log_I        = None  
+            self.flt_log_I        = 0  
             self.int_deg_freedom  = None
             
             # lower state energy (in cm-1), etc.
@@ -85,9 +85,9 @@ class CatConverter:
     
     
     def quanta(self, str_line):
-        """get quanta in std (tuple str) format"""
+        """get quanta in "x,x;y,y" format"""
         
-        return self.__write_quanta(self.__read_quanta(str_line))
+        return ";".join(self.__read_quanta(str_line))
     
     
     def __replace_cat_quant_digits(self, str_q, bol_reverse):
@@ -120,8 +120,9 @@ class CatConverter:
     
     
     def __read_quanta(self, str_l):
-        """convert quanta from .cat to std format.
-           disrespect parity, if needed"""
+        """convert quanta from .cat to "x,x" format
+           returns tuple(str_upper, str_lower) 
+           disrespects parity, if needed"""
         
         str_lq   = str_line[55:79]
         str_lq_l = ""
@@ -148,21 +149,26 @@ class CatConverter:
         return (str_lq_u, str_lq_l)
     
     
-    def __write_quanta(self, lst_q)
-        """convert quanta from tuple int list to str"""
+    def __write_quanta(self, tup_q)
+        """convert quanta from ("x,x","y,y") to .cat str"""
 
-        str_lq = []
-        for q in lst_q:
-            
-            str_q = str(q)
-            
-                str_q  = self.__replace_cat_quant_digits(str_q, True)
-                str_lq += str_q   
-                
-        for i in range(len(lst_q), 6):
+        INT_C = 6
+        str_lq = []    
+        str_lq_u, str_lq_l = tup_q
+        
+        for str_q in str_lq_u.split(","):
+            str_q   = self.__replace_cat_quant_digits(str_q, True)
+            str_lq += str_q   
+        for i in range(len(str_lq_u), INT_C):
             str_lq += "  "
-            
-        return "".join(str_lq)
+        
+        for str_q in str_lq_l.split(","):
+            str_q   = self.__replace_cat_quant_digits(str_q, True)
+            str_lq += str_q   
+        for i in range(len(str_lq_l), INT_C):
+            str_lq += "  "
+        
+        return str_lq
     
     
     def update_line(self, str_line, obj_line):
@@ -177,11 +183,20 @@ class CatConverter:
             obj_line.flt_log_I       = float(str_line[21:29]) 
             obj_line.flt_deg_freedom = int(str_line[29:31])
             
-            obj_line.state_lower.flt_E = float(str_line[31:41])       
+            if not obj_line.state_lower.flt_E:
+                obj_line.state_lower.flt_E = float(str_line[31:41])       
+                
             obj_line.state_upper.int_g = int(str_line[41:44])
-            obj_line.str_cat_tag       = str_line[44:55]
             
-            obj_line.bol_lab = (MINUS in obj_line.str_tag_cat)
+            if not obj_line.str_cat_tag:
+                obj_line.str_cat_tag       = str_line[44:55]
+                obj_line.bol_lab = (MINUS in obj_line.str_tag_cat)
+            
+            if( not obj_line.state_lower.str_quanta 
+             or not obj_line.state_lower.str_quanta ):
+                str_lq_u, str_lq_l = self.__read_quanta(str_line)
+                obj_line.state_lower.str_quanta = str_lq_l
+                obj_line.state_upper.str_quanta = str_lq_u
             
         except:
             bol_success = False
@@ -195,10 +210,13 @@ class CatConverter:
         
         str_out = ""
         
-        str_out += "%13.4f%8.4f" % (obj_line.flt_freq, obj_line.freqErr)
-        str_out += "%8.4f%2d"    % (obj_line.flt_log_I, obj_line.int_deg_freedom)
-        str_out += "%10.4f%3d%s" % (obj_line.state_lower.flt_E, obj_line.int_g, obj_line.str_cat_tag)
-        str_out += obj_line.state_upped.str_quanta + obj_line.state_lower.str_quanta + " "
+        str_quanta = self.__write_quanta((obj_line.state_upper.str_quanta,
+                                          obj_line.state_lower.str_quanta))
+        
+        str_out += "%13.4f%8.4f"% (obj_line.flt_freq, obj_line.freqErr)
+        str_out += "%8.4f%2d"   % (obj_line.flt_log_I, obj_line.int_deg_freedom)
+        str_out += "%10.4f%3d"  % (obj_line.state_lower.flt_E, obj_line.int_g)
+        str_out += "%s%s "      % (obj_line.str_cat_tag, str_quanta)
                
         return str_out
 
