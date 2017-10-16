@@ -7,12 +7,18 @@ from collections import defaultdict
 
 MINUS = '-'
 
+class 
+
 class State:
     """Additional object of a quantum state"""
     
     def __init__(self):
             self.valid = False
 
+            # support of blends
+            self.lst_blends = []
+
+            # energy
             self.flt_E       = None       
             self.flt_E_err   = None
             self.int_g       = None
@@ -31,9 +37,14 @@ class Line:
     def __init__(self):
             self.valid = False
             
-            # states
-            self.state_upper = State()
-            self.state_lower = State()
+            # quanta and energy
+            self.str_ql_l  = ""
+            self.str_ql_u  = ""
+            self.flt_E_low = None
+            self.int_g_up  = 0
+            
+            # support of blends
+            self.lst_blends = []
             
             # Frequency of the line (usually in MHz)
             self.flt_freq      = None           
@@ -56,23 +67,12 @@ class Line:
     def qn_upper(self, int_idx):
         """get upper quantum number u[int_idx] as str"""
         
-        str_q = self.state_upper.str_quanta
-
-        int_c = len(str_q) / 2
-        assert int_idx >= 0 and int_idx < int_c
-         
-        return str_q[int_idx*2:int_idx*2+2]
-    
+        return self.str_ql_u.split(',')[int_idx]
     
     def qn_lower(self, int_idx):
         """get lower quantum number l[int_idx] as str"""
         
-        str_q = self.state_lower.str_quanta
-
-        int_c = len(str_q) / 2
-        assert int_idx >= 0 and int_idx < int_c
-         
-        return str_q[int_idx*2:int_idx*2+2]
+        return self.str_ql_l.split(',')[int_idx]
                         
                         
 class CatConverter:
