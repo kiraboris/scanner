@@ -189,4 +189,4 @@ class CatParser:
         if(float(err_counter) / len(self.states) > 0.05):
             print 'CatParser warning: more than 5% of microstates cannot be used for Q(T) calculation!'
     
-        return pf_value           
+        return pf_value
