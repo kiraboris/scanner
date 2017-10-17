@@ -1,93 +1,15 @@
 # python 2.7
 #
-# Version 1
+# classes: CatConverter, EgyConverter
 #
 
-from collections import defaultdict
-
-MINUS = '-'
-
-class 
-
-class State:
-    """Additional object of a quantum state"""
-    
-    def __init__(self):
-            self.valid = False
-
-            # support of blends
-            self.lst_blends = []
-
-            # energy
-            self.flt_E       = None       
-            self.flt_E_err   = None
-            self.int_g       = None
-
-            # egy file information
-            self.str_hiblk   = None
-            self.str_hindx   = None
-            self.str_pmix    = None
-
-            # quantum numbers
-            self.str_quanta = ""
-    
-
-class Line:
-    """A line entry object"""
-    def __init__(self):
-            self.valid = False
-            
-            # quanta and energy
-            self.str_ql_l  = ""
-            self.str_ql_u  = ""
-            self.flt_E_low = None
-            self.int_g_up  = 0
-            
-            # support of blends
-            self.lst_blends = []
-            
-            # Frequency of the line (usually in MHz)
-            self.flt_freq      = None           
-            self.flt_freq_err  = None
-
-            # base10 log of the integrated intensity at 300 K (in nm2MHz)
-            self.flt_log_I        = 0  
-            self.int_deg_freedom  = None
-            
-            # lower state energy (in cm-1), etc.
-            self.flt_Einstein_A = None    
-            self.str_cat_tag    = None
-            self.bol_lab        = None
-            
-            # pressure broadening, alpha: dv=p*alpha*(T/296)^delta
-            self.flt_pressure_alpha = None    
-            self.flt_pressure_delta = None  
-     
-            
-    def qn_upper(self, int_idx):
-        """get upper quantum number u[int_idx] as str"""
-        
-        return self.str_ql_u.split(',')[int_idx]
-    
-    def qn_lower(self, int_idx):
-        """get lower quantum number l[int_idx] as str"""
-        
-        return self.str_ql_l.split(',')[int_idx]
-                        
-                        
 class CatConverter:
     """Manages entries of .cat files"""
     
-    def __init__(self, bol_respect_parity):
+    def __init__(self, obj_quanta_interpreter):
         """docstring"""
         
-        self.__bol_respect_parity = bol_respect_parity
-    
-    
-    def quanta(self, str_line):
-        """get quanta in "x,x;y,y" format"""
-        
-        return ";".join(self.__read_quanta(str_line))
+        self.__interpeter = obj_quanta_interpreter
     
     
     def __replace_cat_quant_digits(self, str_q, bol_reverse):
@@ -171,7 +93,7 @@ class CatConverter:
         return str_lq
     
     
-    def update_line(self, str_line, obj_line):
+    def update(self, str_line, obj_line):
         """str to Line object"""
         
         try:
@@ -185,18 +107,20 @@ class CatConverter:
             
             if not obj_line.state_lower.flt_E:
                 obj_line.state_lower.flt_E = float(str_line[31:41])       
-                
-            obj_line.state_upper.int_g = int(str_line[41:44])
+            
+            if(obj_line.state_upper.int_g):
+                assert obj_line.state_upper.int_g == int(str_line[41:44])
+            else:
+                obj_line.state_upper.int_g = int(str_line[41:44])
             
             if not obj_line.str_cat_tag:
                 obj_line.str_cat_tag       = str_line[44:55]
-                obj_line.bol_lab = (MINUS in obj_line.str_tag_cat)
+                obj_line.bol_lab = ('-' in obj_line.str_tag_cat)
             
-            if( not obj_line.state_lower.str_quanta 
-             or not obj_line.state_lower.str_quanta ):
-                str_lq_u, str_lq_l = self.__read_quanta(str_line)
-                obj_line.state_lower.str_quanta = str_lq_l
-                obj_line.state_upper.str_quanta = str_lq_u
+            str_lq = self.__read_quanta(str_line)
+            if( obj_line.quanta() ) 
+                assert self.__interpreter.q_in(obj_line.quanta(), str_lq)
+            obj_line.set_quanta(str_lq)
             
         except:
             bol_success = False
@@ -205,7 +129,7 @@ class CatConverter:
             return bol_success
         
         
-    def render_line(self, obj_line):
+    def render(self, obj_line):
         """Line object to str"""
         
         str_out = ""
@@ -225,28 +149,35 @@ class CatConverter:
 class EgyConverter:
     """Manages entries of .egy files"""
     
-    def __init__(self, bol_respect_parity):
+    def __init__(self, obj_quanta_interpreter):
         """docstring"""
         
-        self.__bol_respect_parity = bol_respect_parity
+        self.__interpeter = obj_quanta_interpreter
     
     
-    def quanta(self, str_line):
-        """get the unque quanta of transition in std format"""
-        
-        return str_line[55:79]
-        
-    
-    def update_state(self, obj_state, str_state):
+    def update(self, obj_state, str_state):
         """str to Line object (except quanta)"""
         
         try:
             bol_success = True
-
-            obj_state.flt_E     = float(str_state[31:41])       
-            obj_state.flt_E_err = float(str_state[41:44])
             
-            #FIXME
+            obj_state.str_H_iblk = (str_state[0:6])
+            obj_state.str_H_indx = (str_state[6:11])
+            
+            obj_state.flt_E      = float(str_state[11:29])       
+            obj_state.flt_E_err  = float(str_state[29:47])
+            
+            obj_state.str_pmix   = (str_state[47:58])
+            
+            str_lq_u = self.__read_quanta(str_state)
+            if( obj_state.str_quanta ):
+                assert self.__interpeter.q_in(obj_state.str_quanta, str_lq)
+            obj_state.str_quanta = str_lq
+            
+            if not obj_state.int_g:
+                obj_state.int_g = int(str_state[58:63]
+            else:
+                assert obj_state.int_g == int(str_state[58:63]                
             
         except:
             bol_success = False
@@ -255,7 +186,7 @@ class EgyConverter:
             return bol_success
         
         
-    def render_state(self, obj_state):
+    def render(self, obj_state):
         """Line object to str"""
         
         str_out = ""
@@ -267,59 +198,3 @@ class EgyConverter:
         str_out += "".join(obj_line.qUpper) + "".join(obj_line.qLower) + " "
                
         return str_out
-
-
-
-class CatalogEntry:
-    """A whole species entry"""
-    
-    def __init__(self):
-        """docstring"""
-        
-        self.__dict_q_to_line     = defaultdict(Line)
-        self.__dict_q_to_state    = defaultdict(State)
-        self.__bol_respect_parity = True
-        
-        
-    def load_cat(self, str_filename):
-        """Read from .cat, merge duplicates (quanta considered unique)"""
-        
-        with open(str_filename, 'r') as f:
-            obj_parser = CatConverter(self.__bol_respect_parity)
-            
-            for str_line in f:
-                str_u = obj_parser.quanta_upper(str_line)
-                str_l = obj_parser.quanta_lower(str_line)
-                
-                obj_line = self.__dict_upper_to_line[str_u]
-                obj_parser.update_line(obj_line, str_line)
-                self.__dict_lower_to_line[str_l] = obj_line
-                
-                
-    def load_egy(self, str_filename):
-        """Read from .cat, merge duplicates (quanta considered unique)"""
-        
-        with open(str_filename, 'r') as f:
-            obj_parser = EgyConverter(self.__bol_respect_parity)
-            
-            for str_state in f:
-                str_q = obj_parser.quanta(str_state)
-                
-                obj_line = __dict_upper_to_line[str_q]
-                obj_parser.update_line(obj_line.state_upper, str_state)
-                obj_parser.update_line(obj_line.state_lower, str_state)
-                 
-    
-    def write_cat(self, str_filename):
-        """docstring"""
-        
-        with open(str_filename, 'w') as f:
-            lst_lines = self.__dict_upper_to_line.values()
-            lst_lines.sort(key=lambda x: x.flt_freq)
-            
-            obj_writer = CatConverter(self.__bol_respect_parity)
-            for obj_line in lst_lines:
-                f.write(obj_writer.render_line(obj_line))
-                
-                
-    
