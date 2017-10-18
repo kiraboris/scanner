@@ -1,33 +1,13 @@
 # python 2.7
 #
-# classes: IQuantaInterpreter, State, Line
+# classes: State, Line
 #
-
-class IQuantaInterpreter:
-    """interface of delegate types to work with quantum numbers"""
-    
-    def q_eq(self, str_q1, str_q2):
-        """Are two sets of quantum numbers equal?"""
-        
-        raise NotImplementedError
-    
-    
-    def q_in(self, str_q1, str_q2):
-        """Is set q1 included in set q2?"""
-        raise NotImplementedError
-    
-    
-    def q_blend(self, str_q1, str_q2):
-        """Can two quantum objects be blended?"""
-        
-        raise NotImplementedError
-
 
 class State:
     """Structure of a quantum state"""
     
     def __init__(self):
-            ##self.valid = False
+            self.valid = False
             
             # energy
             self.flt_E       = None       
@@ -40,22 +20,28 @@ class State:
             self.str_pmix    = None
             
             # quantum numbers
-            """format is "x,x,x" """
-            self.str_quanta  = ""
+            self.dict_quanta = {}
+            self.int_fmt     = None
+    
+    def has_quanta(self, dict_quanta_subset):
+        """Checks if state has these quanta as a subset"""
+        
+        return all(x in self.dict_quanta.items()
+                   for x in dict_quanta_subset.items())
 
 
 class Line:
     """A spectroscopic line entry object"""
     
-    def __init__(self, obj_quantum_interpreter):
-            ##self.valid = False
+    def __init__(self):
+            self.valid = False
             
             # states
-            self.state_upper        = State(obj_quantum_interpreter)
-            self.state_lower        = State(obj_quantum_interpreter)
+            self.state_upper        = State()
+            self.state_lower        = State()
             
             # Frequency of the line (usually in MHz)
-            self.flt_freq           = None           
+            self.flt_freq           = None
             self.flt_freq_err       = None
 
             # base10 log of the integrated intensity at 300 K (in nm2MHz)
@@ -71,34 +57,5 @@ class Line:
             self.flt_pressure_delta = None  
             
             # calculated values
-            self.flt_Einstein_A     = None    
-     
-            
-    def qnu(self, int_idx):
-        """get upper quantum number u[int_idx] as int"""
-        
-        return self.state_upper.str_quanta.split(',')[int_idx]
-    
-    
-    def qnl(self, int_idx):
-        """get lower quantum number l[int_idx] as int"""
-        
-        return self.state_lower.str_quanta.split(',')[int_idx]
-    
-    
-    def quanta(self):
-        """docstring"""
-        
-        lst_str_q = [self.state_lower.str_quanta, self.state_upper.str_quanta]
-        
-        return ";".join(lst_str_q)
-    
-    
-    def set_quanta(self, str_ql):
-        """docstring"""
-        
-        str_lq_l, str_lq_u = str_ql.split(";")
-        
-        self.state_lower.str_quanta = str_lq_l
-        self.state_upper.str_quanta = str_lq_u
+            self.flt_Einstein_A     = None
 
