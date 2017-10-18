@@ -3,6 +3,8 @@
 # classes: CatConverter, EgyConverter
 #
 
+from basic_structs import State, Line
+
 def __quanta_headers(int_fmt):
     """returns list of quantum number names for a Pickett code"""
     
