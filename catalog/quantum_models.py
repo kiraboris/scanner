@@ -2,6 +2,7 @@
 #
 # classes: SymmRotor
 #
+import math
 
 class SymmRotorNK:
     """symmetric rotor with N (aka l) and K""" 
@@ -16,9 +17,9 @@ class SymmRotorNK:
     def __spin_symm(self, entry):
         """get spin-statistical symmetry irr.rep. of state or line"""
         
-        if entry.hasattr(dict_quanta):
+        if hasattr(entry, "dict_quanta"):
             quanta = entry.dict_quanta
-        else if entry.hasattr(q_upper):
+        elif hasattr(entry, "q_upper"):
             quanta = entry.q_upper
         
         if (quanta['N'] + quanta['K']) % 3 == 0:
@@ -32,9 +33,9 @@ class SymmRotorNK:
         
         result = blends[0]
         
-        if result.hasattr(flt_log_I):
+        if hasattr(result, "flt_log_I"):
             I_bl = map(lambda x: 10 ** x.flt_log_I, blends)
-            g_bl = map(lambda x: x.int_g if 10 ** x.intensity == max(I_bl) else 0, blends)
+            g_bl = map(lambda x: x.int_g if 10 ** x.flt_log_I == max(I_bl) else 0, blends)
             result.flt_log_I = math.log10(sum(I_bl))
             result.int_g     = sum(g_bl);
         else:
@@ -48,10 +49,10 @@ class SymmRotorNK:
         """in-place"""
         blends = []
         for entry in entries:
-            if entry.hasattr(dict_quanta):
+            if hasattr(entry, "dict_quanta"):
                 self.__remove_minus_inplace(entry.dict_quanta)
                 
-            else if entry.hasattr(q_upper) and entry.hasattr(q_lower):
+            elif hasattr(entry, "q_upper") and hasattr(entry, "q_lower"):
                 self.__remove_minus_inplace(entry.q_upper)
                 self.__remove_minus_inplace(entry.q_lower)
     
@@ -65,16 +66,16 @@ class SymmRotorNK:
             prev = entries[i - 1]
             
             if(i < len(entries)):
-                curr = lines[i]
+                curr = entries[i]
 
-                if(prev == curr and self.__spin_symm(curr) != "A"):
-                    blends.append(prevline)
+                if(curr == prev and self.__spin_symm(curr) != "A"):
+                    blends.append(prev)
                 else:
-                    if(len(blends) == 0):
-                        result.append(prev)
-                    else:
+                    if(blends):
                         blends.append(prev)
                         result.append(self.__merge(blends))
                         blends = []
+                    else:
+                        result.append(prev)
         
-        entries = result  # implicitely frees unused duplicates
+        entries[:] = result  # deep copy implicitely frees unused duplicates

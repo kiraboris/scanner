@@ -10,24 +10,27 @@ def main(filename):
     int_fmt    = pickett_io.get_quantum_fmt(filename + ".cat")
     
     lines_cat  = pickett_io.load_cat(filename + ".cat")
-    lines_icat = pickett_io.load_cat(filename + ".icat")
+    #lines_icat = pickett_io.load_cat(filename + "i.cat")
     states_egy = pickett_io.load_egy(filename + ".egy", int_fmt)
-    
+    print len(lines_cat)
     qm.merge_blends(lines_cat)
-    qm.merge_blends(lines_icat)
+    print len(lines_cat)
+
+    #qm.merge_blends(lines_icat)
     qm.merge_blends(states_egy)
     
     pickett_io.save_cat(filename + "_new.cat", lines_cat)
-    pickett_io.save_cat(filename + "_new.icat", lines_icat)
+    #pickett_io.save_cat(filename + "i_new.cat", lines_icat)
     pickett_io.save_egy(filename + "_new.egy", states_egy, int_fmt)
 
 
-def test():
-    int_fmt    = pickett_io.get_quantum_fmt("test.cat")
-    lines_cat  = pickett_io.load_cat("test.cat")
-    states_egy = pickett_io.load_egy("test.egy")    
-    pickett_io.save_cat("test_new.icat", lines_icat)
-    pickett_io.save_egy("test_new.egy",  states_egy, int_fmt)    
+def test(filename):
+    int_fmt    = pickett_io.get_quantum_fmt(filename + ".cat")
+    print(int_fmt)
+    lines_cat  = pickett_io.load_cat(filename + ".cat")
+    states_egy = pickett_io.load_egy(filename + ".egy",int_fmt)    
+    pickett_io.save_cat(filename + "_new.cat", lines_cat)
+    pickett_io.save_egy(filename + "_new.egy", states_egy, int_fmt)    
     
-if __name__ == "main":
-    test()
+if __name__ == "__main__":
+    main("test2")
