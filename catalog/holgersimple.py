@@ -3,34 +3,40 @@ import sys
 import pickett_io
 import quantum_models 
 
-def main(filename):
-    
-    qm = quantum_models.SymmRotorNK()
-    
-    int_fmt    = pickett_io.get_quantum_fmt(filename + ".cat")
-    
-    lines_cat  = pickett_io.load_cat(filename + ".cat")
-    #lines_icat = pickett_io.load_cat(filename + "i.cat")
-    states_egy = pickett_io.load_egy(filename + ".egy", int_fmt)
-    print len(lines_cat)
-    qm.merge_blends(lines_cat)
-    print len(lines_cat)
 
-    #qm.merge_blends(lines_icat)
-    qm.merge_blends(states_egy)
+def main(cat_id):
     
-    pickett_io.save_cat(filename + "_new.cat", lines_cat)
-    #pickett_io.save_cat(filename + "i_new.cat", lines_icat)
-    pickett_io.save_egy(filename + "_new.egy", states_egy, int_fmt)
+    int_fmt    = pickett_io.get_quantum_fmt("c%s.cat"  % cat_id)
+    
+    lines_cat  = pickett_io.load_cat("c%s.cat"  % cat_id)
+#    lines_icat = pickett_io.load_cat("c%si.cat" % cat_id)
+    states_egy = pickett_io.load_egy("c%s.egy"  % cat_id, int_fmt)
+    
+    process(lines_cat)
+#    process(lines_icat)
+    process(states_egy)
+    
+    pickett_io.save_cat("c%s_new.cat"  % cat_id, lines_cat)
+#    pickett_io.save_cat("c%si_new.cat" % cat_id, lines_icat)
+    pickett_io.save_egy("c%s.egy"      % cat_id, states_egy, int_fmt) 
 
 
-def test(filename):
-    int_fmt    = pickett_io.get_quantum_fmt(filename + ".cat")
-    print(int_fmt)
-    lines_cat  = pickett_io.load_cat(filename + ".cat")
-    states_egy = pickett_io.load_egy(filename + ".egy",int_fmt)    
-    pickett_io.save_cat(filename + "_new.cat", lines_cat)
-    pickett_io.save_egy(filename + "_new.egy", states_egy, int_fmt)    
+def process(entries):
+    old_len = len(entries)
     
+    qm = quantum_models.SymmRotorNK()    
+#    qm.strip_parity(entries)
+    qm.merge_blends(entries)
+    
+    new_len = len(entries)
+    print("Merged %d entries." % (old_len - new_len))  
+
+
 if __name__ == "__main__":
-    main("test2")
+    if len(sys.argv) < 2: 
+        cat_id = raw_input("Enter cat_ID (only digits), please: ")
+    else:
+        cat_id = sys.argv[1]
+        
+    main(cat_id)
+    

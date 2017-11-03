@@ -61,21 +61,20 @@ class SymmRotorNK:
         """in-place"""
         result = []
         blends = []
-        for i in range(1, len(entries) + 1):
+        entries.append(None)
+        for i in range(1, len(entries)):
             
             prev = entries[i - 1]
-            
-            if(i < len(entries)):
-                curr = entries[i]
+            curr = entries[i]
 
-                if(curr == prev and self.__spin_symm(curr) != "A"):
+            if(curr != None and curr == prev and self.__spin_symm(curr) != "A"):
+                blends.append(prev)
+            else:
+                if(blends):
                     blends.append(prev)
+                    result.append(self.__merge(blends))
+                    blends = []
                 else:
-                    if(blends):
-                        blends.append(prev)
-                        result.append(self.__merge(blends))
-                        blends = []
-                    else:
-                        result.append(prev)
+                    result.append(prev)
         
         entries[:] = result  # deep copy implicitely frees unused duplicates
