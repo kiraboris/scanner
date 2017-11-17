@@ -11,9 +11,9 @@ class State(object):
             self.valid = False
             
             # energy
-            self.flt_E       = None       
-            self.flt_E_err   = None
-            self.int_g       = None
+            self.E       = None       
+            self.E_err   = None
+            self.g       = None
             
             # additional .egy file information
             self.str_H_iblk  = None
@@ -21,19 +21,15 @@ class State(object):
             self.str_pmix    = None
             
             # quantum numbers
-            self.dict_quanta = {}
+            self.quanta      = {}
             self.int_fmt     = None
     
-    def has_quanta(self, dict_quanta_subset):
+    def has_quanta(self, quanta_subset):
         """Checks if state has these quanta as a subset"""
         
-        return all(x in self.dict_quanta.items()
-                   for x in dict_quanta_subset.items())
+        return all(x in self.quanta.items()
+                   for x in quanta_subset.items())
                    
-    def __eq__(self, other):
-        """Equivalence is defined in terms of quanta"""
-        
-        return self.dict_quanta == other.dict_quanta
 
 
 class Line(object):
@@ -47,11 +43,11 @@ class Line(object):
         self.state_lower        = State()
                                
         # Frequency of the line (usually in MHz)
-        self.flt_freq           = None
-        self.flt_freq_err       = None
+        self.freq           = None
+        self.freq_err       = None
 
         # base10 log of the integrated intensity at 300 K (in nm2MHz)
-        self.flt_log_I          = None  
+        self.log_I          = None  
         self.int_deg_freedom    = None
         
         # additional .cat file information
@@ -63,38 +59,33 @@ class Line(object):
         self.flt_pressure_delta = None  
         
         # calculated values
-        self.flt_Einstein_A     = None
+        self.Einstein_A     = None
     
-    
-    def __eq__(self, other):
-        """Equivalence is defined in terms of quanta"""
-        
-        return self.q_upper == other.q_upper and self.q_lower == other.q_lower
     
     # references to upper state g and lower state E and quanta
     def _get_E(self): 
-        return self.state_lower.flt_E
+        return self.state_lower.E
         
     def _set_E(self,x): 
-        self.state_lower.flt_E = x
+        self.state_lower.E = x
         
     def _get_g(self): 
-        return self.state_upper.int_g
+        return self.state_upper.g
         
     def _set_g(self,x):
-        self.state_upper.int_g = x  
+        self.state_upper.g = x  
         
     def _get_qu(self): 
-        return self.state_upper.dict_quanta
+        return self.state_upper.quanta
         
     def _set_qu(self,x): 
-        self.state_upper.dict_quanta = x
+        self.state_upper.quanta = x
         
     def _get_ql(self): 
-        return self.state_lower.dict_quanta
+        return self.state_lower.quanta
         
     def _set_ql(self,x): 
-        self.state_lower.dict_quanta = x
+        self.state_lower.quanta = x
         
     def _get_fmt(self): 
         return self.state_upper.int_fmt
@@ -103,8 +94,8 @@ class Line(object):
         self.state_upper.int_fmt = x
         self.state_lower.int_fmt = x
     
-    flt_E = property(_get_E, _set_E)
-    int_g = property(_get_g, _set_g)  
+    E = property(_get_E, _set_E)
+    g = property(_get_g, _set_g)  
     q_upper = property(_get_qu, _set_qu)
     q_lower = property(_get_ql, _set_ql)
     int_fmt = property(_get_fmt, _set_fmt)
@@ -218,14 +209,14 @@ class CatConverter(PickettConverter):
         try:
             obj_line.valid = True
             
-            obj_line.flt_freq     = float(str_line[0:13])           
-            obj_line.flt_freq_err = float(str_line[13:21])
+            obj_line.freq     = float(str_line[0:13])           
+            obj_line.freq_err = float(str_line[13:21])
             
-            obj_line.flt_log_I       = float(str_line[21:29]) 
+            obj_line.log_I       = float(str_line[21:29]) 
             obj_line.int_deg_freedom = int(str_line[29:31])
             
-            obj_line.flt_E = float(str_line[31:41])           
-            obj_line.int_g = int(str_line[41:44])
+            obj_line.E = float(str_line[31:41])           
+            obj_line.g = int(str_line[41:44])
             
             obj_line.str_cat_tag       = str_line[44:51]
             obj_line.bol_lab = ('-' in obj_line.str_cat_tag)
@@ -255,9 +246,9 @@ class CatConverter(PickettConverter):
                                                   obj_line.q_lower),
                                                   obj_line.int_fmt)
         
-        str_out += "%13.4f%8.4f"% (obj_line.flt_freq, obj_line.flt_freq_err)
-        str_out += "%8.4f%2d"   % (obj_line.flt_log_I, obj_line.int_deg_freedom)
-        str_out += "%10.4f%3d"  % (obj_line.flt_E, obj_line.int_g)
+        str_out += "%13.4f%8.4f"% (obj_line.freq, obj_line.freq_err)
+        str_out += "%8.4f%2d"   % (obj_line.log_I, obj_line.int_deg_freedom)
+        str_out += "%10.4f%3d"  % (obj_line.E, obj_line.g)
         str_out += "%s%4d%s "      % (obj_line.str_cat_tag, obj_line.int_fmt, str_quanta)
                
         return str_out
@@ -304,13 +295,13 @@ class EgyConverter(PickettConverter):
             obj_state.str_H_iblk = (str_state[0:6])
             obj_state.str_H_indx = (str_state[6:11])
             
-            obj_state.flt_E      = float(str_state[11:29])       
-            obj_state.flt_E_err  = float(str_state[29:47])
+            obj_state.E      = float(str_state[11:29])       
+            obj_state.E_err  = float(str_state[29:47])
             
             obj_state.str_pmix   = (str_state[47:58])
             
-            obj_state.dict_quanta= EgyConverter.__read_quanta(str_state[64:], int_fmt)
-            obj_state.int_g      = int(str_state[58:63])
+            obj_state.quanta=EgyConverter.__read_quanta(str_state[64:], int_fmt)
+            obj_state.g      = int(str_state[58:63])
         except Exception as e:
             obj_state.valid = False
             print(e)
@@ -324,9 +315,9 @@ class EgyConverter(PickettConverter):
         str_out = ""
         
         str_out += "%s%s"         % (obj_state.str_H_iblk, obj_state.str_H_indx)
-        str_out += "%18.6f%18.6f" % (obj_state.flt_E, obj_state.flt_E_err)
-        str_out += "%s%5d:"       % (obj_state.str_pmix, obj_state.int_g)
-        str_out += EgyConverter.__write_quanta(obj_state.dict_quanta, int_fmt) 
+        str_out += "%18.6f%18.6f" % (obj_state.E, obj_state.E_err)
+        str_out += "%s%5d:"       % (obj_state.str_pmix, obj_state.g)
+        str_out += EgyConverter.__write_quanta(obj_state.quanta, int_fmt) 
         
         return str_out
 
