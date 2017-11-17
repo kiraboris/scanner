@@ -4,14 +4,37 @@
 #
 import math
 
-class SymmRotorNK:
-    """symmetric rotor with N (aka l) and K""" 
+
+class BasicRotor:
+    """basic operations"""
     
     def __remove_minus_inplace(self, dict_quanta):
         """docstring"""
         
         for key in dict_quanta:
-            dict_quanta[key] = abs(dict_quanta[key])
+            dict_quanta[key] = abs(dict_quanta[key])    
+    
+    
+    def custom_quanta_transform(self, entries, func_transform):
+        for entry in entries:
+            if hasattr(entry, "dict_quanta"):
+                func_transform(entry.dict_quanta)
+                
+            elif hasattr(entry, "q_upper") and hasattr(entry, "q_lower"):
+                func_transform(entry.q_upper)
+                func_transform(entry.q_lower)
+    
+    
+    def strip_parity(self, entries):
+        """in-place"""
+        
+        self.custom_quanta_transform(entries, self.__remove_minus_inplace)
+        
+
+
+
+class SymmRotor(BasicRotor):
+    """symmetric rotor with N (aka J), K and possibly v, l""" 
     
     
     def __spin_symm(self, entry):
@@ -22,12 +45,12 @@ class SymmRotorNK:
         elif hasattr(entry, "q_upper"):
             quanta = entry.q_upper
         
-        if (quanta['N'] + quanta['K']) % 3 == 0:
-            return 'E'
-        else:
+        if (quanta['K'] - quanta.get('l', 0)) % 3 == 0:
             return 'A'
+        else:
+            return 'E'
     
-
+    
     def __merge(self, blends):
         """docstring"""
         
@@ -44,17 +67,6 @@ class SymmRotorNK:
         
         return result
     
-    
-    def strip_parity(self, entries):
-        """in-place"""
-        blends = []
-        for entry in entries:
-            if hasattr(entry, "dict_quanta"):
-                self.__remove_minus_inplace(entry.dict_quanta)
-                
-            elif hasattr(entry, "q_upper") and hasattr(entry, "q_lower"):
-                self.__remove_minus_inplace(entry.q_upper)
-                self.__remove_minus_inplace(entry.q_lower)
     
     
     def merge_blends(self, entries):
