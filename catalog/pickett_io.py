@@ -3,6 +3,20 @@
 # classes:   State, Line, CatConverter, EgyConverter
 # functions: load_cat, save_cat, load_egy, save_egy
 
+
+class Mapper(object):
+    """Dictionary forth and reverse transform"""
+    
+    def __init__(self, a2b):
+        if(isinstance(a2b, dict)):
+            self.a2b = a2b
+            self.b2a = dict( (v,k) for k, v in dict_a2b.items() )
+        elif(isinstance(a2b, list):
+            self.a2b = dict([(x,y) for (x,y) in a2b]
+            self.b2a = dict([(y,x) for (x,y) in a2b])
+
+
+
 class State(object):
     """Structure of a quantum state"""
     
@@ -126,28 +140,24 @@ class CatConverter(PickettConverter):
     def __replace_quant_digits(str_q, bol_reverse):
         """replace a -> -1, A -> 10, etc."""
         
-        LST_MAPPING = [ ('a', '-1'), ('b', '-2'), ('c', '-3'), ('d', '-4'), 
+        mapper=Mapper([ ('a', '-1'), ('b', '-2'), ('c', '-3'), ('d', '-4'), 
                         ('e', '-5'), ('P', '25'), ('f', '-6'), ('g', '-7'),
                         ('h', '-8'), ('i', '-9'), ('j', '-10'), ('k', '-11'),
                         ('l', '-12'), ('m', '-13'), ('n', '-14'), ('o', '-15'),
                         ('p', '-16'), ('A', '10'), ('B', '11'), ('C', '12'), 
                         ('D', '13'), ('E', '14'), ('F', '15'), ('G', '16'), 
                         ('H', '17'), ('I', '18'), ('J', '19'), ('K', '20'), 
-                        ('L', '21'), ('M', '22'), ('N', '23'), ('O', '24') ]      
+                        ('L', '21'), ('M', '22'), ('N', '23'), ('O', '24') ])      
         
         if not bol_reverse:
-            dict_map = dict([(x,y) for (x,y) in LST_MAPPING])
-            
             str_s = str_q[0:1]
-            if(str_s in dict_map):
-                str_q = str_q.replace(str_s, dict_map[str_s])
+            if str_s in mapper.a2b:
+                str_q = str_q.replace(str_s, mapper.a2b[str_s])
         else:
-            dict_map = dict([(y,x) for (x,y) in LST_MAPPING])
-            
             if len(str_q) >= 3:
                 str_s = str_q[0:2]
-                if(str_s in dict_map):
-                    str_q = str_q.replace(str_s, dict_map[str_s])               
+                if(str_s in mapper.b2a):
+                    str_q = str_q.replace(str_s, mapper.b2a[str_s])               
         
         return str_q
     

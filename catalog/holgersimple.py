@@ -3,17 +3,17 @@
 import pickett_io
 import quantum_models 
 
-cat_id = "041505"
+cat_id = "041510"
 
 def transform_pseudo_v_into_vl(quanta):
-    transormation = {
+    transormation = pickett_io.Mapper({
         0: (0, 0),
         2: (1, -1),
         3: (1, +1),
         6: (2, 0),
         7: (2, +2),
         8: (2, -2)  
-    }
+    })
     quanta['v'], quanta['l'] = transormation[quanta.get('v', 0)]
 
 def merge_blends(entries):
@@ -32,19 +32,29 @@ def merge_blends(entries):
 int_fmt    = pickett_io.get_quantum_fmt("c%s.cat"  % cat_id)
 
 lines_cat  = pickett_io.load_cat("c%s.cat"  % cat_id)
-lines_icat = pickett_io.load_cat("c%si.cat" % cat_id)
-states_egy = pickett_io.load_egy("c%s.egy"  % cat_id, int_fmt)
-
 print("Cat:")  
 merge_blends(lines_cat)
-
-print("ICat:") 
-merge_blends(lines_icat)
-
-print("Egy:")  
-merge_blends(states_egy)
-
 pickett_io.save_cat("c%s_new.cat"  % cat_id, lines_cat)
-pickett_io.save_cat("c%si_new.cat" % cat_id, lines_icat)
-pickett_io.save_egy("c%s_new.egy"  % cat_id, states_egy, int_fmt) 
+
+try:
+    lines_icat = pickett_io.load_cat("c%si.cat" % cat_id)
+    print("ICat:") 
+    merge_blends(lines_icat)
+    pickett_io.save_cat("c%si_new.cat" % cat_id, lines_icat)
+except:
+    pass
+
+try:
+    states_egy = pickett_io.load_egy("c%s.egy"  % cat_id, int_fmt)
+    print("Egy:")  
+    merge_blends(states_egy)
+    pickett_io.save_egy("c%s_new.egy"  % cat_id, states_egy, int_fmt)     
+except:
+    pass
+
+
+
+
+
+
     
