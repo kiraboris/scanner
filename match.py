@@ -34,13 +34,13 @@ def match_data(data):
 				trav[j] = trav[j] + 1
 			
 			x_t_j = datasets[j][trav[j], 0]
-			y_t_j = datasets[j][trav[j], 1]
+			y_t_j = datasets[j][trav[j], -1]
 			
 			if(x_t_j == x_i):
 				yvalues[i, j] = y_t_j
 			else:  # only x_t_j > x with trav[j] > 0 	 
 				x_t_j_minus = datasets[j][trav[j]-1, 0]
-				y_t_j_minus = datasets[j][trav[j]-1, 1]
+				y_t_j_minus = datasets[j][trav[j]-1, -1]
 
 				yvalues[i, j] = interpolate(x_t_j_minus, y_t_j_minus, x_t_j, y_t_j, x_i)
 				
