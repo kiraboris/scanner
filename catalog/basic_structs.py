@@ -1,18 +1,19 @@
-# python 2.7
+# python 3
 #
-# classes: State, Line
+# classes: State, Line, 
 #
 
-class State:
+
+class State(object):
     """Structure of a quantum state"""
     
     def __init__(self):
-            self.valid = False
-            
+            object.__init__(self)
+         
             # energy
-            self.flt_E       = None       
-            self.flt_E_err   = None
-            self.int_g       = None
+            self.E       = None       
+            self.E_err   = None
+            self.g       = None
             
             # additional .egy file information
             self.str_H_iblk  = None
@@ -20,81 +21,101 @@ class State:
             self.str_pmix    = None
             
             # quantum numbers
-            self.dict_quanta = {}
-            self.int_fmt     = None
+            self._quanta   = frozenset()
+            self.int_fmt   = None
     
-    def has_quanta(self, dict_quanta_subset):
+    
+    def qid(self):
+        """docstring"""
+        
+        return (self._quanta)
+    
+    
+    def has_quanta(self, quanta_subset):
         """Checks if state has these quanta as a subset"""
         
-        return all(x in self.dict_quanta.items()
-                   for x in dict_quanta_subset.items())
+        return all(x in self.q.items()
+                   for x in quanta_subset.items())
                    
-    def __eq__(self, other):
-        """Equivalence is defined in terms of quanta"""
+    def _get_q(self): 
+        return dict(self._quanta)
         
-        return self.dic_quanta == other.dict_quanta
+    def _set_q(self,x): 
+        self._quanta = frozenset(x)
+        
+    q = property(_get_q, _set_q) 
+        
+        
 
-
-class Line:
+class Line(object):
     """A spectroscopic line entry object"""
     
     def __init__(self):
-            self.valid = False
-            
-            # states
-            self.state_upper        = State()
-            self.state_lower        = State()
-            
-            # references to upper state g and lower state E and quanta
-            def _get_E(self): 
-                return self.state_lower.flt_E
-            def _set_E(self): 
-                self.state_lower.flt_E = x
-            def _get_g(self): 
-                return self.state_upper.int_g
-            def _set_g(self,x):
-                self.state_upper.int_g = x  
-            def _get_qu(self): 
-                return self.state_upper.dict_quanta
-            def _set_qu(self,x): 
-                self.state_upper.dict_quanta = x
-            def _get_ql(self): 
-                return self.state_lower.dict_quanta
-            def _set_ql(self,x): 
-                self.state_lower.dict_quanta = x
-            def _get_fmt(self): 
-                return self.state_upper.int_fmt
-            def _set_fmt(self,x): 
-                self.state_upper.dict_quanta = x
-                self.state_lower.dict_quanta = x
-            
-            self.flt_E = property(_get_E, _set_E)
-            self.int_g = property(_get_g, _set_g)  
-            self.q_upper = property(_get_qu, _set_qu)
-            self.q_lower = property(_get_ql, _set_ql)
-            self.int_fmt = property(_get_fmt, _set_fmt)
-                                    
-            # Frequency of the line (usually in MHz)
-            self.flt_freq           = None
-            self.flt_freq_err       = None
+    
+        # states
+        self.state_upper        = State()
+        self.state_lower        = State()
+                               
+        # Frequency of the line (usually in MHz)
+        self.freq            = None
+        self.freq_err        = None
 
-            # base10 log of the integrated intensity at 300 K (in nm2MHz)
-            self.flt_log_I          = None  
-            self.int_deg_freedom    = None
-            
-            # additional .cat file information
-            self.str_cat_tag        = None
-            self.bol_lab            = None
-            
-            # pressure broadening, alpha: dv=p*alpha*(T/296)^delta
-            self.flt_pressure_alpha = None    
-            self.flt_pressure_delta = None  
-            
-            # calculated values
-            self.flt_Einstein_A     = None
-    
-    
-    def __eq__(self, other):
-        """Equivalence is defined in terms of quanta"""
+        # base10 log of the integrated intensity at 300 K (in nm2MHz)
+        self.log_I           = None  
+        self.int_deg_freedom = None
         
-        return self.q_upper == other.q_upper and self.q_lower == other.q_lower
+        # additional information
+        self.str_cat_tag     = None
+        self.str_lin_text    = None
+        
+        # pressure broadening, alpha: dv=p*alpha*(T/296)^delta
+        self.flt_pressure_alpha = None    
+        self.flt_pressure_delta = None  
+        
+        # calculated values
+        self.Einstein_A = None
+    
+    
+    def qid(self):
+        """docstring"""
+        
+        return ((self.state_lower._quanta, self.state_upper._quanta))
+
+    
+    # references to upper state g and lower state E and quanta
+    def _get_E(self): 
+        return self.state_lower.E
+        
+    def _set_E(self,x): 
+        self.state_lower.E = x
+        
+    def _get_g(self): 
+        return self.state_upper.g
+        
+    def _set_g(self,x):
+        self.state_upper.g = x  
+        
+    def _get_qu(self): 
+        return self.state_upper.q
+        
+    def _set_qu(self,x): 
+        self.state_upper.q = x
+        
+    def _get_ql(self): 
+        return self.state_lower.q
+        
+    def _set_ql(self,x): 
+        self.state_lower.q = x
+        
+    def _get_fmt(self): 
+        return self.state_upper.int_fmt
+        
+    def _set_fmt(self,x): 
+        self.state_upper.int_fmt = x
+        self.state_lower.int_fmt = x
+    
+    E = property(_get_E, _set_E)
+    g = property(_get_g, _set_g)  
+    q_upper = property(_get_qu, _set_qu)
+    q_lower = property(_get_ql, _set_ql)
+    int_fmt = property(_get_fmt, _set_fmt)

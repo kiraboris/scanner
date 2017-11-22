@@ -1,4 +1,4 @@
-# python 2.7
+# python 3
 
 import pickett_io
 import quantum_models 
