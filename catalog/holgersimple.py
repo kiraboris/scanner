@@ -1,56 +1,67 @@
 # python 3
 
+import sys
+from bidict import bidict
+
 import pickett_io
 import quantum_models 
 
-cat_id = "041510"
 
-def transform_pseudo_v_into_vl(quanta):
-    transormation = pickett_io.Mapper({
-        0: (0, 0),
-        2: (1, -1),
-        3: (1, +1),
-        6: (2, 0),
-        7: (2, +2),
-        8: (2, -2)  
-    })
-    quanta['v'], quanta['l'] = transormation[quanta.get('v', 0)]
-
-def merge_blends(entries):
-    old_len = len(entries)
+def fix_file(in_file, out_file, fmt):
+    """docstring"""
     
-    qm = quantum_models.SymmRotor()    
+    print("%s -> %s" % (in_file, out_file))
+    entries = pickett_io.load(in_file, fmt)
+    old_len = len(entries)
 
-    qm.custom_quanta_transform(entries, transform_pseudo_v_into_vl)
-    entries[:] = qm.merge_blends(entries)
+    qm.extract_vl(entries, transormation)
+    entries[:] = qm.fix_blends(entries)
+    qm.compress_vl(entries, transormation)
     
     new_len = len(entries)
+    print("  delta %+d entries." % -(old_len - new_len))  
+    pickett_io.save(out_file, entries)
+    
 
-    print(" reduced %d entries." % (old_len - new_len))  
+# *** main part ***
+
+cat_id = "041509"
+
+jobs = ['icat', 'mrg.lin', 'mrg']
+
+qm = quantum_models.SymmRotor()    
+
+transormation = bidict({
+    0: (0, 0),
+    2: (1, -1),
+    3: (1, +1),
+    6: (2, 0),
+    7: (2, +2),
+    8: (2, -2)  
+})
+
+if('icat' in jobs):
+    int_fmt = pickett_io.get_quantum_fmt("c%si.cat" % cat_id)
+elif('cat' in jobs):
+    int_fmt = pickett_io.get_quantum_fmt("c%s.cat"  % cat_id)
+else:
+    sys.exit()
+    
+
+if('icat' in jobs): 
+    fix_file("c%si.cat" % cat_id, "c%si_new.cat"  % cat_id, int_fmt)
+
+if('cat' in jobs): 
+    fix_file("c%s.cat"  % cat_id, "c%s_new.cat"  % cat_id, int_fmt)
+
+if('egy' in jobs): 
+    fix_file("c%s.egy"  % cat_id, "c%s_new.egy"  % cat_id, int_fmt)
+    
+if('mrg.lin' in jobs): 
+    fix_file("c%s_mrg.lin"  % cat_id, "c%s_mrg_new.lin"  % cat_id, int_fmt)
+    
 
 
-int_fmt    = pickett_io.get_quantum_fmt("c%s.cat"  % cat_id)
-
-lines_cat  = pickett_io.load_cat("c%s.cat"  % cat_id)
-print("Cat:")  
-merge_blends(lines_cat)
-pickett_io.save_cat("c%s_new.cat"  % cat_id, lines_cat)
-
-try:
-    lines_icat = pickett_io.load_cat("c%si.cat" % cat_id)
-    print("ICat:") 
-    merge_blends(lines_icat)
-    pickett_io.save_cat("c%si_new.cat" % cat_id, lines_icat)
-except:
-    pass
-
-try:
-    states_egy = pickett_io.load_egy("c%s.egy"  % cat_id, int_fmt)
-    print("Egy:")  
-    merge_blends(states_egy)
-    pickett_io.save_egy("c%s_new.egy"  % cat_id, states_egy, int_fmt)     
-except:
-    pass
 
 
 

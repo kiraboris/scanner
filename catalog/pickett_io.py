@@ -2,10 +2,12 @@
 #
 # classes:   CatConverter, EgyConverter, LinConverter
 #
-# functions: load_cat, save_cat, load_egy, save_egy, load_lin, save_lin
+# functions: load, save, get_quantum_fmt
 #
 
 from bidict import bidict
+
+from basic_structs import Line, State
 
 class PickettConverter:
 
@@ -41,8 +43,8 @@ class CatConverter(PickettConverter):
         """replace a -> -1, A -> 10, etc."""
         
         str_s = str_q[0:1]
-        if str_s in mapper:
-            str_q = str_q.replace(str_s, mapper[str_s])
+        if str_s in CatConverter.mapper:
+            str_q = str_q.replace(str_s, CatConverter.mapper[str_s])
         
         return str_q
     
@@ -53,8 +55,8 @@ class CatConverter(PickettConverter):
         
         if len(str_q) >= 3:
             str_s = str_q[0:2]
-            if(str_s in mapper.inv):
-                str_q = str_q.replace(str_s, mapper.inv[str_s])               
+            if(str_s in CatConverter.mapper.inv):
+                str_q = str_q.replace(str_s, CatConverter.mapper.inv[str_s])               
         
         return str_q
     
@@ -96,14 +98,14 @@ class CatConverter(PickettConverter):
         for str_q in ["%2d" % dict_qu[x] for x in headers]:
             str_q = CatConverter.__encode_quant(str_q)
             str_quanta += str_q   
-        for i in range(len(dict_qu), INT_C):
+        for i in range(len(headers), INT_C):
             str_quanta += "  "
         
         headers = EgyConverter._quanta_headers(int_fmt)[0:len(dict_ql)]
         for str_q in ["%2d" % dict_ql[x] for x in headers]:
             str_q = CatConverter.__encode_quant(str_q)
             str_quanta += str_q   
-        for i in range(len(dict_ql), INT_C):
+        for i in range(len(headers), INT_C):
             str_quanta += "  "
         
         return str_quanta
@@ -252,13 +254,13 @@ class LinConverter(PickettConverter):
         headers = LinConverter._quanta_headers(int_fmt)[0:len(dict_qu)]
         for str_q in ["%3d" % dict_qu[x] for x in headers]:
             str_quanta += str_q   
-        for i in range(len(dict_qu), INT_C):
+        for i in range(len(headers), INT_C):
             str_quanta += "   "
         
         headers = LinConverter._quanta_headers(int_fmt)[0:len(dict_ql)]
         for str_q in ["%3d" % dict_ql[x] for x in headers]:
             str_quanta += str_q   
-        for i in range(len(dict_ql), INT_C):
+        for i in range(len(headers), INT_C):
             str_quanta += "   "
         
         for i in range(2*INT_C, 2*INT_C_MAX):
@@ -274,10 +276,10 @@ class LinConverter(PickettConverter):
         obj_line.freq     = float(str_line[36:51])           
         obj_line.freq_err = float(str_line[51:60])
         
-        obj_line.str_lin_text = str_line[60:]
+        obj_line.str_lin_text = str_line[60:-1]
         
         str_q  = str_line[0:36]
-        dict_qu, dict_ql = LinConverter.__read_quanta(str_lq, int_fmt)
+        dict_qu, dict_ql = LinConverter.__read_quanta(str_q, int_fmt)
         
         obj_line.int_fmt = int_fmt
         obj_line.q_upper = dict_qu
@@ -295,9 +297,10 @@ class LinConverter(PickettConverter):
                                                  obj_line.q_lower,
                                                  obj_line.int_fmt)
 
-        str_out += "%s"   % (str_quanta)
-        str_out += "%15.4f%9.3f"% (obj_line.freq, obj_line.freq_err)
-        str_out += "%s" % (obj_line.str_lin_text)
+        str_out += "%s"    % (str_quanta)
+        str_out += "%15.4f"% (obj_line.freq)
+        str_out +=("%10.3f"% (obj_line.freq_err)).replace('0.', '.')
+        str_out += "%s"    % (obj_line.str_lin_text)
               
         return str_out
 
@@ -315,10 +318,10 @@ def get_quantum_fmt(str_filename):
     return int_quanta_fmt
 
 
-def load_cat(str_filename):
+def _load_cat(str_filename):
     """Read from .cat"""
     
-    lst_lines  = {}
+    lst_lines  = []
     with open(str_filename, 'r') as f:
         for str_line in f:
             obj = CatConverter.str2line(str_line)
@@ -327,7 +330,7 @@ def load_cat(str_filename):
     return lst_lines
 
 
-def save_cat(str_filename, lst_lines):
+def _save_cat(str_filename, lst_lines):
     """docstring"""
     
     with open(str_filename, 'w') as f:
@@ -336,10 +339,10 @@ def save_cat(str_filename, lst_lines):
             f.write(textline+"\n")
 
 
-def load_lin(str_filename, int_quanta_fmt):
+def _load_lin(str_filename, int_quanta_fmt):
     """Read from .cat"""
     
-    lst_lines  = {}
+    lst_lines  = []
     with open(str_filename, 'r') as f:
         for str_line in f:
             obj = LinConverter.str2line(str_line, int_quanta_fmt)
@@ -348,7 +351,7 @@ def load_lin(str_filename, int_quanta_fmt):
     return lst_lines
 
 
-def save_lin(str_filename, lst_lines):
+def _save_lin(str_filename, lst_lines):
     """docstring"""
     
     with open(str_filename, 'w') as f:
@@ -358,7 +361,7 @@ def save_lin(str_filename, lst_lines):
 
 
 
-def load_egy(str_filename, int_quanta_fmt):
+def _load_egy(str_filename, int_quanta_fmt):
     """Read from .egy"""
     
     lst_states  = []
@@ -370,7 +373,7 @@ def load_egy(str_filename, int_quanta_fmt):
     return lst_states
     
 
-def save_egy(str_filename, lst_states):
+def _save_egy(str_filename, lst_states):
     """docstring"""
     
     with open(str_filename, 'w') as f:
@@ -378,4 +381,36 @@ def save_egy(str_filename, lst_states):
             textline = EgyConverter.state2str(obj_state)
             f.write(textline+"\n")
 
+
+
+def load(str_filename, int_quanta_fmt):
+    """docstring"""
+    
+    extension = str_filename[-3:]
+    
+    if( extension == "cat" or extension == "mrg" ):
+        return _load_cat(str_filename)
+        
+    if( extension == "egy" ):
+        return _load_egy(str_filename, int_quanta_fmt)
+        
+    if( extension == "lin" ):
+        return _load_lin(str_filename, int_quanta_fmt)
+
+
+
+def save(str_filename, lst_entries):
+    """docstring"""
+    
+    extension = str_filename[-3:]
+    
+    if( extension == "cat" or extension == "mrg" ):
+        _save_cat(str_filename, lst_entries)
+        
+    if( extension == "egy" ):
+        _save_egy(str_filename, lst_entries)
+        
+    if( extension == "lin" ):
+        _save_lin(str_filename, lst_entries)
+        
 

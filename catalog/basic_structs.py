@@ -3,6 +3,7 @@
 # classes: State, Line, 
 #
 
+import copy
 
 class State(object):
     """Structure of a quantum state"""
@@ -24,6 +25,8 @@ class State(object):
             self._quanta   = frozenset()
             self.int_fmt   = None
     
+    def copy(self):
+        return copy.deepcopy(self)
     
     def qid(self):
         """docstring"""
@@ -40,8 +43,8 @@ class State(object):
     def _get_q(self): 
         return dict(self._quanta)
         
-    def _set_q(self,x): 
-        self._quanta = frozenset(x)
+    def _set_q(self,dict_x): 
+        self._quanta = frozenset(dict_x.items())
         
     q = property(_get_q, _set_q) 
         
@@ -75,11 +78,13 @@ class Line(object):
         # calculated values
         self.Einstein_A = None
     
+    def copy(self):
+        return copy.deepcopy(self)
     
     def qid(self):
         """docstring"""
         
-        return ((self.state_lower._quanta, self.state_upper._quanta))
+        return ((self.state_upper._quanta, self.state_lower._quanta))
 
     
     # references to upper state g and lower state E and quanta
@@ -119,3 +124,11 @@ class Line(object):
     q_upper = property(_get_qu, _set_qu)
     q_lower = property(_get_ql, _set_ql)
     int_fmt = property(_get_fmt, _set_fmt)
+
+def qid(*quanta):
+    """stand-alone function to create comparable quantum IDs"""
+    
+    return tuple([frozenset(x.items()) for x in quanta])
+
+
+
