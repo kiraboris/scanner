@@ -68,7 +68,7 @@ class Line(object):
         self.int_deg_freedom = None
         
         # additional information
-        self.str_cat_tag     = None
+        self.int_cat_tag     = None
         self.str_lin_text    = None
         
         # pressure broadening, alpha: dv=p*alpha*(T/296)^delta

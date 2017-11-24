@@ -1,6 +1,7 @@
 # python 3
 
 import sys
+import shutil
 from bidict import bidict
 
 import pickett_io
@@ -21,6 +22,23 @@ def fix_file(in_file, out_file, fmt):
     new_len = len(entries)
     print("  delta %+d entries." % -(old_len - new_len))  
     pickett_io.save(out_file, entries)
+    
+    return entries
+    
+
+def make_mrg(cat_file, lin_file, egy_file, egy_file_new, mrg_file, fmt):
+    """docstring"""
+    
+    #egy_entries = fix_file(egy_file, egy_file_new, fmt) 
+    
+    print("Create %s" % (mrg_file))
+    
+    cat_entries = pickett_io.load(cat_file, fmt)
+    lin_entries = pickett_io.load(lin_file, fmt)
+    
+    mrg_entries = qm.make_mrg(cat_entries, lin_entries)
+    
+    pickett_io.save(mrg_file, mrg_entries)
     
 
 # *** main part ***
@@ -60,8 +78,10 @@ if('egy' in jobs):
 if('mrg.lin' in jobs): 
     fix_file("c%s_mrg.lin"  % cat_id, "c%s_mrg_new.lin"  % cat_id, int_fmt)
     
-
-
+if('mrg' in jobs):
+    make_mrg("c%si_new.cat"  % cat_id, "c%s_mrg_new.lin"  % cat_id,
+             "c%s.egy"  % cat_id, "c%s_new.egy" % cat_id, 
+             "c%s_new.mrg"  % cat_id, int_fmt)
 
 
 

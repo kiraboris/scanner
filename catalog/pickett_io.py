@@ -125,7 +125,7 @@ class CatConverter(PickettConverter):
         obj_line.E = float(str_line[31:41])           
         obj_line.g = int(str_line[41:44])
         
-        obj_line.str_cat_tag  = str_line[44:51]
+        obj_line.int_cat_tag  = int(str_line[44:51])
         
         str_q  = str_line[55:79]
         int_fmt = int(str_line[51:55])
@@ -150,7 +150,8 @@ class CatConverter(PickettConverter):
         str_out += "%13.4f%8.4f"% (obj_line.freq, obj_line.freq_err)
         str_out += "%8.4f%2d"   % (obj_line.log_I, obj_line.int_deg_freedom)
         str_out += "%10.4f%3d"  % (obj_line.E, obj_line.g)
-        str_out += "%s%4d%s "   % (obj_line.str_cat_tag, obj_line.int_fmt, str_quanta)
+        str_out += "%7d"        % (obj_line.int_cat_tag)
+        str_out += "%4d%s "     % (obj_line.int_fmt, str_quanta)
                
         return str_out
 

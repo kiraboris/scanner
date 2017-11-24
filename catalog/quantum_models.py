@@ -27,6 +27,7 @@ class BasicModel:
     
     
     def fix_blends(self, entries):
+        """docstring"""        
         
         # make O(1) lookup dict 
         dict_entries = self.__build_dict(entries)
@@ -70,6 +71,43 @@ class BasicModel:
         return result
         
     
+    def make_mrg(self, cat_lst, lin_lst, egy_lst = []):
+        """docstring"""
+        
+        result = []
+        
+        # process cat entries in lin
+        lin_dict = self.__build_dict(lin_lst)
+        
+        for entry_cat in cat_lst:
+            entry_mrg = entry_cat.copy()
+            
+            if entry_mrg.qid() in lin_dict:
+                entry_lin = lin_dict[entry_mrg.qid()]
+                
+                entry_mrg.freq = entry_lin.freq
+                entry_mrg.freq_err = entry_lin.freq_err
+                entry_mrg.int_cat_tag = -abs(entry_mrg.int_cat_tag)
+                
+            result.append(entry_mrg)
+        
+        # process other lin entries
+        ####
+        #cat_dict = self.__build_dict(cat_lst)
+        #egy_dict = self.__build_dict(egy_lst)
+        
+        #for entry_lin in lin_lst:
+            #if not entry_lin.qid() in cat_dict:
+                #entry_mrg = entry_lin.copy()
+                #entry_ref = result[0]
+                
+                #entry_mrg.int_cat_tag = -abs(entry_ref.int_cat_tag)
+                #entry_mrg.g 
+                
+                #result.append(entry_mrg)
+        
+        return result
+            
     
     
 
@@ -182,9 +220,6 @@ class SymmRotor(BasicModel):
                 result = [entry]
         else:
             result = [entry]
-                
-        #if(entry.freq == 73805.7356):
-        #    print( [x.qid() for x in result] )
             
         return result
 
@@ -208,9 +243,6 @@ class SymmRotor(BasicModel):
         result = []
         for x in ids:
             result.extend(dict_entries.getlist(x))
-        
-        #if(entry.freq == 73805.7356):
-        #    print( [x.qid() for x in result] )
         
         return result
             
