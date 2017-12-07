@@ -57,6 +57,8 @@ class BasicModel:
             splits = self._make_splits(dict_entries, cur)
         
             result2.extend(splits)
+            
+            dict_entries.update(self.__build_dict(splits))
         
         return result2
     
@@ -122,10 +124,10 @@ class SymmRotor(BasicModel):
         
         if isinstance(result, Line):
 
-            if(self.__spin_symm(result.q_upper) == "A"):
+            if(self.__spin_symm(result) == "A"):
                 qu = result.q_upper
                 ql = result.q_lower
-                ql['K'] = -qu['K']
+                ql['K'] = -sign(qu['K'])*abs(ql['K'])
                 result.q_lower = ql
             
             if(not result.log_I is None):
@@ -160,34 +162,37 @@ class SymmRotor(BasicModel):
         """docstring"""
         
         if isinstance(entry, Line):
-            if(self.__spin_symm(entry.q_upper) == "A"):
+            if(self.__spin_symm(entry) == "A"):
                 
                 result = []
                 
                 qu = entry.q_upper 
                 ql = entry.q_lower
                 
-                if(sign(qu['K']) == -sign(ql['K'])):
+                if(ql['K'] == 0 or qu['K'] == 0):
                     result.append(entry)
-                
-                Kl = abs(ql['K']) 
-                Ku = abs(qu['K'])
-                
-                ql['K'] = Kl
-                qu['K'] = -Ku
-                if not qid(qu, ql) in dict_entries:
-                    newline = entry.copy()
-                    newline.q_upper = qu
-                    newline.q_lower = ql
-                    result.append(newline)
+                else:
+                    if(sign(qu['K']) == -sign(ql['K'])):
+                        result.append(entry)
+                    
+                    Kl = abs(ql['K']) 
+                    Ku = abs(qu['K'])
+                    
+                    ql['K'] = Kl
+                    qu['K'] = -Ku
+                    if not qid(qu, ql) in dict_entries:
+                        newline = entry.copy()
+                        newline.q_upper = qu
+                        newline.q_lower = ql
+                        result.append(newline)
 
-                ql['K'] = -Kl
-                qu['K'] = Ku
-                if not qid(qu, ql) in dict_entries:
-                    newline = entry.copy()
-                    newline.q_upper = qu
-                    newline.q_lower = ql
-                    result.append(newline)        
+                    ql['K'] = -Kl
+                    qu['K'] = Ku
+                    if not qid(qu, ql) in dict_entries:
+                        newline = entry.copy()
+                        newline.q_upper = qu
+                        newline.q_lower = ql
+                        result.append(newline)        
             else:
                 result = [entry]
         else:
@@ -210,7 +215,7 @@ class SymmRotor(BasicModel):
         ids = [entry.qid()]
         
         if isinstance(entry, Line):
-            if(self.__spin_symm(entry.q_upper) == "A"):
+            if(self.__spin_symm(entry) == "A"):
                 # build "wrong parity" transition: differs only in q_lower
                 
                 qu = entry.q_upper 
@@ -259,15 +264,30 @@ class SymmRotor(BasicModel):
         self.custom_quanta_transform(entries, bind(self.__vl2pv, mapper=mapper))
     
     
-    def __spin_symm(self, quanta):
+    def __spin_symm_q(self, quanta):
         """get spin-statistical symmetry irr.rep. of state or line"""
         
-        if (abs(quanta['K']) - quanta.get('l', 0)) % 3 == 0:
+        if quanta['K'] == 0 and quanta.get('l', 0) % 3 == 0:
+            return 'E'        
+        elif (abs(quanta['K']) - quanta.get('l', 0)) % 3 == 0:
             return 'A'
         else:
             return 'E'             
             
-            
+    def __spin_symm(self, entry):
+        """get spin-statistical symmetry irr.rep. of state or line"""
         
+        if isinstance(entry, Line):             
+            upper = self.__spin_symm_q(entry.q_upper)
+            lower = self.__spin_symm_q(entry.q_lower)
+            if upper == "A" or lower == "A":
+                return 'A'
+            else:
+                return 'E'
+        elif isinstance(entry, State):
+            return self.__spin_symm_q(entry.q)
+        else:
+            raise Exception('Neither line nor state')
+            
     
 

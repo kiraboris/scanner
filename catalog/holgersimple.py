@@ -43,9 +43,12 @@ def make_mrg(cat_file, lin_file, egy_file, egy_file_new, mrg_file, fmt):
 
 # *** main part ***
 
-cat_id = "041509"
+jobs  = ['icat', 'mrg.lin', 'mrg']
+jobs2 = ['cat']
 
-jobs = ['icat', 'mrg.lin', 'mrg']
+looper = {"041505": jobs, "041509": jobs, "041510": jobs, "041511": jobs2, 
+          "041512": jobs2, "041513": jobs2
+         }
 
 qm = quantum_models.SymmRotor()    
 
@@ -58,30 +61,34 @@ transormation = bidict({
     8: (2, -2)  
 })
 
-if('icat' in jobs):
-    int_fmt = pickett_io.get_quantum_fmt("c%si.cat" % cat_id)
-elif('cat' in jobs):
-    int_fmt = pickett_io.get_quantum_fmt("c%s.cat"  % cat_id)
-else:
-    sys.exit()
+for cat_id in looper:
     
+    jobs = looper[cat_id]
 
-if('icat' in jobs): 
-    fix_file("c%si.cat" % cat_id, "c%si_new.cat"  % cat_id, int_fmt)
+    if('icat' in jobs):
+        int_fmt = pickett_io.get_quantum_fmt("c%si.cat" % cat_id)
+    elif('cat' in jobs):
+        int_fmt = pickett_io.get_quantum_fmt("c%s.cat"  % cat_id)
+    else:
+        sys.exit()
+        
 
-if('cat' in jobs): 
-    fix_file("c%s.cat"  % cat_id, "c%s_new.cat"  % cat_id, int_fmt)
+    if('icat' in jobs): 
+        fix_file("c%si.cat" % cat_id, "c%si_new.cat"  % cat_id, int_fmt)
 
-if('egy' in jobs): 
-    fix_file("c%s.egy"  % cat_id, "c%s_new.egy"  % cat_id, int_fmt)
-    
-if('mrg.lin' in jobs): 
-    fix_file("c%s_mrg.lin"  % cat_id, "c%s_mrg_new.lin"  % cat_id, int_fmt)
-    
-if('mrg' in jobs):
-    make_mrg("c%si_new.cat"  % cat_id, "c%s_mrg_new.lin"  % cat_id,
-             "c%s.egy"  % cat_id, "c%s_new.egy" % cat_id, 
-             "c%s_new.mrg"  % cat_id, int_fmt)
+    if('cat' in jobs): 
+        fix_file("c%s.cat"  % cat_id, "c%s_new.cat"  % cat_id, int_fmt)
+
+    if('egy' in jobs): 
+        fix_file("c%s.egy"  % cat_id, "c%s_new.egy"  % cat_id, int_fmt)
+        
+    if('mrg.lin' in jobs): 
+        fix_file("c%s_mrg.lin"  % cat_id, "c%s_mrg_new.lin"  % cat_id, int_fmt)
+        
+    if('mrg' in jobs):
+        make_mrg("c%si_new.cat"  % cat_id, "c%s_mrg_new.lin"  % cat_id,
+                 "c%s.egy"  % cat_id, "c%s_new.egy" % cat_id, 
+                 "c%s_new.mrg"  % cat_id, int_fmt)
 
 
 
