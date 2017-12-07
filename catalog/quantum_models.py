@@ -4,6 +4,7 @@
 #
 
 import math
+from numpy import sign
 from functools import partial as bind
 from werkzeug.datastructures import MultiDict
 
@@ -35,30 +36,29 @@ class BasicModel:
         # merge blends (assuption: entries partitioned into mergable classes)
         result  = []
         ignore  = set()
-        for i in range(0, len(entries)):
+        for cur in entries:
             
-            if entries[i].qid() in ignore:
+            if cur.qid() in ignore:
                 continue
             
-            blends  = self._find_mergable(dict_entries, entries[i])
+            blends  = self._find_mergable(dict_entries, cur)
             
             if(len(blends) > 1):
                 result.append(self._merge(blends))
                 ignore.update([x.qid() for x in blends])
             else:
-                result.append(entries[i])
-                ignore.add(entries[i].qid())
+                result.append(cur)
+                ignore.add(cur.qid())
                 
         # make splits        
-        entries = result
-        result  = []
-        for i in range(0, len(entries)):
+        result2  = []
+        for cur in result:
             
-            splits = self._make_splits(dict_entries, entries[i])
+            splits = self._make_splits(dict_entries, cur)
         
-            result.extend(splits)
+            result2.extend(splits)
         
-        return result
+        return result2
     
     
     def __build_dict(self, entries):
@@ -114,6 +114,125 @@ class BasicModel:
 class SymmRotor(BasicModel):
     """symmetric rotor with N (aka J), K and possibly v, l""" 
     
+    
+    def _merge(self, blends):
+        """docstring"""
+        
+        result = blends[0].copy()
+        
+        if isinstance(result, Line):
+
+            if(self.__spin_symm(result.q_upper) == "A"):
+                qu = result.q_upper
+                ql = result.q_lower
+                ql['K'] = -qu['K']
+                result.q_lower = ql
+            
+            if(not result.log_I is None):
+                I_bl = list(map(lambda x: 10 ** x.log_I, blends))
+                g_bl = list(map(lambda x: x.g, blends))
+                
+                result.log_I = math.log10(sum(I_bl))
+                
+                result.g = 0
+                for (I, g) in zip(I_bl, g_bl):
+                    if( math.isclose(I, max(I_bl)) ):
+                        result.g += g
+                #print (list(I_bl), list(g_bl))
+                        
+                        
+            elif(not result.g is None):
+                g_bl = map(lambda x: x.g, blends)
+                result.g = sum(g_bl)
+
+        elif isinstance(result, State): 
+            g_bl = map(lambda x: x.g, blends)
+            result.g = sum(g_bl)
+
+        else:
+            raise Exception("Neither line nor state")
+        
+        return result
+    
+    
+    
+    def _make_splits(self, dict_entries, entry):
+        """docstring"""
+        
+        if isinstance(entry, Line):
+            if(self.__spin_symm(entry.q_upper) == "A"):
+                
+                result = []
+                
+                qu = entry.q_upper 
+                ql = entry.q_lower
+                
+                if(sign(qu['K']) == -sign(ql['K'])):
+                    result.append(entry)
+                
+                Kl = abs(ql['K']) 
+                Ku = abs(qu['K'])
+                
+                ql['K'] = Kl
+                qu['K'] = -Ku
+                if not qid(qu, ql) in dict_entries:
+                    newline = entry.copy()
+                    newline.q_upper = qu
+                    newline.q_lower = ql
+                    result.append(newline)
+
+                ql['K'] = -Kl
+                qu['K'] = Ku
+                if not qid(qu, ql) in dict_entries:
+                    newline = entry.copy()
+                    newline.q_upper = qu
+                    newline.q_lower = ql
+                    result.append(newline)        
+            else:
+                result = [entry]
+        else:
+            result = [entry]
+        
+        # debug
+        #if math.isclose(entry.freq,  681589.6115 ):
+        #    print(len(result))
+        #    for x in result:
+        #        print(CatConverter.line2str(x))
+        
+            
+        return result
+
+    
+    
+    def _find_mergable(self, dict_entries, entry):
+        """docstring"""
+        
+        ids = [entry.qid()]
+        
+        if isinstance(entry, Line):
+            if(self.__spin_symm(entry.q_upper) == "A"):
+                # build "wrong parity" transition: differs only in q_lower
+                
+                qu = entry.q_upper 
+                ql = entry.q_lower
+            
+                ql['K'] = -(ql['K'])
+                
+                ids.append(qid(qu, ql))
+            
+        result = []
+        for x in ids:
+            result.extend(dict_entries.getlist(x))
+        
+        # debug
+        #if math.isclose(entry.freq,  681589.6115 ):
+        #    print(len(result))
+        #    for x in result:
+        #        print(CatConverter.line2str(x))
+        
+        return result
+            
+            
     def __pv2vl(self, quanta, mapper):
         """docstring"""
         
@@ -143,111 +262,10 @@ class SymmRotor(BasicModel):
     def __spin_symm(self, quanta):
         """get spin-statistical symmetry irr.rep. of state or line"""
         
-        if (quanta['K'] - quanta.get('l', 0)) % 3 == 0:
+        if (abs(quanta['K']) - quanta.get('l', 0)) % 3 == 0:
             return 'A'
         else:
-            return 'E'
-    
-    
-    def _merge(self, blends):
-        """docstring"""
-        
-        result = blends[0].copy()
-        
-        if isinstance(result, Line):
-
-            if(self.__spin_symm(result.q_upper) == "A"):
-                result.q_lower['K'] = -(result.q_upper['K'])
-            
-            if(not result.log_I is None):
-                I_bl = map(lambda x: 10 ** x.log_I, blends)
-                g_bl = map(lambda x: x.g, blends)
-                
-                result.log_I = math.log10(sum(I_bl))
-                
-                result.g = 0
-                for (I, g) in zip(I_bl, g_bl):
-                    if( I == max(I_bl) ):
-                        result.g += g
-                        
-            elif(not result.g is None):
-                g_bl = map(lambda x: x.g, blends)
-                result.g = sum(g_bl)
-
-        elif isinstance(result, State): 
-            g_bl = map(lambda x: x.g, blends)
-            result.g = sum(g_bl)
-
-        else:
-            raise Exception("Neigher line nor state")
-        
-        return result
-    
-    
-    
-    def _make_splits(self, dict_entries, entry):
-        """docstring"""
-        
-        if isinstance(entry, Line):
-            if(self.__spin_symm(entry.q_upper) == "A"):
-                
-                result = []
-                
-                qu = entry.q_upper 
-                ql = entry.q_lower
-                
-                if(ql['K'] == -(qu['K'])):
-                    result.append(entry)
-                
-                K = abs(ql['K']) # == abs(qu[K])
-                
-                ql['K'] = K
-                qu['K'] = -K
-                if not qid(qu, ql) in dict_entries:
-                    newline = entry.copy()
-                    newline.q_upper = qu
-                    newline.q_lower = ql
-                    result.append(newline)
-                
-                ql['K'] = -K
-                qu['K'] = K
-                if not qid(qu, ql) in dict_entries:
-                    newline = entry.copy()
-                    newline.q_upper = qu
-                    newline.q_lower = ql
-                    result.append(newline)        
-            else:
-                result = [entry]
-        else:
-            result = [entry]
-            
-        return result
-
-    
-    
-    def _find_mergable(self, dict_entries, entry):
-        """docstring"""
-        
-        ids = [entry.qid()]
-        if isinstance(entry, Line):
-            if(self.__spin_symm(entry.q_upper) == "A"):
-                # build "wrong parity" transition quanta
-                
-                qu = entry.q_upper 
-                ql = entry.q_lower
-            
-                ql['K'] = -(ql['K'])
-                
-                ids.append(qid(qu, ql))
-            
-        result = []
-        for x in ids:
-            result.extend(dict_entries.getlist(x))
-        
-        return result
-            
-            
-             
+            return 'E'             
             
             
         

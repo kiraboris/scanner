@@ -125,10 +125,12 @@ class Line(object):
     q_lower = property(_get_ql, _set_ql)
     int_fmt = property(_get_fmt, _set_fmt)
 
-def qid(*quanta):
-    """stand-alone function to create comparable quantum IDs"""
+def qid(q1, q2=None):
+    """stand-alone function to create haschable quantum IDs
+       used for dictionary lookup. q1, q2 are DICTS like also in other methods
+    """
     
-    return tuple([frozenset(x.items()) for x in quanta])
-
-
-
+    if q2 is None:
+        return frozenset(q1.items())
+    else:
+        return (frozenset(q1.items()), frozenset(q2.items()))
