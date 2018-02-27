@@ -3,7 +3,7 @@
 
 import bidict
 
-from models import Line, State, Rotor
+from models import Line, State
 
 
 def save_int(str_filename, obj_rotor, 
@@ -25,7 +25,7 @@ def save_int(str_filename, obj_rotor,
 def save_par_var(str_filename, obj_rotor):
     
     if all([x in self.params for x in ['A', 'B', 'C', '-DJ', '-DJK', '-DK']]):
-        __save_parvar_asymm_simple(obj_rotor)
+        _save_parvar_asymm_simple(obj_rotor)
     else:
         raise NotImplementedError
         
@@ -58,7 +58,7 @@ def get_fit_rms(str_filename):
     
     
 
-def __save_parvar_asymm_simple(rotor):
+def _save_parvar_asymm_simple(rotor):
     
     def signum(flag):
         if flag:
@@ -90,7 +90,7 @@ def __save_parvar_asymm_simple(rotor):
 
 
 
-def __quanta_headers(int_fmt):
+def quanta_headers(int_fmt):
     """returns list of quantum number names for a Pickett code"""
     
     int_c = int_fmt  % 10
@@ -156,7 +156,7 @@ class CatConverter:
                 str_qu = CatConverter.__decode_quant(str_qu)
                 str_ql = CatConverter.__decode_quant(str_ql)
                 
-                headers = __quanta_headers(int_fmt)
+                headers = quanta_headers(int_fmt)
                 dict_ql[headers[i]] = int(str_ql)
                 dict_qu[headers[i]] = int(str_qu)
             else:
@@ -171,14 +171,14 @@ class CatConverter:
         INT_C = 6
         str_quanta = ""    
         
-        headers = __quanta_headers(int_fmt)[0:len(dict_qu)]
+        headers = quanta_headers(int_fmt)[0:len(dict_qu)]
         for str_q in ["%2d" % dict_qu[x] for x in headers]:
             str_q = CatConverter.__encode_quant(str_q)
             str_quanta += str_q   
         for i in range(len(headers), INT_C):
             str_quanta += "  "
         
-        headers = __quanta_headers(int_fmt)[0:len(dict_ql)]
+        headers = quanta_headers(int_fmt)[0:len(dict_ql)]
         for str_q in ["%2d" % dict_ql[x] for x in headers]:
             str_q = CatConverter.__encode_quant(str_q)
             str_quanta += str_q   
@@ -243,7 +243,7 @@ class EgyConverter:
         """
         dict_q = {}
         
-        headers = __quanta_headers(int_fmt)
+        headers = quanta_headers(int_fmt)
         INT_C = min(int_fmt % 10, len(str_quanta) // 3)
         for i in range(0, INT_C):
             str_q = str_quanta[i*3 : (i+1)*3]
@@ -257,7 +257,7 @@ class EgyConverter:
 
         str_quanta = ""    
         
-        headers = __quanta_headers(int_fmt)[0:len(dict_q)]
+        headers = quanta_headers(int_fmt)[0:len(dict_q)]
         for str_q in ["%3d" % dict_q[x] for x in headers]:
             str_quanta += str_q   
         
@@ -315,7 +315,7 @@ class LinConverter:
             str_qu = str_quanta[i*3 : (i+1)*3]
             str_ql = str_quanta[(i+INT_C)*3: (i+INT_C+1)*3]
             
-            headers = __quanta_headers(int_fmt)
+            headers = quanta_headers(int_fmt)
             dict_ql[headers[i]] = int(str_ql)
             dict_qu[headers[i]] = int(str_qu)
         
@@ -329,13 +329,13 @@ class LinConverter:
         INT_C      = int_fmt % 10
         str_quanta = ""   
         
-        headers = __quanta_headers(int_fmt)[0:len(dict_qu)]
+        headers = quanta_headers(int_fmt)[0:len(dict_qu)]
         for str_q in ["%3d" % dict_qu[x] for x in headers]:
             str_quanta += str_q   
         for i in range(len(headers), INT_C):
             str_quanta += "   "
         
-        headers = __quanta_headers(int_fmt)[0:len(dict_ql)]
+        headers = quanta_headers(int_fmt)[0:len(dict_ql)]
         for str_q in ["%3d" % dict_ql[x] for x in headers]:
             str_quanta += str_q   
         for i in range(len(headers), INT_C):
@@ -422,9 +422,12 @@ def load_lin(str_filename, int_quanta_fmt):
     
     lst_lines  = []
     with open(str_filename, 'r') as f:
-        for str_line in f:
-            obj = LinConverter.str2line(str_line, int_quanta_fmt)
-            lst_lines.append(obj)
+        for i, str_line in enumerate(f):
+            try:
+                obj = LinConverter.str2line(str_line, int_quanta_fmt)
+                lst_lines.append(obj)
+            except(ValueError):
+                print ('Warning: skipping bad line %i' % (i+1)) 
         
     return lst_lines
 
@@ -460,4 +463,40 @@ def save_egy(str_filename, lst_states):
             f.write(textline+"\n")
 
 
+def load(str_filename, int_quanta_fmt):
+    """docstring"""
+    
+    extension = str_filename[-3:]
+    
+    if( extension == "cat" or extension == "mrg" ):
+        return load_cat(str_filename)
+        
+    if( extension == "egy" ):
+        return load_egy(str_filename, int_quanta_fmt)
+        
+    if( extension == "lin" ):
+        return load_lin(str_filename, int_quanta_fmt)
 
+
+
+def save(str_filename, lst_entries):
+    """docstring"""
+    
+    extension = str_filename[-3:]
+    
+    if( extension == "cat" or extension == "mrg" ):
+        save_cat(str_filename, lst_entries)
+        
+    if( extension == "egy" ):
+        save_egy(str_filename, lst_entries)
+        
+    if( extension == "lin" ):
+        save_lin(str_filename, lst_entries)
+        
+        
+        
+        
+        
+        
+        
+        
