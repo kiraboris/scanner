@@ -1,7 +1,5 @@
 # python 3
 #
-# classes: State, Line, 
-#
 
 import copy
 
@@ -125,6 +123,7 @@ class Line(object):
     q_lower = property(_get_ql, _set_ql)
     int_fmt = property(_get_fmt, _set_fmt)
 
+
 def qid(q1, q2=None):
     """stand-alone function to create haschable quantum IDs
        used for dictionary lookup. q1, q2 are DICTS like also in other methods
@@ -134,3 +133,40 @@ def qid(q1, q2=None):
         return frozenset(q1.items())
     else:
         return (frozenset(q1.items()), frozenset(q2.items()))
+
+
+class RotorParameter(object):
+    
+    def __init__(self, code, value=1.0, error=float('inf')):
+        self.code = code
+        self.value = value
+        self.error = error
+        self.flag_fit = False
+
+
+class BasicRotor:
+    
+    def Q(self, T):
+        return 30000
+        
+                
+class AsymRotor(BasicRotor):
+    
+    def __init__(self):
+        self.params = {}
+    
+    
+    def Q(self, T): 
+        if all([x in self.params for x in ['A', 'B', 'C']]):
+            Qrot = ((5.3311 * 10**(6)) * (float(T)**(1.5)) * 
+                    (float(self.params['A']) *
+                     float(self.params['B']) *
+                     float(self.params['C']))**(-0.5))
+        else:
+            Qrot = BasicRotor.Q(self, T)
+            
+        return Qrot
+    
+    
+    
+

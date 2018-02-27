@@ -1,35 +1,112 @@
 # python 3
 #
-# classes:   CatConverter, EgyConverter, LinConverter
-#
-# functions: load, save, get_quantum_fmt
-#
 
-from bidict import bidict
+import bidict
 
-from basic_structs import Line, State
+from models import Line, State, Rotor
 
-class PickettConverter:
 
-    @staticmethod
-    def _quanta_headers(int_fmt):
-        """returns list of quantum number names for a Pickett code"""
+def save_int(str_filename, obj_rotor, 
+            J_min=0, J_max=20, inten1=-10.0, max_freq=100.0, temperature=300.0):
+    
+    input_file = ""
+    input_file += "%s \n" % obj_rotor.name
+    input_file += ("0  91  %f  %3d  %3d  %f  %f  %f  %f\n" % 
+        (obj_rotor.Q(temperature), J_min, J_max, inten, inten,
+         max_freq, temperature))
+    input_file += " 001  %f \n" % obj_rotor.u_A
+    input_file += " 002  %f \n" % obj_rotor.u_B
+    input_file += " 003  %f \n" % obj_rotor.u_C
+
+    with open(str_filename, "w") as fh:
+        fh.write(input_file)
+
+
+def save_par_var(str_filename, obj_rotor):
+    
+    if all([x in self.params for x in ['A', 'B', 'C', '-DJ', '-DJK', '-DK']]):
+        __save_parvar_asymm_simple(obj_rotor)
+    else:
+        raise NotImplementedError
         
-        int_c = int_fmt  % 10
-        int_Q = int_fmt // 100
-        
-        DICT_MAPPING = {2:  ['N', 'K', 'J', 'F1', 'F2', 'F'],
-                        13: ['N', 'K', 'v', 'J', 'F1', 'F']
-                       }
-                       
-        return DICT_MAPPING[int_Q][0:int_c]
+
+
+def load_var_into_model(str_filename, obj_rotor):
+        fh_var = open("default%s.var"%(str(file_num)))
+        for line in fh_var:
+            if line.split()[0] == "10000":
+                temp_A = float(line.split()[1])
+                const_list.append("%.3f" %temp_A)
+            if line.split()[0] == "20000":
+                temp_B = float(line.split()[1])
+                const_list.append("%.3f" %temp_B)
+            if line.split()[0] == "30000":
+                temp_C = float(line.split()[1])
+                const_list.append("%.3f" %temp_C)
+    
+
+def get_fit_rms(str_filename):
+    
+    rms_fit = None
+    with open(str_filename) as f:
+        for line in reversed(f.readlines()):
+            line = line.strip()
+            if line[11:14] == "RMS":
+                rms_fit = float(line[21:32]) 
+                
+    return rms_fit
+    
+    
+
+def __save_parvar_asymm_simple(rotor):
+    
+    def signum(flag):
+        if flag:
+            return '+'
+        else:
+            return '-'
+    
+    input_file = ""
+    input_file += "Molecule                                        Thu Jun 03 17:45:45 2010\n"
+    input_file += "   6  430   51    0    0.0000E+000    1.0000E+005    1.0000E+000 1.0000000000\n"
+    input_file +="s   1  1  0  99  0  1  1  1  1  -1   0\n"
+    input_file += "           10000  %.15e 1.0E%s100 \n" \
+        %(rotor.params['A'].value, signum(rotor.params['A'].flag_fit)) 
+    input_file += "           20000  %.15e 1.0E%s100 \n" \
+        %(rotor.params['B'].value, signum(rotor.params['B'].flag_fit))
+    input_file += "           30000  %.15e 1.0E%s100 \n" \
+        %(rotor.params['C'].value, signum(rotor.params['C'].flag_fit))
+    input_file += "             200  %.15e 1.0E%s100 \n" \
+        %(-rotor.params['-DJ'].value, signum(rotor.params['-DJ'].flag_fit))
+    input_file += "            1100  %.15e 1.0E%s100 \n" \
+        %(-rotor.params['-DJK'].value, signum(rotor.params['-DJK'].flag_fit)) 
+    input_file += "            2000  %.15e 1.0E%s100 \n" \
+        %(-rotor.params['-DK'].value, signum(rotor.params['-DK'].flag_fit))
+    
+    fh_var = open("output.var",'w')
+    fh_var.write(input_file)
+    fh_var.close()
 
 
 
-class CatConverter(PickettConverter):
+
+def __quanta_headers(int_fmt):
+    """returns list of quantum number names for a Pickett code"""
+    
+    int_c = int_fmt  % 10
+    int_Q = int_fmt // 100
+    
+    DICT_MAPPING = {2:  ['N', 'K', 'J', 'F1', 'F2', 'F'],
+                    13: ['N', 'K', 'v', 'J', 'F1', 'F']
+                   }
+                   
+    return DICT_MAPPING[int_Q][0:int_c]
+
+
+class CatConverter:
     """Manages entries of .cat files"""
     
-    mapper=bidict([ ('a', '-1'), ('b', '-2'), ('c', '-3'), ('d', '-4'), 
+    mapper=bidict.bidict([ ('a', '-1'), ('b', '-2'), ('c', '-3'), ('d', '-4'), 
                 ('e', '-5'), ('P', '25'), ('f', '-6'), ('g', '-7'),
                 ('h', '-8'), ('i', '-9'), ('j', '-10'), ('k', '-11'),
                 ('l', '-12'), ('m', '-13'), ('n', '-14'), ('o', '-15'),
@@ -79,7 +156,7 @@ class CatConverter(PickettConverter):
                 str_qu = CatConverter.__decode_quant(str_qu)
                 str_ql = CatConverter.__decode_quant(str_ql)
                 
-                headers = CatConverter._quanta_headers(int_fmt)
+                headers = __quanta_headers(int_fmt)
                 dict_ql[headers[i]] = int(str_ql)
                 dict_qu[headers[i]] = int(str_qu)
             else:
@@ -94,14 +171,14 @@ class CatConverter(PickettConverter):
         INT_C = 6
         str_quanta = ""    
         
-        headers = EgyConverter._quanta_headers(int_fmt)[0:len(dict_qu)]
+        headers = __quanta_headers(int_fmt)[0:len(dict_qu)]
         for str_q in ["%2d" % dict_qu[x] for x in headers]:
             str_q = CatConverter.__encode_quant(str_q)
             str_quanta += str_q   
         for i in range(len(headers), INT_C):
             str_quanta += "  "
         
-        headers = EgyConverter._quanta_headers(int_fmt)[0:len(dict_ql)]
+        headers = __quanta_headers(int_fmt)[0:len(dict_ql)]
         for str_q in ["%2d" % dict_ql[x] for x in headers]:
             str_q = CatConverter.__encode_quant(str_q)
             str_quanta += str_q   
@@ -157,7 +234,7 @@ class CatConverter(PickettConverter):
 
 
 
-class EgyConverter(PickettConverter):
+class EgyConverter:
     """Manages entries of .egy files."""
     
     @staticmethod
@@ -166,7 +243,7 @@ class EgyConverter(PickettConverter):
         """
         dict_q = {}
         
-        headers = EgyConverter._quanta_headers(int_fmt)
+        headers = __quanta_headers(int_fmt)
         INT_C = min(int_fmt % 10, len(str_quanta) // 3)
         for i in range(0, INT_C):
             str_q = str_quanta[i*3 : (i+1)*3]
@@ -180,7 +257,7 @@ class EgyConverter(PickettConverter):
 
         str_quanta = ""    
         
-        headers = EgyConverter._quanta_headers(int_fmt)[0:len(dict_q)]
+        headers = __quanta_headers(int_fmt)[0:len(dict_q)]
         for str_q in ["%3d" % dict_q[x] for x in headers]:
             str_quanta += str_q   
         
@@ -221,7 +298,7 @@ class EgyConverter(PickettConverter):
 
 
 
-class LinConverter(PickettConverter):
+class LinConverter:
     """Manages entries of .lin files"""
     
     @staticmethod
@@ -238,7 +315,7 @@ class LinConverter(PickettConverter):
             str_qu = str_quanta[i*3 : (i+1)*3]
             str_ql = str_quanta[(i+INT_C)*3: (i+INT_C+1)*3]
             
-            headers = LinConverter._quanta_headers(int_fmt)
+            headers = __quanta_headers(int_fmt)
             dict_ql[headers[i]] = int(str_ql)
             dict_qu[headers[i]] = int(str_qu)
         
@@ -252,13 +329,13 @@ class LinConverter(PickettConverter):
         INT_C      = int_fmt % 10
         str_quanta = ""   
         
-        headers = LinConverter._quanta_headers(int_fmt)[0:len(dict_qu)]
+        headers = __quanta_headers(int_fmt)[0:len(dict_qu)]
         for str_q in ["%3d" % dict_qu[x] for x in headers]:
             str_quanta += str_q   
         for i in range(len(headers), INT_C):
             str_quanta += "   "
         
-        headers = LinConverter._quanta_headers(int_fmt)[0:len(dict_ql)]
+        headers = __quanta_headers(int_fmt)[0:len(dict_ql)]
         for str_q in ["%3d" % dict_ql[x] for x in headers]:
             str_quanta += str_q   
         for i in range(len(headers), INT_C):
@@ -319,7 +396,7 @@ def get_quantum_fmt(str_filename):
     return int_quanta_fmt
 
 
-def _load_cat(str_filename):
+def load_cat(str_filename):
     """Read from .cat"""
     
     lst_lines  = []
@@ -331,7 +408,7 @@ def _load_cat(str_filename):
     return lst_lines
 
 
-def _save_cat(str_filename, lst_lines):
+def save_cat(str_filename, lst_lines):
     """docstring"""
     
     with open(str_filename, 'w') as f:
@@ -340,7 +417,7 @@ def _save_cat(str_filename, lst_lines):
             f.write(textline+"\n")
 
 
-def _load_lin(str_filename, int_quanta_fmt):
+def load_lin(str_filename, int_quanta_fmt):
     """Read from .cat"""
     
     lst_lines  = []
@@ -352,7 +429,7 @@ def _load_lin(str_filename, int_quanta_fmt):
     return lst_lines
 
 
-def _save_lin(str_filename, lst_lines):
+def save_lin(str_filename, lst_lines):
     """docstring"""
     
     with open(str_filename, 'w') as f:
@@ -362,7 +439,7 @@ def _save_lin(str_filename, lst_lines):
 
 
 
-def _load_egy(str_filename, int_quanta_fmt):
+def load_egy(str_filename, int_quanta_fmt):
     """Read from .egy"""
     
     lst_states  = []
@@ -374,7 +451,7 @@ def _load_egy(str_filename, int_quanta_fmt):
     return lst_states
     
 
-def _save_egy(str_filename, lst_states):
+def save_egy(str_filename, lst_states):
     """docstring"""
     
     with open(str_filename, 'w') as f:
@@ -383,35 +460,4 @@ def _save_egy(str_filename, lst_states):
             f.write(textline+"\n")
 
 
-
-def load(str_filename, int_quanta_fmt):
-    """docstring"""
-    
-    extension = str_filename[-3:]
-    
-    if( extension == "cat" or extension == "mrg" ):
-        return _load_cat(str_filename)
-        
-    if( extension == "egy" ):
-        return _load_egy(str_filename, int_quanta_fmt)
-        
-    if( extension == "lin" ):
-        return _load_lin(str_filename, int_quanta_fmt)
-
-
-
-def save(str_filename, lst_entries):
-    """docstring"""
-    
-    extension = str_filename[-3:]
-    
-    if( extension == "cat" or extension == "mrg" ):
-        _save_cat(str_filename, lst_entries)
-        
-    if( extension == "egy" ):
-        _save_egy(str_filename, lst_entries)
-        
-    if( extension == "lin" ):
-        _save_lin(str_filename, lst_entries)
-        
 
