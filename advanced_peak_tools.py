@@ -1,6 +1,8 @@
 from collections import namedtuple
 import numpy as np
+import sys
 
+import pint
 import lmfit
 import lmfit.models as lmfit_models
 
@@ -11,31 +13,32 @@ class LineProfileSettings(StructFactory.make(
     'gaussian_fwhm_estimate',
     'lorentzian_fwhm_estimate',
     'derivative_order'
-    ): pass
+    'data_units'
+    )): pass
 
 
-def voigt_param_estimate(line_profile_settings):
+def voigt_param_estimate(settings):
     
-    fL = line_profile_settings.lorentzian_fwhm_estimate
-    fG = line_profile_settings.gaussian_fwhm_estimate
+    fL = settings.lorentzian_fwhm_estimate.to(settings.data_units).magnitude
+    fG = settings.gaussian_fwhm_estimate.to(settings.data_units).magnitude
     
     fwhm = 0.5*fL + (0.2*fL**2 + fG**2)**0.5
     frac = fL / (fG + fL)
     
-    return namedtuple("tup_vpe", "fwhm", "frac")(fwhm=fwhm, frac=frac)
+    return {'fwhm': fwhm, 'fraction': frac}
     
 
-def make_slices(data_ranges, line_profile_settings, step_nw = 1, span_nw = 3):
+def step_and_span(settings, step_nw =1.0, span_nw = 3.0):
     
-    estimate = voigt_fwhm_estimate(line_profile_settings)
+    estimate = voigt_param_estimate(settings)
     
-    step = step_nw * estimate.fwhm
-    span = span_nw * estimate.fwhm
+    step = step_nw * estimate['fwhm']
+    span = span_nw * estimate['fwhm']
     
-    return data_ranges.slices(step, span, dim=0)
+    return step, span
     
 
-def find_peaks(data, line_profile_settings):
+def find_peaks(data, settings):
     
     data_ranges = Ranges(arrays=[data])
     
@@ -44,16 +47,32 @@ def find_peaks(data, line_profile_settings):
     base_model = lmfit_models.LinearModel()
     model = peak_model + base_model
     
-    estimate = voigt_fwhm_estimate(line_profile_settings)
-    
-    params_guess = model.make_params(amplitude=1.0, 
-                                     fwhm=estimate.fwhm, fraction=estimate.frac) 
+    estimate = voigt_param_estimate(settings)
+    params = model.make_params() 
+    params['fwhm'].set(value=estimate['fwhm'], 
+        min=0.2*estimate['fwhm'], max=5*estimate['fwhm'])
+    params['fraction'].set(value=estimate['fraction'], 
+        min=0.0, max=1.0)
     
     peaklist = []
-    for data_slice in make_slices(data_ranges, line_profile_settings):
-        xxx = data_slice[:, 0]
-        yyy = data_slice[:, 1]
-        fit_out = model.fit(yyy, params_guess, x=xxx)
+    print('Searching for peaks...')
+    nslices = data_ranges.nslices(*step_and_span(settings), dim=0)
+    slices  = data_ranges.slices(*step_and_span(settings), dim=0)
+    
+    for i, d in enumerate(slices):
+        xxx = d[:, 0]
+        yyy = d[:, 1]
+        
+        params['center'].set(value=((xxx[0] + xxx[-1]) / 2),
+            min=xxx[0], max=xxx[-1])
+        params['amplitude'].set(value=np.mean(yyy), 
+            min=0.0, max=np.max(yyy)-np.min(yyy))
+                            
+        fit_out = model.fit(yyy, params, 
+                            x=xxx, fit_kws={'maxfev': 15})
+                            
+        print("%i%%" % int(i / float(nslices) * 100), end='\r')
+        sys.stdout.flush()
         peaklist.append(fit_out)
         
     return peaklist
@@ -62,18 +81,30 @@ def find_peaks(data, line_profile_settings):
 def test():
     # test example for emission spectra
     
+    units = pint.UnitRegistry('units.txt')
+    
     settings = LineProfileSettings() 
-
-    settings.gaussian_fwhm_estimate   = 100  # kHz
-    settings.lorentzian_fwhm_estimate = 10   # kHz
+    
+    settings.data_units = units.GHz
+    settings.gaussian_fwhm_estimate   = 400 * units.kHz
+    settings.lorentzian_fwhm_estimate = 200 * units.kHz
     settings.derivative_order = 0
     
-    folder = "./"
-    filename = folder + suffix + '340K_norm_mean_spec.txt'
+    folder = "/home/borisov/projects/work/emission/simple_model/"
+    filename = folder + 'RT_norm_mean_spec.txt'
     
     data = np.loadtxt(filename)
     
     peaklist = find_peaks(data, settings)
+    
+    peaklist_sorted = sorted(peaklist, 
+        key=lambda p: float(p.params['amplitude']), reverse=True)
+
+    print('')        
+    print('30 most instense peaks:')   
+    for p in peaklist_sorted[:30]:    
+        print(float(p.params['amplitude']))
+        
     
     
 if __name__ == '__main__':

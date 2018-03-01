@@ -1,6 +1,8 @@
 # python 
 #
 
+import numpy as np
+import sys
 
 class StructFactory:
     
@@ -22,7 +24,7 @@ class StructFactory:
         # instances of new type get a constructor
         def init_instance(instance, *args, **kwargs):
             
-            for k,v in field_names_with_default.items(): # set captured defaults
+            for k,v in field_names_with_def.items(): # set captured defaults
                 setattr(instance, k, v)
 
             for i in range(len(args)):  # init values for captured field names
@@ -43,28 +45,44 @@ class Ranges:
 
         self.__arrs = arrays
     
-    def slices(self, span, step, dim=None)
+    def nslices(self, step, span, dim=None):
+        
+        nbins = 0
+        for a in self.__arrs:
+            left = 0
+            right = 0
+
+            if dim is None:
+                xa = a    
+            else:
+                xa = a[:, dim]
+            
+            nbins += ((xa[-1]-span/2) - (xa[0]+span/2)) / step
+            
+        return int(nbins)
+
+    def slices(self, step, span, dim=None):
         """'span': size of slice,
            'step': offset of each next slice from begin of previous one"""
         
-        if dim is None:
-            xarrs = self.__arrs    
-        else:
-            xarrs = self.__arrs[:, dim]
-        
-        bins = [np.arange(a[0]+span/2, a[-1]-span/2, step) for a in xarrs]
-        
-        def slice_generator():
-            for xa, a, b in zib(xarrs, self.__arrs, bins):
-                left = 0
-                right = 0
-                for x in b:
-                    while xa[left]  < x - span/2: left  = left  + 1
-                    while xa[right] < x + span/2: right = right + 1
-                    
-                    if dim is None:
-                        yield a[left:right]
-                    else:
-                        yield a[left:right, :]
-                    
-        return slice_generator
+       
+        for a in self.__arrs:
+            left = 0
+            right = 0
+            
+            if dim is None:
+                xa = a    
+            else:
+                xa = a[:, dim]
+            
+            bins = np.arange(xa[0]+span/2, xa[-1]-span/2, step)
+
+            for x in bins:
+                while xa[left]  <= x - span/2.0: left  = left  + 1
+                while xa[right] <  x + span/2.0: right = right + 1
+                
+                if dim is None:
+                    yield a[left:right]
+                else:
+                    yield a[left:right, :]
+
