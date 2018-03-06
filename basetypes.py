@@ -68,7 +68,7 @@ class Ranges:
             return max([np.max(a[:, dim]) - np.min(a[:, dim]) 
                 for a in self.__arrs])
             
-    def nslices(self, step, span, dim=None):
+    def nslices(self, step, span, nmipmap=0, dim=None):
         
         nbins = 0
         for a in self.__arrs:
@@ -80,11 +80,11 @@ class Ranges:
             else:
                 xa = a[:, dim]
             
-            nbins += ((xa[-1]-span/2) - (xa[0]+span/2)) / step
+            nbins += (((xa[-1]-span/2) - (xa[0]+span/2)) / step) * nmipmap
             
         return int(nbins)
 
-    def slices(self, step, span, dim=None):
+    def slices(self, step, span, nmipmap=0, dim=None):
         """'span': size of slice,
            'step': offset of each next slice from begin of previous one"""
         
@@ -104,8 +104,16 @@ class Ranges:
                 while xa[left]  <= x - span/2.0: left  = left  + 1
                 while xa[right] <  x + span/2.0: right = right + 1
                 
-                if dim is None:
-                    yield a[left:right]
-                else:
-                    yield a[left:right, :]
+                mleft = left
+                mright = right
+                for n in range(0, nmipmap):
+                
+                    if dim is None:
+                        yield a[mleft:mright]
+                    else:
+                        yield a[mleft:mright, :]
+                    
+                    mleft  += int((mright - mleft) / 4)
+                    mright -= int((mright - mleft) / 4)
+                    
 

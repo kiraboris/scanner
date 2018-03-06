@@ -11,7 +11,7 @@ from basetypes import Ranges, Units, DIM
 
 def step_and_span(settings):
     
-    step = settings.max_fwhm.to(settings.data_units).magnitude
+    step = settings.max_fwhm.to(settings.data_units).magnitude 
         
     span = 4.0 * settings.max_fwhm.to(settings.data_units).magnitude
     
@@ -45,8 +45,8 @@ def find_peaks(data_ranges, settings, fev_per_epoch = 16, nepochs=8):
     local_baseline_model = lmfit_models.LinearModel()
     biased_peak_model = peak_model + local_baseline_model
     
-    nslices = data_ranges.nslices(*step_and_span(settings), dim=DIM.X)
-    slices  = data_ranges.slices(*step_and_span(settings), dim=DIM.X)
+    nslices = data_ranges.nslices(*step_and_span(settings), dim=DIM.X, nmipmap=1)
+    slices  = data_ranges.slices(*step_and_span(settings), dim=DIM.X, nmipmap=1)
 
     peaklist = []    
     print('Searching for peaks...')
@@ -82,7 +82,7 @@ def find_peaks(data_ranges, settings, fev_per_epoch = 16, nepochs=8):
             fit_out.xxx = xxx + offset
             peaklist.append(fit_out)
                                 
-        print("%i%%" % int(i / float(nslices) * 100), end='\r')
+        print("%3.1f%%" % (float(i) / float(nslices) * 100.0), end='\r')
         sys.stdout.flush()
         
     return peaklist
@@ -97,14 +97,14 @@ def test():
     settings = LineProfileSettings() 
     settings.data_units       = units.GHz
     settings.min_fwhm         = 0.05 * units.MHz
-    settings.max_fwhm         = 1.0 * units.MHz
+    settings.max_fwhm         = 1.5 * units.MHz
     settings.min_height       = 0.0005
     settings.derivative_order = 0
     
-    folder = "/home/borisov/projects/work/emission/simple_model/"
-    filename = folder + 'RT_norm_mean_spec.txt'
+    folder = "/home/borisov/projects/work/emission/magix/"
+    filename = folder + 'avg55_baseline.txt'  # '340K_norm_mean_spec.txt'
     
-    data = np.loadtxt(filename)
+    data = np.loadtxt(filename) # [4000:6500, :]
     
     data_ranges = Ranges(arrays=[data])
     
