@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import sys
 
+from bisect import bisect_left
 import lmfit.models as lmfit_models
 
 from basetypes import Ranges, Units, DIM 
@@ -80,6 +81,7 @@ def find_peaks(data_ranges, settings, fev_per_epoch = 16, nepochs=8):
         # result of peak guess and fit
         if accept_peak(fit_out, settings):
             fit_out.xxx = xxx + offset
+            fit_out.params['center'].value += offset
             peaklist.append(fit_out)
                                 
         print("%3.1f%%" % (float(i) / float(nslices) * 100.0), end='\r')
@@ -87,6 +89,24 @@ def find_peaks(data_ranges, settings, fev_per_epoch = 16, nepochs=8):
         
     return peaklist
         
+
+
+def extract_peaks(peaklist, xxx):
+    
+    yyy = np.zeros(xxx.shape)
+    ny  = np.zeros(xxx.shape)
+    
+    for p in peaklist:
+        index = bisect_left(xxx, p.params['center'])
+        yyy[index] += p.params['height']
+        ny[index] += 1
+    
+    for i in range(0, len(xxx)):
+        if ny[index] > 0:
+            yyy[index] = yyy[index] / ny[index]
+    
+    return yyy
+
 
 def test():
     """test example for emission spectra"""
@@ -101,29 +121,25 @@ def test():
     settings.min_height       = 0.0005
     settings.derivative_order = 0
     
-    folder = "/home/borisov/projects/work/emission/magix/"
-    filename = folder + 'avg55_baseline.txt'  # '340K_norm_mean_spec.txt'
+    folder = "/home/borisov/projects/work/emission/simple_model/"
+    filename = folder + '340K_norm_mean_spec.txt' # 'avg55_baseline.txt'
     
-    data = np.loadtxt(filename) # [4000:6500, :]
+    data = np.loadtxt(filename)[4000:6500, :]
     
     data_ranges = Ranges(arrays=[data])
     
     peaklist = find_peaks(data_ranges, settings)
     
-    
-    # output
-    peaklist_sorted = sorted(peaklist, 
-        key=lambda p: float(p.params['amplitude']), reverse=True)
-
-    print('')         
-    for p in peaklist_sorted:    
-        print(float(p.params['amplitude']),float(p.params['center']) )
+    xxx = data[:, 0]
+    obs = data[:, 1]
+    calc = extract_peaks(peaklist, xxx)
         
     f1 = plt.figure()
     ax1 = f1.add_subplot(111)
-    ax1.plot(data[:, 0], data[:, 1], color = 'k', lw=1)
-    for p in peaklist_sorted: 
-        ax1.plot(p.xxx, p.best_fit, color = 'r', lw=2)
+    ax1.plot(xxx, obs,  color = 'k', lw=1)
+    ax1.plot(xxx, calc, color = 'r', lw=2)
+    #for p in peaklist: 
+        #ax1.plot(p.xxx, p.best_fit, color = 'r', lw=2)
 
     plt.show()
     plt.close()
