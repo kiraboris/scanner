@@ -27,9 +27,13 @@ def find_peaks(data_ranges, settings, fev_per_epoch = 16, nepochs=8):
     
     # fidelity test for peak candidates 
     def accept_peak(peak):
-        flag1 = np.max(peak.best_fit) - np.min(peak.best_fit) > 2 * np.std(yyy)
-        flag2 = (peak.params['fwhm'] > 
-            settings.resolution.to(settings.data_units).magnitude)
+        
+        # height of canditate greater than threshold
+        flag1 = (np.max(peak.best_fit) - np.min(peak.best_fit) > 
+            settings.min_height)
+            
+        # candidate has a maximum
+        flag2 = (peak.xxx[0] < peak.params['center'] < peak.xxx[-1])
             
         return flag1 and flag2
     
@@ -60,6 +64,7 @@ def find_peaks(data_ranges, settings, fev_per_epoch = 16, nepochs=8):
         for n in range(0, nepochs):
             fit_out = biased_peak_model.fit(yyy, params, x = xxx,
                                             fit_kws = scipy_leastsq_settings)
+            fit_out.xxx = xxx
             params = fit_out.params
             if converged_peak(fit_out): 
                 break
@@ -90,6 +95,7 @@ def test():
     settings.min_fwhm         = 0.2 * units.MHz
     settings.max_fwhm         = 0.8 * units.MHz
     settings.resolution       = 70 * units.kHz
+    settings.min_height       = 0.001
     settings.derivative_order = 0
     
     folder = "/home/borisov/projects/work/emission/simple_model/"
