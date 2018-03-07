@@ -80,7 +80,7 @@ class Ranges:
             else:
                 xa = a[:, dim]
             
-            nbins += (((xa[-1]-span/2) - (xa[0]+span/2)) / step) * nmipmap
+            nbins += (((xa[-1]-span/2) - (xa[0]+span/2)) / step) * (nmipmap + 1)
             
         return int(nbins)
 
@@ -106,7 +106,7 @@ class Ranges:
                 
                 mleft = left
                 mright = right
-                for n in range(0, nmipmap):
+                for n in range(0, nmipmap + 1):
                 
                     if dim is None:
                         yield a[mleft:mright]

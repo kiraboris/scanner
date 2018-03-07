@@ -8,8 +8,6 @@ import lmfit.models as lmfit_models
 
 from basetypes import Ranges, Units, DIM 
 
-# np.max(peak.best_fit) - np.min(peak.best_fit)
-
 def step_and_span(settings):
     
     step = settings.max_fwhm.to(settings.data_units).magnitude 
@@ -40,14 +38,14 @@ def converged_peak(peak):
     #    generated/scipy.optimize.leastsq.html 
 
 
-def find_peaks(data_ranges, settings, fev_per_epoch = 16, nepochs=8):
+def find_peaks(data_ranges, settings, fev_per_epoch = 16, nepochs=4):
     
     peak_model = lmfit_models.PseudoVoigtModel()     # TODO: derivatives
     local_baseline_model = lmfit_models.LinearModel()
     biased_peak_model = peak_model + local_baseline_model
     
-    nslices = data_ranges.nslices(*step_and_span(settings), dim=DIM.X, nmipmap=1)
-    slices  = data_ranges.slices(*step_and_span(settings), dim=DIM.X, nmipmap=1)
+    nslices = data_ranges.nslices(*step_and_span(settings), dim=DIM.X, nmipmap=2)
+    slices  = data_ranges.slices(*step_and_span(settings), dim=DIM.X, nmipmap=2)
 
     peaklist = []    
     print('Searching for peaks...')
@@ -91,21 +89,48 @@ def find_peaks(data_ranges, settings, fev_per_epoch = 16, nepochs=8):
         
 
 
-def extract_peaks(peaklist, xxx):
+def peak_value(peak, flag_area = False):
     
-    yyy = np.zeros(xxx.shape)
-    ny  = np.zeros(xxx.shape)
+    if not flag_area:
+        return peak.params['height']
+    else:
+        return peak.params['height'] * peak.params['fwhm']
+
+def extract_peaks(peaklist, xxx, flag_area = False):
+    
+    calc_x    = np.linspace(xxx[0], xxx[-1], num = 2 * len(xxx))
+    calc_y    = np.zeros(calc_x.shape)
+    calc_ny_t = np.zeros(calc_x.shape)
+    calc_ny   = np.zeros(calc_x.shape)
     
     for p in peaklist:
-        index = bisect_left(xxx, p.params['center'])
-        yyy[index] += p.params['height']
-        ny[index] += 1
+        index = bisect_left(calc_x, p.params['center'])
+        
+        if index <= 0 or index >= len(calc_x) - 1:
+            continue
+        
+        calc_ny_t[index] += 1
+        ny_i = calc_ny[index] + 1
+        y_i  = calc_y[index] + peak_value(p, flag_area)
+        
+        if calc_ny_t[index] >= calc_ny_t[index+1] and calc_ny_t[index] >= calc_ny_t[index-1]:
+            di = 0
+        elif calc_ny_t[index+1] >= calc_ny_t[index] and calc_ny_t[index+1] >= calc_ny_t[index-1]:
+            di = +1
+        else:
+            di = -1
+            
+        calc_y[index-1:index+2] = 0 
+        calc_ny[index-1:index+2] = 0
+        
+        calc_y[index+di] = y_i
+        calc_ny[index+di] = ny_i 
     
-    for i in range(0, len(xxx)):
-        if ny[index] > 0:
-            yyy[index] = yyy[index] / ny[index]
+    for i in range(0, len(calc_x)):
+        if calc_ny[i] > 0:
+            calc_y[i] = calc_y[i] / calc_ny[i]
     
-    return yyy
+    return calc_x, calc_y
 
 
 def test():
@@ -116,15 +141,18 @@ def test():
     class LineProfileSettings: pass
     settings = LineProfileSettings() 
     settings.data_units       = units.GHz
-    settings.min_fwhm         = 0.05 * units.MHz
+    settings.min_fwhm         = 0.08 * units.MHz
     settings.max_fwhm         = 1.5 * units.MHz
-    settings.min_height       = 0.0005
+    settings.min_height       = 0.0008
     settings.derivative_order = 0
     
-    folder = "/home/borisov/projects/work/emission/simple_model/"
+    folder = "/home/borisov/projects/work/emission/advanced/"
     filename = folder + '340K_norm_mean_spec.txt' # 'avg55_baseline.txt'
     
-    data = np.loadtxt(filename)[4000:6500, :]
+    data = np.loadtxt(filename)[6000:6500, :]
+    
+    # artificial baseline
+    #data[:, 1] += 0.1* np.sin(data[:, 0]*3)
     
     data_ranges = Ranges(arrays=[data])
     
@@ -132,17 +160,27 @@ def test():
     
     xxx = data[:, 0]
     obs = data[:, 1]
-    calc = extract_peaks(peaklist, xxx)
+    calc_x, calc_y = extract_peaks(peaklist, xxx, flag_area = False)
         
-    f1 = plt.figure()
-    ax1 = f1.add_subplot(111)
+    f1 = plt.figure(figsize=(11.69,8.27))
+    ax1 = f1.add_subplot(211)
+    ax2 = f1.add_subplot(212)
+    
+    ax1.set_xlabel(r"Frequency [GHz]")
+    ax1.set_ylabel(r"Intensity [arb]")
+    ax2.set_xlabel(r"Frequency [GHz]")
+    ax2.set_ylabel(r"Peak intensity [arb]")
+    ax1.ticklabel_format(axis='x', useOffset=False)
+    ax2.ticklabel_format(axis='x', useOffset=False)
+    
     ax1.plot(xxx, obs,  color = 'k', lw=1)
-    ax1.plot(xxx, calc, color = 'r', lw=2)
-    #for p in peaklist: 
-        #ax1.plot(p.xxx, p.best_fit, color = 'r', lw=2)
+    ax2.plot(calc_x, calc_y, color = 'b', lw=1)
+    for p in peaklist: 
+        ax1.plot(p.xxx, p.best_fit, color = 'r', lw=2)
 
-    plt.show()
+    plt.savefig(folder+'test.png', papertype = 'a4', orientation = 'landscape')
     plt.close()
+    
     
 if __name__ == '__main__':
     test()
