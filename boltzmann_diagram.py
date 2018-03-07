@@ -4,8 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from bisect import bisect_left
-from lmfit.models import ExponentialModel
-from peak_tools import find_peaks, baselevel_and_noiselevel
+from lmfit.models import ExponentialModel, LinearModel
 
 from matplotlib import rc
 rc('font',**{'family':'serif', 'size' : 10})
@@ -36,7 +35,6 @@ def transitions():
         Trans(E=173.2971,nu=330.9697941,g=74,J=18,K=4,A=0.0029126),
         Trans(E=113.7402,nu=331.0460962,g=74,J=18,K=2,A=0.0031212),
         Trans(E=98.8467,nu=331.0651815,g=74,J=18,K=1,A=0.0031508),
-        Trans(E=93.8818,nu=331.0715436,g=74,J=18,K=0,A=0.0031607)
     ]
     
     # from CDMS for CH3CN;v=0;A   
@@ -44,7 +42,8 @@ def transitions():
         Trans(E=806.8966,nu=330.1597465,g=148,J=18,K=12,A=0.0017414),
         Trans(E=495.4279,nu=330.5575689,g=148,J=18,K=9,A=0.0023595),
         Trans(E=272.4986,nu=330.8427622,g=148,J=18,K=6,A=0.0028035),
-        Trans(E=138.5589,nu=331.0142959,g=148,J=18,K=3,A=0.0030716)
+        Trans(E=138.5589,nu=331.0142959,g=148,J=18,K=3,A=0.0030716),
+        Trans(E=93.8818,nu=331.0715436,g=74,J=18,K=0,A=0.0031607)
     ]
     
     # from CDMS for CH3CN;v8=1;E   
@@ -73,27 +72,6 @@ def transitions():
     return transitions1 + transitions2
 
 
-def peakfinder(data):
-    
-    base_l, noise_l = baselevel_and_noiselevel(data[:, 1], nbins=4000)
-    
-    peaks_all, _ = find_peaks(data, thresholds = [noise_l])
-    
-    data_simple = np.zeros(len(data[:, 1]))
-    
-    for i, peak in enumerate(peaks_all):
-        x1 = peak
-        while data[x1, 1] > data[peak, 1] / 2: x1 = x1 + 1
-        x2 = peak
-        while data[x2, 1] > data[peak, 1] / 2: x2 = x2 - 1
-        
-        if (data[x1, 0] - data[x2, 0]) < 0:
-            continue
-            
-        data_simple[peak] = data[peak, 1] * (data[x1, 0] - data[x2, 0])
-    
-    return data_simple
-
 
 def assign(expdata, trans):
     
@@ -101,6 +79,7 @@ def assign(expdata, trans):
     y_exp = expdata[:, 1]  
 
     eps = 1e-6
+    new_trans = []
     for t in trans:
 
         index = bisect_left(xxx, t.nu)  
@@ -112,11 +91,13 @@ def assign(expdata, trans):
         elif y_exp[index - 1] > eps:
             index = index - 1
         else:
+            print('Not assigned: ' + str(t.nu))
             continue
         
         t.Y = y_exp[index]
+        new_trans.append(t)
     
-    return trans
+    return new_trans
 
 
 def fit(filename):
@@ -125,10 +106,6 @@ def fit(filename):
     
     data = np.loadtxt(filename)
     
-    needs_peakfinder = True
-    if needs_peakfinder:
-        y_exp = peakfinder(data)
-    
     trans = transitions()
     trans = assign(data, trans)
     trans = sorted(trans, key=lambda t: t.E)
@@ -136,18 +113,24 @@ def fit(filename):
     xxx    = [t.E               for t in trans]
     y_exp  = [t.Y / (t.A * t.g) for t in trans]
     
-    model = ExponentialModel()
-    pars = model.make_params(amplitude=1.0, decay=kB_wn*300)
+    #model = ExponentialModel()
+    #pars = model.make_params(amplitude=1.0, decay=kB_wn*300)
+    
+    model = LinearModel()
+    pars = model.make_params(intercept=5.0, slope=-1.0/(kB_wn*300))
+    y_exp = list(np.log(y_exp))
+    
     out = model.fit(y_exp, pars, x=xxx)
   
     y_calc = out.best_fit
-    T = out.params['decay'] / kB_wn
+    #T = out.params['decay'] / kB_wn
+    T = - 1 / (kB_wn * out.params['slope'])
     
     return xxx, y_exp, y_calc, T, trans
     
 
 if __name__ == "__main__":
-    folder = "./"
+    folder = "/home/borisov/projects/work/emission/advanced/"
     suffixes = ["RT", "340K"]
 
     f2 = plt.figure()
@@ -155,12 +138,17 @@ if __name__ == "__main__":
     ax1.set_xlabel(r"Lower state energy [cm-1]")
     ax1.set_ylabel(r"$I / (A * g_{upper}$) [integrated]")
     ax1.tick_params(labelsize=14, direction = 'in')
+    
     ax1.set_yscale('log')
+
     
     for suffix in suffixes:
         
-        filename = folder + suffix + '_norm_mean_spec.txt'
+        filename = folder + suffix + '_norm_peaks.txt'
         xxx, y_exp, y_calc, T, trans = fit(filename)
+        
+        y_exp = list(np.exp(y_exp))
+        y_calc = list(np.exp(y_calc))
         
         print ("T  = " + str(T))
         
@@ -172,7 +160,7 @@ if __name__ == "__main__":
             ax1.plot(xxx, y_calc, color = 'g', lw=1, label = (r"Fit: T = %i K" %round(T,0)))
 
     ax1.legend()
-    filename = folder + 'Fit/boltzmann_diagram_both2.pdf' 
+    filename = folder + 'Fit/boltzmann_diagram_both4.pdf' 
     plt.savefig(filename, papertype = 'a4', orientation = 'landscape')
     plt.close()
     

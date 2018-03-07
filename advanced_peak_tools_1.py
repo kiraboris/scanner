@@ -78,6 +78,7 @@ def find_peaks(data_ranges, settings, fev_per_epoch = 16, nepochs=4):
 
         # result of peak guess and fit
         if accept_peak(fit_out, settings):
+            fit_out.offset = offset
             fit_out.xxx = xxx + offset
             fit_out.params['center'].value += offset
             peaklist.append(fit_out)
@@ -94,7 +95,19 @@ def peak_value(peak, flag_area = False):
     if not flag_area:
         return peak.params['height']
     else:
-        return peak.params['height'] * peak.params['fwhm']
+        xxx = peak.xxx
+        full_area = np.trapz(peak.best_fit, x=xxx)
+        
+        # revive linear model from fitted peak to subtract baseline area
+        local_baseline_model = lmfit_models.LinearModel()
+        params = local_baseline_model.make_params()
+        params['intercept'].set(value = peak.params['intercept']) 
+        params['slope'].set(value = peak.params['slope'])
+        
+        xxx = peak.xxx - peak.offset
+        base_area = np.trapz(local_baseline_model.eval(params, x=xxx), x=xxx)
+        
+        return full_area - base_area
 
 def extract_peaks(peaklist, xxx, flag_area = False):
     
@@ -147,9 +160,9 @@ def test():
     settings.derivative_order = 0
     
     folder = "/home/borisov/projects/work/emission/advanced/"
-    filename = folder + '340K_norm_mean_spec.txt' # 'avg55_baseline.txt'
+    filename = folder + 'RT_norm_mean_spec.txt' # 'avg55_baseline.txt'
     
-    data = np.loadtxt(filename)[6000:6500, :]
+    data = np.loadtxt(filename) # [6000:6500, :]
     
     # artificial baseline
     #data[:, 1] += 0.1* np.sin(data[:, 0]*3)
@@ -160,7 +173,7 @@ def test():
     
     xxx = data[:, 0]
     obs = data[:, 1]
-    calc_x, calc_y = extract_peaks(peaklist, xxx, flag_area = False)
+    calc_x, calc_y = extract_peaks(peaklist, xxx, flag_area = True)
         
     f1 = plt.figure(figsize=(11.69,8.27))
     ax1 = f1.add_subplot(211)
@@ -169,18 +182,21 @@ def test():
     ax1.set_xlabel(r"Frequency [GHz]")
     ax1.set_ylabel(r"Intensity [arb]")
     ax2.set_xlabel(r"Frequency [GHz]")
-    ax2.set_ylabel(r"Peak intensity [arb]")
+    ax2.set_ylabel(r"Peak area [arb * MHz]")
     ax1.ticklabel_format(axis='x', useOffset=False)
     ax2.ticklabel_format(axis='x', useOffset=False)
     
     ax1.plot(xxx, obs,  color = 'k', lw=1)
-    ax2.plot(calc_x, calc_y, color = 'b', lw=1)
+    ax2.plot(calc_x, calc_y * 1000, color = 'b', lw=1)
     for p in peaklist: 
         ax1.plot(p.xxx, p.best_fit, color = 'r', lw=2)
 
-    plt.savefig(folder+'test.png', papertype = 'a4', orientation = 'landscape')
+    #plt.savefig(folder+'test.png', papertype = 'a4', orientation = 'landscape')
+    plt.show()
     plt.close()
     
+    # export calc spectrum
+    np.savetxt(folder + "calc_area.txt", np.stack([calc_x, calc_y * 1000]).T)
     
 if __name__ == '__main__':
     test()
