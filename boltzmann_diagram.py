@@ -112,18 +112,14 @@ def fit(filename):
 
     xxx    = [t.E               for t in trans]
     y_exp  = [t.Y / (t.A * t.g) for t in trans]
-    
-    #model = ExponentialModel()
-    #pars = model.make_params(amplitude=1.0, decay=kB_wn*300)
+    y_exp = list(np.log(y_exp))
     
     model = LinearModel()
     pars = model.make_params(intercept=5.0, slope=-1.0/(kB_wn*300))
-    y_exp = list(np.log(y_exp))
-    
+   
     out = model.fit(y_exp, pars, x=xxx)
   
     y_calc = out.best_fit
-    #T = out.params['decay'] / kB_wn
     T = - 1 / (kB_wn * out.params['slope'])
     
     return xxx, y_exp, y_calc, T, trans
@@ -138,9 +134,7 @@ if __name__ == "__main__":
     ax1.set_xlabel(r"Lower state energy [cm-1]")
     ax1.set_ylabel(r"$I / (A * g_{upper}$) [integrated]")
     ax1.tick_params(labelsize=14, direction = 'in')
-    
     ax1.set_yscale('log')
-
     
     for suffix in suffixes:
         

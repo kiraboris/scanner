@@ -10,16 +10,16 @@ from basetypes import Ranges, Units, DIM
 
 def step_and_span(settings):
     
-    step = settings.max_fwhm.to(settings.data_units).magnitude 
+    step = 1.0 * settings.max_fwhm.to(settings.data_units).magnitude 
         
     span = 4.0 * settings.max_fwhm.to(settings.data_units).magnitude
     
     return step, span
     
-def accept_peak(peak, settings):
+def accept_peak(peak, settings, xxx, yyy):
     """fidelity test for peak candidates"""
     
-    flag1 = (peak.params['height'] >= settings.min_height)
+    flag1 = (abs(peak.params['height']) >= settings.min_height)
 
     flag2 = (peak.params['fwhm'] >=
         settings.min_fwhm.to(settings.data_units).magnitude)
@@ -28,9 +28,13 @@ def accept_peak(peak, settings):
         settings.max_fwhm.to(settings.data_units).magnitude)
         
     # candidate has a maximum
-    flag4 = (peak.xxx[0] < peak.params['center'] < peak.xxx[-1])
+    flag4 = (xxx[0] < peak.params['center'] < xxx[-1])
+    
+    # slope not extreme
+    max_slope_estimate = (np.max(yyy) - np.min(yyy)) / (xxx[-1] - xxx[0])
+    flag5 = (abs(peak.params['slope']) <= max_slope_estimate)
         
-    return flag1 and flag2 and flag3 and flag4
+    return flag1 and flag2 and flag3 and flag4 and flag5
 
 def converged_peak(peak):
     return peak.ier in range(1, 5)  
@@ -38,7 +42,7 @@ def converged_peak(peak):
     #    generated/scipy.optimize.leastsq.html 
 
 
-def find_peaks(data_ranges, settings, fev_per_epoch = 16, nepochs=4):
+def find_peaks(data_ranges, settings, fev_per_epoch = 16, nepochs = 4):
     
     peak_model = lmfit_models.PseudoVoigtModel()     # TODO: derivatives
     local_baseline_model = lmfit_models.LinearModel()
@@ -69,15 +73,14 @@ def find_peaks(data_ranges, settings, fev_per_epoch = 16, nepochs=4):
         for n in range(0, nepochs):
             fit_out = biased_peak_model.fit(yyy, params, x = xxx,
                                             fit_kws = scipy_leastsq_sett)
-            fit_out.xxx = xxx
             params = fit_out.params
             if converged_peak(fit_out): 
                 break
-            if not accept_peak(fit_out, settings):
+            if not accept_peak(fit_out, settings, xxx, yyy):
                 break
 
         # result of peak guess and fit
-        if accept_peak(fit_out, settings):
+        if accept_peak(fit_out, settings, xxx, yyy):
             fit_out.offset = offset
             fit_out.xxx = xxx + offset
             fit_out.params['center'].value += offset
@@ -146,7 +149,7 @@ def extract_peaks(peaklist, xxx, flag_area = False):
     return calc_x, calc_y
 
 
-def test():
+def test_emission():
     """test example for emission spectra"""
     
     units = Units.spec_units()
@@ -154,18 +157,18 @@ def test():
     class LineProfileSettings: pass
     settings = LineProfileSettings() 
     settings.data_units       = units.GHz
-    settings.min_fwhm         = 0.08 * units.MHz
+    settings.min_fwhm         = 80  * units.kHz
     settings.max_fwhm         = 1.5 * units.MHz
-    settings.min_height       = 0.0008
+    settings.min_height       = 0.001
     settings.derivative_order = 0
     
     folder = "/home/borisov/projects/work/emission/advanced/"
-    filename = folder + 'RT_norm_mean_spec.txt' # 'avg55_baseline.txt'
+    filename = folder + 'RT_norm_mean_spec.txt'
     
-    data = np.loadtxt(filename) # [6000:6500, :]
+    data = np.loadtxt(filename)#[4000:6500, :]
     
     # artificial baseline
-    #data[:, 1] += 0.1* np.sin(data[:, 0]*3)
+    data[:, 1] += 0.1* np.sin(data[:, 0]*3)
     
     data_ranges = Ranges(arrays=[data])
     
@@ -197,6 +200,55 @@ def test():
     
     # export calc spectrum
     np.savetxt(folder + "calc_area.txt", np.stack([calc_x, calc_y * 1000]).T)
+
+
+def test_absorption():
+    """test example for absortion spectra"""
+    
+    units = Units.spec_units()
+    
+    class LineProfileSettings: pass
+    settings = LineProfileSettings() 
+    settings.data_units       = units.MHz
+    settings.min_fwhm         = 50  * units.kHz
+    settings.max_fwhm         = 500 * units.kHz
+    settings.min_height       = 10.0
+    settings.derivative_order = 1
+    
+    folder = "/home/borisov/projects/work/emission/advanced/"
+    filename = folder + 'expdata_38-44.dat'
+    
+    data = np.loadtxt(filename)[5500:6500, :]
+    data_ranges = Ranges(arrays=[data])
+    
+    peaklist = find_peaks(data_ranges, settings)
+    
+    xxx = data[:, 0]
+    obs = data[:, 1]
+    #calc_x, calc_y = extract_peaks(peaklist, xxx, flag_area = True)
+        
+    f1 = plt.figure(figsize=(11.69,8.27))
+    ax1 = f1.add_subplot(211)
+    ax2 = f1.add_subplot(212)
+    
+    ax1.set_xlabel(r"Frequency [GHz]")
+    ax1.set_ylabel(r"Intensity [arb]")
+    ax2.set_xlabel(r"Frequency [GHz]")
+    ax2.set_ylabel(r"Peak area [arb * MHz]")
+    ax1.ticklabel_format(axis='x', useOffset=False)
+    ax2.ticklabel_format(axis='x', useOffset=False)
+    
+    ax1.plot(xxx, obs,  color = 'k', lw=1)
+    #ax2.plot(calc_x, calc_y * 1000, color = 'b', lw=1)
+    for p in peaklist: 
+        ax1.plot(p.xxx, p.best_fit, color = 'r', lw=2)
+
+    #plt.savefig(folder+'test.png', papertype = 'a4', orientation = 'landscape')
+    plt.show()
+    plt.close()
+    
+    # export calc spectrum
+    #np.savetxt(folder + "calc_area.txt", np.stack([calc_x, calc_y * 1000]).T)
     
 if __name__ == '__main__':
-    test()
+    test_emission()
