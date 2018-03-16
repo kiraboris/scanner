@@ -5,7 +5,6 @@ import bidict
 
 from models import Line, State
 
-
 def save_int(str_filename, obj_rotor, 
             J_min=0, J_max=20, inten1=-10.0, max_freq=100.0, temperature=300.0):
     
@@ -441,7 +440,6 @@ def save_lin(str_filename, lst_lines):
             f.write(textline+"\n")
 
 
-
 def load_egy(str_filename, int_quanta_fmt):
     """Read from .egy"""
     
@@ -463,39 +461,7 @@ def save_egy(str_filename, lst_states):
             f.write(textline+"\n")
 
 
-def load(str_filename, int_quanta_fmt):
-    """docstring"""
-    
-    extension = str_filename[-3:]
-    
-    if( extension == "cat" or extension == "mrg" ):
-        return load_cat(str_filename)
-        
-    if( extension == "egy" ):
-        return load_egy(str_filename, int_quanta_fmt)
-        
-    if( extension == "lin" ):
-        return load_lin(str_filename, int_quanta_fmt)
 
-
-
-def save(str_filename, lst_entries):
-    """docstring"""
-    
-    extension = str_filename[-3:]
-    
-    if( extension == "cat" or extension == "mrg" ):
-        save_cat(str_filename, lst_entries)
-        
-    if( extension == "egy" ):
-        save_egy(str_filename, lst_entries)
-        
-    if( extension == "lin" ):
-        save_lin(str_filename, lst_entries)
-        
-        
-        
-        
         
         
         

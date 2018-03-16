@@ -1,12 +1,60 @@
 
 import matplotlib.pyplot as plt
 import numpy as np
-import sys
+import bisect
 
-from bisect import bisect_left
-import lmfit.models as lmfit_models
+import lmfit.models as lmfit_models 
+import lmfit.model lmfit_model_base
 
-from basetypes import Ranges, Units, DIM 
+import basetypes
+from basetypes import DIM 
+
+class PVoigtDerivedModel(lmfit_model_base.Model):
+    fwhm_factor = 2*np.sqrt(2*np.log(2))
+    height_factor = 1./np.sqrt(2*np.pi)
+    
+    def __init__(self, independent_vars=['x'], prefix='', nan_policy='raise',
+                 derivative_order = 0, **kwargs):
+        kwargs.update({'prefix': prefix, 'nan_policy': nan_policy,
+                       'independent_vars': independent_vars})
+
+        if derivative_order == 0:
+            self.function = self.pvoigt
+            self.
+        elif derivative_order == 1:
+        
+        super(PVoigtDerivedModel, self).__init__(self.function, **kwargs)
+        self._set_paramhints_prefix()
+
+    def _set_paramhints_prefix(self):
+        self.set_param_hint('sigma', min=0)
+        self.set_param_hint('fraction', value=0.5, min=0.0, max=1.0)
+        self.set_param_hint('fwhm', expr=fwhm_expr(self))
+        fmt = ("(((1-{prefix:s}fraction)*{prefix:s}amplitude)/"
+               "({prefix:s}sigma*sqrt(pi/log(2)))+"
+               "({prefix:s}fraction*{prefix:s}amplitude)/"
+               "(pi*{prefix:s}sigma))")
+        self.set_param_hint('height', expr=fmt.format(prefix=self.prefix))
+
+    def guess(self, data, x=None, negative=False, **kwargs):
+        pars = guess_from_peak(self, data, x, negative, ampscale=1.25)
+        pars['%sfraction' % self.prefix].set(value=0.5, min=0.0, max=1.0)
+        return update_param_vals(pars, self.prefix, **kwargs)
+        
+    
+    @staticmethod
+    def pvoigt(x, amplitude=1.0, center=0.0, sigma=1.0, fraction=0.5):
+        sigma_g = sigma / sqrt(2*log2)
+        return ((1-fraction)*gaussian(x, amplitude, center, sigma_g) +
+                fraction*lorentzian(x, amplitude, center, sigma))
+            
+    @staticmethod
+    def pvoigt_prime(x, amplitude=1.0, center=0.0, sigma=1.0, fraction=0.5):
+        sigma_g = sigma / sqrt(2*log2)
+        return ((1-fraction)*gaussian(x, amplitude, center, sigma_g) +
+                fraction*lorentzian(x, amplitude, center, sigma))
+
+
 
 def step_and_span(settings):
     
@@ -60,7 +108,7 @@ def find_peaks(data_ranges, settings, fev_per_epoch = 16, nepochs = 4):
         
         # initital peak guess             
         params = peak_model.guess(yyy, x=xxx)
-        params.add('intercept', value=0.0)
+        params.add('intercept', value=np.mean(yyy))
         params.add('slope', value=0.0)
 
         # peak fitting loop
@@ -101,7 +149,7 @@ def peak_value(peak, flag_area = False):
         xxx = peak.xxx
         full_area = np.trapz(peak.best_fit, x=xxx)
         
-        # revive linear model from fitted peak to subtract baseline area
+        # revive local baseline model from fitted peak to subtract baseline area
         local_baseline_model = lmfit_models.LinearModel()
         params = local_baseline_model.make_params()
         params['intercept'].set(value = peak.params['intercept']) 
@@ -120,7 +168,7 @@ def extract_peaks(peaklist, xxx, flag_area = False):
     calc_ny   = np.zeros(calc_x.shape)
     
     for p in peaklist:
-        index = bisect_left(calc_x, p.params['center'])
+        index = bisect.bisect_left(calc_x, p.params['center'])
         
         if index <= 0 or index >= len(calc_x) - 1:
             continue
@@ -129,9 +177,11 @@ def extract_peaks(peaklist, xxx, flag_area = False):
         ny_i = calc_ny[index] + 1
         y_i  = calc_y[index] + peak_value(p, flag_area)
         
-        if calc_ny_t[index] >= calc_ny_t[index+1] and calc_ny_t[index] >= calc_ny_t[index-1]:
+        if( calc_ny_t[index] >= calc_ny_t[index+1] 
+            and calc_ny_t[index] >= calc_ny_t[index-1] ):
             di = 0
-        elif calc_ny_t[index+1] >= calc_ny_t[index] and calc_ny_t[index+1] >= calc_ny_t[index-1]:
+        elif( calc_ny_t[index+1] >= calc_ny_t[index] 
+            and calc_ny_t[index+1] >= calc_ny_t[index-1] ):
             di = +1
         else:
             di = -1
@@ -165,12 +215,12 @@ def test_emission():
     folder = "/home/borisov/projects/work/emission/advanced/"
     filename = folder + 'RT_norm_mean_spec.txt'
     
-    data = np.loadtxt(filename)#[4000:6500, :]
+    data = np.loadtxt(filename)[4000:6500, :]
     
     # artificial baseline
     data[:, 1] += 0.1* np.sin(data[:, 0]*3)
     
-    data_ranges = Ranges(arrays=[data])
+    data_ranges = basetypes.Ranges(arrays=[data])
     
     peaklist = find_peaks(data_ranges, settings)
     
@@ -205,7 +255,7 @@ def test_emission():
 def test_absorption():
     """test example for absortion spectra"""
     
-    units = Units.spec_units()
+    units = basetypes.Units.spec_units()
     
     class LineProfileSettings: pass
     settings = LineProfileSettings() 
