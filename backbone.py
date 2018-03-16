@@ -1,7 +1,7 @@
 
 import numpy as np
 from easygui import fileopenbox
-from autofit import assign_next_lines
+from autofit import assign_next_lines, try_add_constant
 from rotors import AsymRotor
 
 def next_action(model)
@@ -15,6 +15,9 @@ def next_action(model)
     try:
         if c == 0:
             print('1: add experimental spectrum (overlapping ranges will be overwritten)')
+            print('1: add experimental spectrum (overlapping ranges will be overwritten)')
+            print('1: add experimental spectrum (overlapping ranges will be overwritten)')
+            print('1: add experimental spectrum (overlapping ranges will be overwritten)')
             
         if c == 1:
             data = numpy.loadtxt(fileopenbox(
@@ -27,6 +30,10 @@ def next_action(model)
             assign_next_lines(model)
             
         if c == 3:
+            
+            try_add_constant(model)
+            
+        if c == 4:
             
             folders = multenterbox("Choose an output folder name","", ["Output folder"] )
         
