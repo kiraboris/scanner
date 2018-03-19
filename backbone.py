@@ -1,8 +1,10 @@
 
 import numpy as np
 from easygui import fileopenbox
-from autofit import assign_next_lines, try_add_constant
+
 from rotors import AsymRotor
+from autofit import assign_next_lines, try_add_constant
+
 
 def next_action(model)
     """manual input, for now""":
@@ -15,9 +17,9 @@ def next_action(model)
     try:
         if c == 0:
             print('1: add experimental spectrum (overlapping ranges will be overwritten)')
-            print('1: add experimental spectrum (overlapping ranges will be overwritten)')
-            print('1: add experimental spectrum (overlapping ranges will be overwritten)')
-            print('1: add experimental spectrum (overlapping ranges will be overwritten)')
+            print('2: assign next possible line(s)')
+            print('3: try to add a new constant to the quantum model')
+            print('4: save model in pickett format')
             
         if c == 1:
             data = numpy.loadtxt(fileopenbox(

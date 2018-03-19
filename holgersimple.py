@@ -4,9 +4,7 @@ import sys
 import shutil
 import bidict
 
-import pickett
 import rotors
-
 
 def main():
 
