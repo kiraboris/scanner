@@ -2,7 +2,7 @@
 #
 
 import copy
-import bidict
+from bidict import bidict
 from werkzeug.datastructures import MultiDict
 
 class State(object):
@@ -153,7 +153,7 @@ def quanta_headers(int_fmt):
 class CatConverter:
     """Manages entries of .cat files"""
     
-    mapper=bidict.bidict([ ('a', '-1'), ('b', '-2'), ('c', '-3'), ('d', '-4'), 
+    mapper=bidict([ ('a', '-1'), ('b', '-2'), ('c', '-3'), ('d', '-4'), 
                 ('e', '-5'), ('P', '25'), ('f', '-6'), ('g', '-7'),
                 ('h', '-8'), ('i', '-9'), ('j', '-10'), ('k', '-11'),
                 ('l', '-12'), ('m', '-13'), ('n', '-14'), ('o', '-15'),
@@ -512,9 +512,8 @@ def save_egy(str_filename, lst_states):
 class Formatter:
     """formatting methods on transitions and states"""
     
-    def __init__(self, corrector):
+    def __init__(self, corrector = None):
         self.__model = corrector
-    
     
     def custom_quanta_transform(self, entries, func_transform):
         """docstring"""
@@ -529,7 +528,15 @@ class Formatter:
     
     
     def correct(self, entries, file_format):
-        """docstring"""        
+        """Corrects wrong splits or blends
+           Works only if 'corrector' is not None and implements:
+            find_mergable_with_state(states, state)
+            find_mergable_with_line(lines, line)
+            merge_lines(blends)
+            merge_states(blends)
+            split_line(lines, line, flag_require_all_spilts) 
+            split_state(states, state)
+        """        
         
         # make O(1) lookup dict 
         dict_entries = self.__build_dict(entries)
@@ -609,9 +616,9 @@ class Formatter:
     def __split(self, dict_entries, cur, file_format):
         
         if 'cat' in file_format:
-            return self.__model.split_line(dict_entries, cur, flag_strict=True)
+            return self.__model.split_line(dict_entries, cur, flag_require_all_spilts=True)
         elif 'lin' in file_format:
-            return self.__model.split_line(dict_entries, cur, flag_strict=False)
+            return self.__model.split_line(dict_entries, cur, flag_require_all_spilts=False)
         elif 'egy' in file_format:
             return self.__model.split_state(dict_entries, cur)
         else:

@@ -1,10 +1,10 @@
 # python 2,3
 #
 
-import math
-import numpy as np
+from bidict import bidict
 
 import catalog
+import knowledge
 
 def load_var_into_model(str_filename, obj_rotor):
         fh_var = open("default%s.var"%(str(file_num)))
@@ -52,11 +52,11 @@ def _save_parvar_asymm_simple(rotor):
     input_file += "           30000  %.15e 1.0E%s100 \n" \
         %(rotor.params['C'].value, signum(rotor.params['C'].flag_fit))
     input_file += "             200  %.15e 1.0E%s100 \n" \
-        %(-rotor.params['-DJ'].value, signum(rotor.params['-DJ'].flag_fit))
+        %(rotor.params['-DJ'].value, signum(rotor.params['-DJ'].flag_fit))
     input_file += "            1100  %.15e 1.0E%s100 \n" \
-        %(-rotor.params['-DJK'].value, signum(rotor.params['-DJK'].flag_fit)) 
+        %(rotor.params['-DJK'].value, signum(rotor.params['-DJK'].flag_fit)) 
     input_file += "            2000  %.15e 1.0E%s100 \n" \
-        %(-rotor.params['-DK'].value, signum(rotor.params['-DK'].flag_fit))
+        %(rotor.params['-DK'].value, signum(rotor.params['-DK'].flag_fit))
     
     fh_var = open("output.var",'w')
     fh_var.write(input_file)
@@ -74,22 +74,28 @@ class RotorParameter(object):
         self.flag_fit = False
 
 def save_int(str_filename, obj_rotor, 
-            J_min=0, J_max=20, inten1=-10.0, max_freq=100.0, temperature=300.0):
+            J_min=0, J_max=100, inten=-15.0, max_freq=300.0, temperature=300.0):
     
     input_file = ""
     input_file += "%s \n" % obj_rotor.name
     input_file += ("0  91  %f  %3d  %3d  %f  %f  %f  %f\n" % 
         (obj_rotor.Q(temperature), J_min, J_max, inten, inten,
          max_freq, temperature))
-    input_file += " 001  %f \n" % obj_rotor.u_A
-    input_file += " 002  %f \n" % obj_rotor.u_B
-    input_file += " 003  %f \n" % obj_rotor.u_C
+         
+    if obj_rotor.u_A:
+        input_file += " 001  %f \n" % obj_rotor.u_A
+        
+    if obj_rotor.u_B:
+        input_file += " 002  %f \n" % obj_rotor.u_B
+        
+    if obj_rotor.u_C:
+        input_file += " 003  %f \n" % obj_rotor.u_C
 
     with open(str_filename, "w") as fh:
         fh.write(input_file)
 
 
-def save_par_var(str_filename, obj_rotor):
+def save_par(str_filename, obj_rotor):
     
     if all([x in self.params for x in ['A', 'B', 'C', '-DJ', '-DJK', '-DK']]):
         _save_parvar_asymm_simple(obj_rotor)
@@ -98,261 +104,53 @@ def save_par_var(str_filename, obj_rotor):
         
 
 
+class RotorSymmetry:
+    
+    def __init__(self):
+        # sample defaults
+        self.rotor_type = "asym"
+        self.symmetry_type = 'C3v'
+        self.representation = 'IIIr'
+        self.reduction = 'S'
+        self.degree = 3
+
 class Rotor(object):
-    """symmetric rotor with N, K and possibly v, l, J, hfs""" 
     
     def __init__(self):
         
-        self.__symmetry = Symmetry()
-        self.__formatter = formatter.Formatter(SymmCorrector(self.__symmetry))
-
-        self.params = {}
+        self.enabled_params = {}
+        self.disabled_params = {}
+        
+        self.symmetry = RotorSymmetry()
+        
+        
+    def param(name_or_code):
+        
+        if isinstance(name_or_code, str):
+            code = knowledge.param_code(name_or_code)
+        else:
+            code = name_or_code
+            
+        par = enabled_params.get(code, None)
+        
+        if par is None:
+            par = disabled_params.get(code, None)
+            
+        return par
+                     
     
     def Q(self, T): 
-        if all([x in self.params for x in ['A', 'B', 'C']]):
-            Qrot = ((5.3311 * 10**(6)) * (float(T)**(1.5)) * 
-                    (float(self.params['A']) *
-                     float(self.params['B']) *
-                     float(self.params['C']))**(-0.5))
-        else:
-            Qrot = BasicRotor.Q(self, T)
+        
+        if self.symmetry.rotor_type == "asym":
+            QrotBase = (self.param('A').value *
+                        self.param('B').value *
+                        self.param('C').value)**(-0.5)
+        elif self.symmetry.rotor_type == "sym":
+            QrotBase = (self.param('A').value *
+                        self.param('B').value**2)**(-0.5) 
+
+            Qrot = ((5.3311 * 10**(6)) * (T**(1.5)) * QrotBase
             
         return Qrot
         
         
-class SymmCorrector:
-    
-    def __init__(self, symmetry):
-        
-        self.__symm = symmetry
-
-    def merge_lines(self, blends):
-        """docstring"""
-        
-        result = blends[0].copy()
-        
-        if not result.g is None:
-            if not result.log_I is None:
-                I_bl = list(map(lambda x: 10 ** x.log_I, blends))
-                g_bl = list(map(lambda x: x.g, blends))
-                
-                result.log_I = math.log10(sum(I_bl))
-                
-                result.g = 0
-                for (I, g) in zip(I_bl, g_bl):
-                    if( math.isclose(I, max(I_bl)) ):
-                        result.g += g
-            else:
-                g_bl = map(lambda x: x.g, blends)
-                result.g = sum(g_bl)
-        
-        return result
-    
-    
-    def merge_states(self, blends):
-        """docstring"""
-        
-        result = blends[0].copy()
-        
-        g_bl = map(lambda x: x.g, blends)
-        result.g = sum(g_bl)
-
-        return result    
-    
-    
-    def __split_blended_line(self, entry):
-        
-        result = []
-        
-        qu = entry.q_upper 
-        ql = entry.q_lower
-        Kl = abs(ql['K']) 
-        Ku = abs(qu['K'])
-        
-        ql['K'] = Kl
-        qu['K'] = -Ku
-        newline = entry.copy()
-        newline.q_upper = qu
-        newline.q_lower = ql
-        if not newline.g is None:
-            newline.g = newline.g / 2
-        result.append(newline)
-
-        ql['K'] = -Kl
-        qu['K'] = Ku
-        newline = entry.copy()
-        newline.q_upper = qu
-        newline.q_lower = ql
-        if not newline.g is None:
-            newline.g = newline.g / 2
-        result.append(newline)
-        
-        return result
-    
-    
-    def split_line(self, dict_entries, entry, flag_strict):
-        """docstring"""
-        
-        if(self.__spin_symm(entry) == "A"):
-            
-            result = []
-            
-            qu = entry.q_upper 
-            ql = entry.q_lower
-            
-            if(ql['K'] == 0 or qu['K'] == 0):
-                result.append(entry)
-            else:
-                if(np.sign(qu['K']) == -np.sign(ql['K'])): # Ku == -Kl mod 2, correct
-                    if(not flag_strict):
-                        result.append(entry)
-                    else:
-                        # always require l-splitting
-                        ql['K'] = -ql['K']
-                        qu['K'] = -qu['K']
-                        if qid(qu, ql) in dict_entries:
-                            # other parity is there
-                            result.append(entry)
-                        else:
-                            # other parity is NOT there: entry is a blended line
-                            result.extend(self.__split_blended_line(entry))
-                else:
-                    # Ku == +Kl mod 2, incorrect
-                    Kl = abs(ql['K']) 
-                    Ku = abs(qu['K'])
-                    
-                    qu['K'] = Ku
-                    ql['K'] = -Kl
-                    qid_plus_to_minus = qid(qu, ql)
-                    
-                    qu['K'] = -Ku
-                    ql['K'] =  Kl
-                    qid_minus_to_plus = qid(qu, ql)
-                    
-                    if( qid_plus_to_minus in dict_entries and 
-                        not qid_minus_to_plus in dict_entries):
-                        # make "minus_to_plus" from entry
-                        qu['K'] = -Ku
-                        ql['K'] =  Kl 
-                        entry.q_upper = qu
-                        entry.q_lower = ql  
-                        result.append(entry)
-                    elif( qid_minus_to_plus in dict_entries and 
-                          not qid_plus_to_minus in dict_entries): 
-                        # make "plus_to_minus" from entry
-                        qu['K'] = -Ku
-                        ql['K'] =  Kl
-                        entry.q_upper = qu
-                        entry.q_lower = ql  
-                        result.append(entry)
-                    elif( qid_minus_to_plus in dict_entries and 
-                          qid_plus_to_minus in dict_entries): 
-                        # entry is redundant
-                        pass
-                    else:
-                        # entry is a blended line, create both splits
-                        result.extend(self.__split_blended_line(entry))
-                           
-        else:
-            # E-symmetry line doesn't need splitting
-            result = [entry]
-            
-        return result
-    
-    
-    def split_state(self, dict_entries, entry):
-        """docstring"""
-        
-        # state doesn't need splitting
-        result = [entry]        
-            
-        return result
-
-    
-    
-    def find_mergable_with_line(self, dict_entries, entry):
-        """docstring"""
-        
-        ids = [entry.qid()]
-        
-        if(self.__spin_symm(entry) == "A"):
-            # merge with 'wrong parity' transition
-            # that differs only in q_lower
-            
-            qu = entry.q_upper 
-            ql = entry.q_lower
-        
-            ql['K'] = -(ql['K'])
-            
-            ids.append(qid(qu, ql))
-            
-        result = []
-        for x in ids:
-            result.extend(dict_entries.getlist(x))
-        
-        return result
-        
-    
-    def find_mergable_with_state(self, dict_entries, entry):
-        """docstring"""
-        
-        # only states with same qid() are mergable
-        result = dict_entries.getlist(entry.qid())
-        
-        return result
-        
-    def __spin_symm_q(self, quanta):
-        """get spin-statistical symmetry irr.rep. of state or line"""
-        
-        if quanta['K'] == 0 and quanta.get('l', 0) % 3 == 0:
-            return 'E'        
-        elif (abs(quanta['K']) - quanta.get('l', 0)) % 3 == 0:
-            return 'A'
-        else:
-            return 'E'             
-    
-    
-    def __spin_symm(self, entry):
-        """get spin-statistical symmetry irr.rep. of state or line"""
-        
-        if isinstance(entry, Line):             
-            upper = self.__spin_symm_q(entry.q_upper)
-            lower = self.__spin_symm_q(entry.q_lower)
-            if upper == "A" or lower == "A":
-                return 'A'
-            else:
-                return 'E'
-        elif isinstance(entry, State):
-            return self.__spin_symm_q(entry.q)
-        else:
-            raise Exception('Neither line nor state')
-
-
-class Symmetry:
-
-    def spin_symm_q(self, quanta):
-        """get spin-statistical symmetry irr.rep. of state or line"""
-        
-        if quanta['K'] == 0 and quanta.get('l', 0) % 3 == 0:
-            return 'E'        
-        elif (abs(quanta['K']) - quanta.get('l', 0)) % 3 == 0:
-            return 'A'
-        else:
-            return 'E'             
-    
-    
-    def spin_symm(self, entry):
-        """get spin-statistical symmetry irr.rep. of state or line"""
-        
-        if isinstance(entry, Line):             
-            upper = self.__spin_symm_q(entry.q_upper)
-            lower = self.__spin_symm_q(entry.q_lower)
-            if upper == "A" or lower == "A":
-                return 'A'
-            else:
-                return 'E'
-        elif isinstance(entry, State):
-            return self.__spin_symm_q(entry.q)
-        else:
-            raise Exception('Neither line nor state')
-            
