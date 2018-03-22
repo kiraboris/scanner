@@ -1,140 +1,28 @@
 # python 2,3
 #
 
-import copy
 from bidict import bidict
-from werkzeug.datastructures import MultiDict
 
-class State(object):
-    """Structure of a quantum state"""
-    
-    def __init__(self):
-            object.__init__(self)
-         
-            # energy
-            self.E       = None       
-            self.E_err   = None
-            self.g       = None
-            
-            # additional .egy file information
-            self.str_H_iblk  = None
-            self.str_H_indx  = None
-            self.str_pmix    = None
-            
-            # quantum numbers
-            self._quanta   = frozenset()
-            self.int_fmt   = None
-    
-    def copy(self):
-        return copy.deepcopy(self)
-    
-    def qid(self):
-        """docstring"""
-        
-        return (self._quanta)
-    
-    
-    def has_quanta(self, quanta_subset):
-        """Checks if state has these quanta as a subset"""
-        
-        return all(x in self.q.items()
-                   for x in quanta_subset.items())
-                   
-    def _get_q(self): 
-        return dict(self._quanta)
-        
-    def _set_q(self,dict_x): 
-        self._quanta = frozenset(dict_x.items())
-        
-    q = property(_get_q, _set_q) 
-        
-        
+import knowledge
 
-class Line(object):
-    """A spectroscopic line entry object"""
-    
-    def __init__(self):
-    
-        # states
-        self.state_upper        = State()
-        self.state_lower        = State()
-                               
-        # Frequency of the line (usually in MHz)
-        self.freq            = None
-        self.freq_err        = None
+db = knowledge.PyDB(modulename=__name__)
 
-        # base10 log of the integrated intensity at 300 K (in nm2MHz)
-        self.log_I           = None  
-        self.int_deg_freedom = None
-        
-        # additional information
-        self.int_cat_tag     = None
-        self.str_lin_text    = None
-        
-        # pressure broadening, alpha: dv=p*alpha*(T/296)^delta
-        self.flt_pressure_alpha = None    
-        self.flt_pressure_delta = None  
-        
-        # calculated values
-        self.Einstein_A = None
+def param_code(name):
     
-    def copy(self):
-        return copy.deepcopy(self)
+    if name in db.INVERSE_PARAMS:
+        name = '-' + name
     
-    def qid(self):
-        """docstring"""
+    if not code in db.PARAM_CODES:
+        code = int(knowledge.ask("Sorry, what is the code for %s? " % name))
         
-        return ((self.state_upper._quanta, self.state_lower._quanta))
-
-    
-    # references to upper state g and lower state E and quanta
-    def _get_E(self): 
-        return self.state_lower.E
+        db.PARAM_CODES[name] = code
+        db.add("PARAM_CODES", "%s: %i," % (repr(name), code))
         
-    def _set_E(self,x): 
-        self.state_lower.E = x
+        if name[0] == '-':
+            db.INVERSE_PARAMS.append(name)
+            db.add("INVERSE_PARAMS", "%s," % repr(name))
         
-    def _get_g(self): 
-        return self.state_upper.g
-        
-    def _set_g(self,x):
-        self.state_upper.g = x  
-        
-    def _get_qu(self): 
-        return self.state_upper.q
-        
-    def _set_qu(self,x): 
-        self.state_upper.q = x
-        
-    def _get_ql(self): 
-        return self.state_lower.q
-        
-    def _set_ql(self,x): 
-        self.state_lower.q = x
-        
-    def _get_fmt(self): 
-        return self.state_upper.int_fmt
-        
-    def _set_fmt(self,x): 
-        self.state_upper.int_fmt = x
-        self.state_lower.int_fmt = x
-    
-    E = property(_get_E, _set_E)
-    g = property(_get_g, _set_g)  
-    q_upper = property(_get_qu, _set_qu)
-    q_lower = property(_get_ql, _set_ql)
-    int_fmt = property(_get_fmt, _set_fmt)
-
-
-def qid(q1, q2=None):
-    """stand-alone function to create haschable quantum IDs
-       used for dictionary lookup. q1, q2 are DICTS like also in other methods
-    """
-    
-    if q2 is None:
-        return frozenset(q1.items())
-    else:
-        return (frozenset(q1.items()), frozenset(q2.items()))
+    return PARAM_CODES[name]
 
 
 def quanta_headers(int_fmt):
@@ -143,11 +31,143 @@ def quanta_headers(int_fmt):
     int_c = int_fmt  % 10
     int_Q = int_fmt // 100
     
-    DICT_MAPPING = {2:  ['N', 'K', 'J', 'F1', 'F2', 'F'],
-                    13: ['N', 'K', 'v', 'J', 'F1', 'F']
-                   }
-                   
-    return DICT_MAPPING[int_Q][0:int_c]
+    if not int_Q in db.QUANTA_HEADERS:
+        str_head = (knowledge.ask(
+            'Sorry, what are the quanta for code %i? (e.g. "N K J F1 F2 F"' % int_Q))
+            
+        lst_head = [q for q in str_head.split()] 
+        
+        db.QUANTA_HEADERS[int_Q] = lst_head
+        db.add("QUANTA_HEADERS", "%s: %i," % (int_Q, repr(lst_head)))
+    
+    return QUANTA_HEADERS[int_Q][0:int_c]
+
+
+def load_var_into_model(str_filename, obj_rotor):
+        fh_var = open("default%s.var"%(str(file_num)))
+        for line in fh_var:
+            if line.split()[0] == "10000":
+                temp_A = float(line.split()[1])
+                const_list.append("%.3f" %temp_A)
+            if line.split()[0] == "20000":
+                temp_B = float(line.split()[1])
+                const_list.append("%.3f" %temp_B)
+            if line.split()[0] == "30000":
+                temp_C = float(line.split()[1])
+                const_list.append("%.3f" %temp_C)
+    
+
+def get_fit_rms(str_filename):
+    
+    rms_fit = None
+    with open(str_filename) as f:
+        for line in reversed(f.readlines()):
+            line = line.strip()
+            if line[11:14] == "RMS":
+                rms_fit = float(line[21:32]) 
+                
+    return rms_fit
+    
+    
+
+def _save_parvar_asymm_simple(rotor):
+    
+    def signum(flag):
+        if flag:
+            return '+'
+        else:
+            return '-'
+    
+
+    input_file += "           10000  %.15e 1.0E%s100 \n" \
+        %(rotor.params['A'].value, signum(rotor.params['A'].flag_fit)) 
+    input_file += "           20000  %.15e 1.0E%s100 \n" \
+        %(rotor.params['B'].value, signum(rotor.params['B'].flag_fit))
+    input_file += "           30000  %.15e 1.0E%s100 \n" \
+        %(rotor.params['C'].value, signum(rotor.params['C'].flag_fit))
+    input_file += "             200  %.15e 1.0E%s100 \n" \
+        %(rotor.params['-DJ'].value, signum(rotor.params['-DJ'].flag_fit))
+    input_file += "            1100  %.15e 1.0E%s100 \n" \
+        %(rotor.params['-DJK'].value, signum(rotor.params['-DJK'].flag_fit)) 
+    input_file += "            2000  %.15e 1.0E%s100 \n" \
+        %(rotor.params['-DK'].value, signum(rotor.params['-DK'].flag_fit))
+    
+    fh_var = open("output.var",'w')
+    fh_var.write(input_file)
+    fh_var.close()
+
+
+
+    
+
+class RotorParameterConverter:
+    
+    @staticmethod
+    def __signum(flag):
+        if flag:
+            return '+'
+        else:
+            return '-'
+    
+    @staticmethod
+    def obj2parstr(obj):
+        return( "%13i  %.23e 1.00000000E%s50 /%s\n" 
+            % (param_code(obj.name),  obj.value, __signum(obj.flag_fit), obj.name)) 
+        
+    @staticmethod
+    def obj2varstr(obj):
+        
+        
+    @staticmethod
+    def parstr2obj(line):
+    
+    @staticmethod
+    def varstr2obj(line):
+        return( "%13i %.23e %.14e /%s\n" 
+            % (param_code(obj.name),  obj.value, obj.error, obj.name))         
+    
+    @staticmethod
+    def var_par_header(rotor):
+        text = ""
+        text += "Molecule                                        Thu Jun 03 17:45:45 2010\n"
+        text += "   6  430   51    0    0.0000E+000    1.0000E+005    1.0000E+000 1.0000000000\n"
+        text +="s   1  1  0  99  0  1  1  1  1  -1   0\n" 
+        return text       
+        
+
+def save_int(str_filename, obj_rotor, 
+            J_min=0, J_max=100, inten=-15.0, max_freq=300.0, temperature=300.0):
+    
+    input_file = ""
+    input_file += "%s \n" % obj_rotor.name
+    input_file += ("0  91  %f  %3d  %3d  %f  %f  %f  %f\n" % 
+        (obj_rotor.Q(temperature), J_min, J_max, inten, inten,
+         max_freq, temperature))
+         
+    if obj_rotor.u_A:
+        input_file += " 001  %f \n" % obj_rotor.u_A
+        
+    if obj_rotor.u_B:
+        input_file += " 002  %f \n" % obj_rotor.u_B
+        
+    if obj_rotor.u_C:
+        input_file += " 003  %f \n" % obj_rotor.u_C
+
+    with open(str_filename, "w") as fh:
+        fh.write(input_file)
+
+
+
+
+def save_par(str_filename, obj_rotor):
+    
+    text = RotorParameterConverter.var_par_header(obj_rotor)
+    
+    for param in 
+
+    with open("output.var",'w') as f:
+        f.write(text)
+
 
 
 class CatConverter:
@@ -515,16 +535,7 @@ class Formatter:
     def __init__(self, corrector = None):
         self.__model = corrector
     
-    def custom_quanta_transform(self, entries, func_transform):
-        """docstring"""
 
-        for entry in entries:
-            if hasattr(entry, "q"):
-                entry.q = func_transform(entry.q)
-                
-            elif hasattr(entry, "q_upper") and hasattr(entry, "q_lower"):
-                entry.q_upper = func_transform(entry.q_upper)
-                entry.q_lower = func_transform(entry.q_lower)
     
     
     def correct(self, entries, file_format):
@@ -625,14 +636,7 @@ class Formatter:
             raise Exception('File format unknown') 
         
     
-    def __build_dict(self, entries):
-        """docstring"""
-        
-        result = MultiDict()
-        for e in entries:
-            result.add(e.qid(), e)
-            
-        return result
+
     
         
         

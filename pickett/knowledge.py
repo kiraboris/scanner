@@ -1,57 +1,62 @@
 # python 2,3
 #
-# This is a self-upgrading knowledge base of pypickett
+# Functions for User <-> Knowledge interaction
 #
 
 import inspect
 
-def open_myself(flag):
+class PyDB:
     
-    return open(inspect.getfile(__name__), flag)
-    
-
-#  **** pickett rotor parameters ****
-
-KNOWN_PARAM_CODES = bidict({
-    'A': 10000,
-    'B': 20000,
-    'C': 30000,
-    '-DJ': 200,
-    '-DK': 2000,
-    '-DJK': 1100
-    })
-    
-
-KNOWN_INVERSE_PARAMS = [
-    'DJ',
-    'DK', 
-    'DJK'
-    ]
-
-def param_code(name):
-    
-    if name in KNOWN_INVERSE_PARAMS:
-        name = '-' + name
-    
-    code = KNOWN_PARAM_CODES.get(name, 0)
-    
-    if code == 0:
+    def __init__(self, filename=None, modulename=None):
         
-        code = int(raw_input('Sorry, what is the code for %s? ' % name))
+        if filename is None:
+            if modulename is None:
+                return
+            else:
+                filename = inspect.getfile(modulename).replace('.py', '.db.py')
         
-        KNOWN_PARAM_CODES[name] = code
-        with open_myself('r') as me:
+        self.__filename = filename
+        __import__(filename)
+        
+    def open(flag):
+        """
+            opens source code of module currenly being executed
+        """
+        return open(self.__filename, flag)
+    
+    def add(after_what_line, line_to_write):
+        """
+            adds a line_to_write to source code of module currenly being executed
+            after known line_after (e.g. line containing certain variable name
+        """
+                
+        with open('r') as me:
             buf = me.readlines()
             
-        with open_myself('w') as me:
+        with opendb('w') as me:
             for line in buf:
                 me.write(line)
-                if 'KNOWN_PARAM_CODES' in line:
-                    me.write("'%s': %i,\n" % (name, code))
-                
-                if 'KNOWN_INVERSE_PARAMS' in line and '-' in name:
-                    me.write("'%s',\n" % name)
-                
-    return code
+                if after_what_line in line:
+                    me.write("%s\n" % line_to_write)
+                    
+                    
+def ask(text="", **kwargs):
+    """
+        may be custom input method
+    """
+    
+    try:
+        result = raw_input(text, **kwargs)
+    except:
+        result = input(text, **kwargs)
+        
+    return result
 
-# **** / pickett rotor parameters *****
+
+def say(text="", **kwargs):
+    """
+        may be custom output method
+    """
+    
+    print(text, **kwargs)
+    
