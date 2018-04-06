@@ -3,26 +3,26 @@
 
 from bidict import bidict
 
-import knowledge
+from . import knowledge
 
-db = knowledge.PyDB(modulename=__name__)
+db = knowledge.SourceDB(module_name=__name__)
 
 def param_code(name):
     
     if name in db.INVERSE_PARAMS:
         name = '-' + name
     
-    if not code in db.PARAM_CODES:
-        code = int(knowledge.ask("Sorry, what is the code for %s? " % name))
+    if not name in db.PARAM_CODES:
+        code = int(knowledge.ask("What is the code for %s? " % name))
         
         db.PARAM_CODES[name] = code
-        db.add("PARAM_CODES", "%s: %i," % (repr(name), code))
         
         if name[0] == '-':
             db.INVERSE_PARAMS.append(name)
-            db.add("INVERSE_PARAMS", "%s," % repr(name))
+
+        db.save()
         
-    return PARAM_CODES[name]
+    return db.PARAM_CODES[name]
 
 
 def quanta_headers(int_fmt):
@@ -33,70 +33,27 @@ def quanta_headers(int_fmt):
     
     if not int_Q in db.QUANTA_HEADERS:
         str_head = (knowledge.ask(
-            'Sorry, what are the quanta for code %i? (e.g. "N K J F1 F2 F"' % int_Q))
+            'What are the quanta for code %i? (e.g. "N K J F1 F2 F"' % int_Q))
             
         lst_head = [q for q in str_head.split()] 
         
         db.QUANTA_HEADERS[int_Q] = lst_head
-        db.add("QUANTA_HEADERS", "%s: %i," % (int_Q, repr(lst_head)))
+
+        db.save()
     
-    return QUANTA_HEADERS[int_Q][0:int_c]
+    return db.QUANTA_HEADERS[int_Q][0:int_c]
 
 
-def load_var_into_model(str_filename, obj_rotor):
-        fh_var = open("default%s.var"%(str(file_num)))
-        for line in fh_var:
-            if line.split()[0] == "10000":
-                temp_A = float(line.split()[1])
-                const_list.append("%.3f" %temp_A)
-            if line.split()[0] == "20000":
-                temp_B = float(line.split()[1])
-                const_list.append("%.3f" %temp_B)
-            if line.split()[0] == "30000":
-                temp_C = float(line.split()[1])
-                const_list.append("%.3f" %temp_C)
-    
-
-def get_fit_rms(str_filename):
+def get_fit_rms(str_fit_filename):
     
     rms_fit = None
-    with open(str_filename) as f:
+    with open(str_fit_filename) as f:
         for line in reversed(f.readlines()):
             line = line.strip()
             if line[11:14] == "RMS":
                 rms_fit = float(line[21:32]) 
                 
     return rms_fit
-    
-    
-
-def _save_parvar_asymm_simple(rotor):
-    
-    def signum(flag):
-        if flag:
-            return '+'
-        else:
-            return '-'
-    
-
-    input_file += "           10000  %.15e 1.0E%s100 \n" \
-        %(rotor.params['A'].value, signum(rotor.params['A'].flag_fit)) 
-    input_file += "           20000  %.15e 1.0E%s100 \n" \
-        %(rotor.params['B'].value, signum(rotor.params['B'].flag_fit))
-    input_file += "           30000  %.15e 1.0E%s100 \n" \
-        %(rotor.params['C'].value, signum(rotor.params['C'].flag_fit))
-    input_file += "             200  %.15e 1.0E%s100 \n" \
-        %(rotor.params['-DJ'].value, signum(rotor.params['-DJ'].flag_fit))
-    input_file += "            1100  %.15e 1.0E%s100 \n" \
-        %(rotor.params['-DJK'].value, signum(rotor.params['-DJK'].flag_fit)) 
-    input_file += "            2000  %.15e 1.0E%s100 \n" \
-        %(rotor.params['-DK'].value, signum(rotor.params['-DK'].flag_fit))
-    
-    fh_var = open("output.var",'w')
-    fh_var.write(input_file)
-    fh_var.close()
-
-
 
     
 
@@ -110,30 +67,36 @@ class RotorParameterConverter:
             return '-'
     
     @staticmethod
-    def obj2parstr(obj):
+    def obj_to_par_str(obj):
         return( "%13i  %.23e 1.00000000E%s50 /%s\n" 
-            % (param_code(obj.name),  obj.value, __signum(obj.flag_fit), obj.name)) 
+            % (param_code(obj.name),  obj.value,
+               RotorParameterConverter.__signum(obj.flag_fit), obj.name))
         
     @staticmethod
-    def obj2varstr(obj):
-        
+    def obj_to_var_str(obj):
+        return( "%13i %.23e %.14e /%s\n"
+            % (param_code(obj.name),  obj.value, obj.error, obj.name))
         
     @staticmethod
-    def parstr2obj(line):
+    def par_str_to_obj(line):
     
     @staticmethod
-    def varstr2obj(line):
-        return( "%13i %.23e %.14e /%s\n" 
-            % (param_code(obj.name),  obj.value, obj.error, obj.name))         
+    def var_str_to_obj(line):
+
     
     @staticmethod
-    def var_par_header(rotor):
+    def header(rotor):
         text = ""
         text += "Molecule                                        Thu Jun 03 17:45:45 2010\n"
         text += "   6  430   51    0    0.0000E+000    1.0000E+005    1.0000E+000 1.0000000000\n"
         text +="s   1  1  0  99  0  1  1  1  1  -1   0\n" 
         return text       
         
+
+def load_int(str_filename, obj_rotor):
+
+    return obj_rotor
+
 
 def save_int(str_filename, obj_rotor, 
             J_min=0, J_max=100, inten=-15.0, max_freq=300.0, temperature=300.0):
@@ -557,17 +520,17 @@ class Formatter:
         ignore  = set()
         for cur in entries:
             
-            if cur.qid() in ignore:
+            if cur.qid in ignore:
                 continue
             
             blends = self.__find_mergable(dict_entries, cur, file_format)
             
             if(len(blends) > 1):
                 result.append(self.__merge(blends, file_format))
-                ignore.update([x.qid() for x in blends])
+                ignore.update([x.qid for x in blends])
             else:
                 result.append(cur)
-                ignore.add(cur.qid())
+                ignore.add(cur.qid)
                 
         # make splits        
         result2  = []
@@ -592,8 +555,8 @@ class Formatter:
         for entry_cat in cat_lst:
             entry_mrg = entry_cat.copy()
             
-            if entry_mrg.qid() in lin_dict:
-                entry_lin = lin_dict[entry_mrg.qid()]
+            if entry_mrg.qid in lin_dict:
+                entry_lin = lin_dict[entry_mrg.qid]
                 
                 entry_mrg.freq = entry_lin.freq
                 entry_mrg.freq_err = entry_lin.freq_err

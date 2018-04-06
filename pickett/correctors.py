@@ -159,7 +159,7 @@ class SpinSymmCorrector:
     def find_mergable_with_line(self, dict_entries, entry):
         """docstring"""
         
-        ids = [entry.qid()]
+        ids = [entry.qid]
         
         if(self.__spin_symm(entry) == "A"):
             # merge with 'wrong parity' transition
@@ -183,7 +183,7 @@ class SpinSymmCorrector:
         """docstring"""
         
         # only states with same qid() are mergable
-        result = dict_entries.getlist(entry.qid())
+        result = dict_entries.getlist(entry.qid)
         
         return result
         

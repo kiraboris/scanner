@@ -96,8 +96,8 @@ def find_peaks(data_ranges, settings, fev_per_epoch = 16, nepochs = 4):
     local_baseline_model = lmfit_models.LinearModel()
     biased_peak_model = peak_model + local_baseline_model
     
-    nslices = data_ranges.nslices(*step_and_span(settings), dim=DIM.X, nmipmap=2)
-    slices  = data_ranges.slices(*step_and_span(settings), dim=DIM.X, nmipmap=2)
+    nslices = data_ranges.nslices(*step_and_span(settings), nmipmap=2)
+    slices  = data_ranges.slices(*step_and_span(settings), nmipmap=2)
 
     peaklist = []    
     print('Searching for peaks...')
