@@ -12,44 +12,45 @@ def interpolate(x1, y1, x2, y2, x):
     y = y1 + (y2 - y1) / (x2 - x1) * (x - x1)
     return y
 
-def match_data(data):
+def avg_data(data):
     """data must be a list of ndarrays
        matched by 1st column (x), averaged by last column (y) (as above)"""
 
     datasets = [a[a[:, DIM.X].argsort()] for a in data]
 
-    xl = max([a[0, DIM.X] for a in datasets])
-    xh = min([a[-1, DIM.X] for a in datasets])
-    assert (xh >= xl)  # ensure common range is found
-
-    set_xvalues = set()
+    set_xvalues = set()  # uniqueness needed here
     for a in datasets:
         for x in a[:, DIM.X]:
-            if xh >= x >= xl:
-                set_xvalues.add(x)
+            set_xvalues.add(x)
 
     xvalues = sorted(list(set_xvalues))
-    yvalues = np.empty((len(xvalues), len(datasets)))
+    ysumvalues = np.zeros(len(xvalues))
+    ynarrays   = np.zeros(len(xvalues))
 
-    trav = [0] * len(datasets)
+    trav = [0] * len(datasets)  # traversion index for each input array
     for (i, x_i) in enumerate(xvalues):
         for j in range(len(trav)):
 
             while datasets[j][trav[j], DIM.X] < x_i:
                 trav[j] = trav[j] + 1
 
-            x_t_j = datasets[j][trav[j], DIM.X]
-            y_t_j = datasets[j][trav[j], DIM.Y]
+            x_trav_j = datasets[j][trav[j], DIM.X]
+            y_trav_j = datasets[j][trav[j], DIM.Y]
 
-            if x_t_j == x_i:
-                yvalues[i, j] = y_t_j
-            else:  # only x_t_j > x with trav[j] > 0
-                x_t_j_minus = datasets[j][trav[j] - 1, DIM.X]
-                y_t_j_minus = datasets[j][trav[j] - 1, DIM.Y]
+            if x_trav_j == x_i:
+                ysumvalues[i] += y_trav_j
+                ynarrays[i] += 1
+            elif x_trav_j > x_i and trav[j] > 0:
+                x_trav_j_minus = datasets[j][trav[j] - 1, DIM.X]
+                y_trav_j_minus = datasets[j][trav[j] - 1, DIM.Y]
 
-                yvalues[i, j] = interpolate(x_t_j_minus, y_t_j_minus, x_t_j, y_t_j, x_i)
+                ynarrays[i] +=1
+                ysumvalues[i] += interpolate(x_trav_j_minus, y_trav_j_minus,
+                                             x_trav_j, y_trav_j, x_i)
+            else:
+                pass
 
-    out = np.column_stack((xvalues, yvalues))
+    out = np.column_stack((xvalues, ysumvalues / ynarrays))
     return out
 
 
@@ -68,31 +69,49 @@ class Ranges:
 
     def add(self, arr):
 
-        self.__arrs.append(arr)
-        self.__merge_overlaps()
+        self.__arrs = self.__merge_overlaps(self.__arrs + arr)
 
-    def __merge_overlaps(self):
+    @staticmethod
+    def __merge_overlaps(arrs):
 
+        result = []
 
+        excluded = set()
+        for i,ai in enumerate(arrs):
 
+            if i in excluded:
+                continue
 
-    def nslices(self, step, span, nmipmap=0, dim=None):
+            excluded.add(i)
+
+            intersect = [(aj,j) for (aj,j) in enumerate(arrs)
+                         if not j in excluded and aj[0, DIM.X] >= ai[-1, DIM.X]]
+
+            if intersect:
+                arrs_intersect = [aj for (aj,j) in intersect]
+                j_intersect = [j for (aj, j) in intersect]
+
+                result.append(avg_data(arrs_intersect))
+                excluded.update(j_intersect)
+            else:
+                result.append(ai)
+
+        return result
+
+    def nslices(self, step, span, nmipmap=0):
 
         nbins = 0
         for a in self.__arrs:
             left = 0
             right = 0
 
-            if dim is None:
-                xa = a
-            else:
-                xa = a[:, DIM.Y]
+            xa = a[:, DIM.X]
 
             nbins += (((xa[-1] - span / 2) - (xa[0] + span / 2)) / step) * (nmipmap + 1)
 
         return int(nbins)
 
-    def slices(self, step, span, nmipmap=0, dim=None):
+    def slices(self, step, span, nmipmap=0):
         """'span': size of slice,
            'step': offset of each next slice from begin of previous one"""
 
@@ -100,10 +119,7 @@ class Ranges:
             left = 0
             right = 0
 
-            if dim is None:
-                xa = a
-            else:
-                xa = a[:, dim]
+            xa = a[:, DIM.X]
 
             bins = np.arange(xa[0] + span / 2, xa[-1] - span / 2, step)
 
@@ -115,10 +131,7 @@ class Ranges:
                 mright = right
                 for n in range(0, nmipmap + 1):
 
-                    if dim is None:
-                        yield a[mleft:mright]
-                    else:
-                        yield a[mleft:mright, :]
+                    yield a[mleft:mright, :]  # yield spectrum, both DIM.X and DIM.Y
 
                     mleft += int((mright - mleft) / 4)
                     mright -= int((mright - mleft) / 4)
