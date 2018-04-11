@@ -31,8 +31,11 @@ def avg_data(data):
     for (i, x_i) in enumerate(xvalues):
         for j in range(len(trav)):
 
-            while datasets[j][trav[j], DIM.X] < x_i:
+            while trav[j] < len(datasets[j]) and datasets[j][trav[j], DIM.X] < x_i:
                 trav[j] = trav[j] + 1
+
+            if trav[j] == len(datasets[j]):
+                continue # to next j
 
             x_trav_j = datasets[j][trav[j], DIM.X]
             y_trav_j = datasets[j][trav[j], DIM.Y]
@@ -47,8 +50,6 @@ def avg_data(data):
                 ynarrays[i] +=1
                 ysumvalues[i] += interpolate(x_trav_j_minus, y_trav_j_minus,
                                              x_trav_j, y_trav_j, x_i)
-            else:
-                pass
 
     out = np.column_stack((xvalues, ysumvalues / ynarrays))
     return out
@@ -60,7 +61,10 @@ class Ranges:
         """'arrays': list of ndnumpy arrays
             where x axis is 1st column, y axis is last column (as above)"""
 
-        self.__arrs = list(arrays)
+        if arrays:
+            self.__arrs = self.__merge_overlaps(arrays)
+        else:
+            self.__arrs = []
 
     def spread(self):
 
@@ -69,10 +73,13 @@ class Ranges:
 
     def add(self, arr):
 
-        self.__arrs = self.__merge_overlaps(self.__arrs + arr)
+        self.__arrs = self.__merge_overlaps(self.__arrs + [arr])
 
     @staticmethod
     def __merge_overlaps(arrs):
+
+        if len(arrs) <= 1:
+            return arrs
 
         result = []
 
@@ -84,14 +91,14 @@ class Ranges:
 
             excluded.add(i)
 
-            intersect = [(aj,j) for (aj,j) in enumerate(arrs)
-                         if not j in excluded and aj[0, DIM.X] >= ai[-1, DIM.X]]
+            intersect = [(j,aj) for (j,aj) in enumerate(arrs)
+                         if not j in excluded and aj[0, DIM.X] <= ai[-1, DIM.X]]
 
             if intersect:
-                arrs_intersect = [aj for (aj,j) in intersect]
-                j_intersect = [j for (aj, j) in intersect]
+                arrs_intersect = [aj for (j,aj) in intersect]
+                j_intersect = [j for (j,aj) in intersect]
 
-                result.append(avg_data(arrs_intersect))
+                result.append(avg_data([ai] + arrs_intersect))
                 excluded.update(j_intersect)
             else:
                 result.append(ai)
@@ -135,3 +142,61 @@ class Ranges:
 
                     mleft += int((mright - mleft) / 4)
                     mright -= int((mright - mleft) / 4)
+
+    def print(self):
+
+        print(self.export())
+
+    def export(self):
+        """convert Ranges to single array, filling gaps with zeros"""
+
+        arrs = sorted(self.__arrs, key = lambda arr: arr[0, DIM.X])
+
+        step = max([max(arr[1:, DIM.X] - arr[:-1, DIM.X]) for arr in arrs])
+
+        #result = np.empty((0,0))
+        result = None
+
+        for i in range(1, len(arrs)):
+
+            if result:
+                result = np.vstack((result, arrs[i - 1]))
+            else:
+                result = arrs[i - 1]
+
+            gap_l = arrs[i-1][-1, DIM.X]
+            gap_r = arrs[i][0, DIM.X]
+
+            insert_x = np.arange(gap_l + step, gap_r, step)
+            insert_y = np.zeros(len(insert_x))
+
+            insert = np.stack((insert_x, insert_y)).T
+
+            result = np.vstack((result, insert))
+
+        result = np.vstack((result, arrs[1]))
+
+        return result
+
+
+
+if __name__ == "__main__":
+    """unit test"""
+
+    x1 = np.linspace(1, 10, 10)
+    x2 = np.linspace(10, 19, 10)
+    x3 = np.linspace(25, 34, 10)
+    x4 = np.linspace(5, 14, 10)
+
+    y  = np.linspace(10, 100, 10)
+
+    a1 = np.stack((x1, y)).T
+    a2 = np.stack((x2, y)).T
+    a3 = np.stack((x3, y)).T
+    a4 = np.stack((x4, y)).T
+
+    r = Ranges([a1, a2])
+    r.add(a3)
+    r.add(a4)
+
+    r.print()
