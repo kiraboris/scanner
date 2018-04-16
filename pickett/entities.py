@@ -146,7 +146,7 @@ def qdict(entries):
 
     result = MultiDict()
     for e in entries:
-        result.add(e.qid, e)
+        result.add(e.qid(), e)
 
     return result
 

@@ -13,7 +13,7 @@ class Units:
             'femto- = 1e-15 = f-',
             'pico- =  1e-12 = p-',
             'nano- =  1e-9  = n-',
-            'micro- = 1e-6  = u- = µ-',
+            'micro- = 1e-6  = u-',
             'milli- = 1e-3  = m-',
             'centi- = 1e-2  = c-',
             'deci- =  1e-1  = d-',

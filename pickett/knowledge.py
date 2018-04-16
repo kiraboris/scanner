@@ -3,8 +3,8 @@
 # Functions for User <-> Knowledge interaction
 #
 
-import inspect
 import easygui as gui
+from importlib.machinery import SourceFileLoader
 
 # alias
 first = next
@@ -12,10 +12,11 @@ first = next
 
 class SourceDB:
 
-    def __init__(self, module_name, flag_autosave=True):
+    def __init__(self, filename, flag_autosave=True):
 
-        self.__db = __import__(module_name)
-        self.__filename = inspect.getfile(self.__db)
+        modulename = filename.split('/')[-1].split('.')[0]
+        self.__db = SourceFileLoader(modulename, filename).load_module()
+        self.__filename = filename
         self.__autosave = flag_autosave
         self.__observed_names = set()
 

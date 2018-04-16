@@ -154,9 +154,10 @@ class Ranges:
 
         step = max([max(arr[1:, DIM.X] - arr[:-1, DIM.X]) for arr in arrs])
 
-        #result = np.empty((0,0))
+        if len(arrs) == 1:
+            return arrs[0]
+        
         result = None
-
         for i in range(1, len(arrs)):
 
             if result:

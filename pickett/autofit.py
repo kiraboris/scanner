@@ -1,6 +1,6 @@
 
 
-from .basetypes import Ranges
+from .ranges import Ranges
 
 class Model:
 
