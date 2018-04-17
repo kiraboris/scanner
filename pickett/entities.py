@@ -203,11 +203,11 @@ class Rotor(object):
 
     def Q(self, T):
 
-        if self.symmetry.rotor_type == "asym":
+        if self.symmetry.type == "asym":
             Q_rot_base = (self.param('A').value *
                           self.param('B').value *
                           self.param('C').value) ** (-0.5)
-        elif self.symmetry.rotor_type == "sym":
+        elif self.symmetry.type == "sym":
             Q_rot_base = (self.param('A').value *
                           self.param('B').value ** 2) ** (-0.5)
         else:
