@@ -71,9 +71,9 @@ class Ranges:
         return max([np.max(a[:, DIM.Y]) - np.min(a[:, DIM.Y])
                     for a in self.__arrs])
 
-    def add(self, arr):
+    def add(self, arrays):
 
-        self.__arrs = self.__merge_overlaps(self.__arrs + [arr])
+        self.__arrs = self.__merge_overlaps(self.__arrs + arrays)
 
     @staticmethod
     def __merge_overlaps(arrs):

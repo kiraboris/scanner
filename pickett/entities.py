@@ -62,13 +62,15 @@ class Line(object):
         self.freq = None
         self.freq_err = None
 
-        # base10 log of the integrated intensity at 300 K (in nm2MHz)
+        # base10 log of the integrated intensity:
+        # * at 300 K in nm2MHz for theo lines
+        # * arbitrary units for exp lines
         self.log_I = None
-        self.int_deg_freedom = None
 
         # additional information
-        self.int_cat_tag = None
-        self.str_lin_text = None
+        self.int_deg_freedom = None   # TODO: inherited ?
+        self.int_cat_tag = None       # inherited from Rotor
+        self.str_lin_text = None      # custom information for lines
 
         # pressure broadening, alpha: dv=p*alpha*(T/296)^delta
         self.flt_pressure_alpha = None
@@ -76,6 +78,7 @@ class Line(object):
 
         # calculated values
         self.Einstein_A = None
+        self.peak = None   # experimental peak
 
     def copy(self):
         return copy.deepcopy(self)
