@@ -2,16 +2,13 @@
 
 from bidict import bidict
 
-PARAM_CODES = bidict({'-DJK': 1100,
-                      '-DJ': 200,
+PARAM_CODES = bidict({'DJK': 1100,
+                      'DJ': 200,
                       'A': 10000,
-                      '-DK': 2000,
+                      'DK': 2000,
                       'B': 20000,
                       'C': 30000})
 
-INVERSE_PARAMS = ['DJ',
-                  'DK',
-                  'DJK']
 
 QUANTA_HEADERS = {2: ['N',
                   'K',

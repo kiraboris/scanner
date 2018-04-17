@@ -172,20 +172,21 @@ class RotorSymmetry:
 
     def __init__(self):
         # sample defaults
-        self.rotor_type = "asym"
-        self.symmetry_type = 'C3v'
-        self.representation = 'IIIr'
-        self.reduction = 'S'
-        self.degree = 3
+        self.type = "asym"
+        self.group = 'C1'
+        self.representation = 'prolate'
+        self.reduction = 's'
+        self.degree = 3   # used in Q() calculation
+        self.spin_degeneracy = 1
 
 
 class RotorParameter(object):
 
-    def __init__(self, name, value=1.0, error=float('inf')):
+    def __init__(self, name, value=1.0, error=float('inf'), flag_fit=False):
         self.name = name
         self.value = value
         self.error = error
-        self.flag_fit = False
+        self.flag_fit = flag_fit
         self.flag_enabled = True
 
 
