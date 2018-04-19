@@ -1,10 +1,5 @@
 
 
-from .ranges import Ranges
+class Autofit:
+    pass
 
-
-class Model:
-
-    def __init__(self):
-
-        self.__experiment = Ranges()

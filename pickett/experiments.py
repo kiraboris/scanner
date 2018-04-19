@@ -42,5 +42,3 @@ class Experiments:
 
         self.__ranges = new_ranges
 
-    @staticmethod
-    def __extract_lines():

@@ -94,7 +94,7 @@ class ParVarConverter:
                 % (param_code(obj.name), obj.value, obj.error, obj.name))
 
     @staticmethod
-    def par_str_to_obj(line, thresh_flag_fit=1.0):
+    def par_str_to_obj(line, param=None, thresh_flag_fit=1.0):
 
         line_lst = line.strip().split()
         name = line_lst[-1]
@@ -104,16 +104,36 @@ class ParVarConverter:
         else:
             flag_fit = False
 
-        return RotorParameter(name=name, value=value, flag_fit=flag_fit)
+        if not param:
+            return RotorParameter(name=name, value=value, flag_fit=flag_fit)
+        else:
+            if not param.name:
+                param.name = name
+            if not param.value:
+                param.value = value
+
+            param.flag_fit = flag_fit
+
+            return param
 
     @staticmethod
-    def var_str_to_obj(line):
+    def var_str_to_obj(line, param=None):
         line_lst = line.strip().split()
         name = line_lst[-1]
         value = float(line_lst[1])
         error = float(line_lst[2])
 
-        return RotorParameter(name=name, value=value, error=error)
+        if not param:
+            return RotorParameter(name=name, value=value, error=error)
+        else:
+            if not param.name:
+                param.name = name
+            if not param.value:
+                param.value = value
+
+            param.error = error
+
+            return param
 
     @staticmethod
     def write_header(rotor, max_lines=2000, max_error=1.0E+005, max_iters=100,
@@ -129,7 +149,7 @@ class ParVarConverter:
         return text
 
 
-def load_int(str_filename, rotor):  # TODO: future, not yet tested
+def load_int(str_filename, rotor):
 
     with open(str_filename, "r") as fh:
         for i, line in enumerate(fh):
@@ -195,6 +215,13 @@ def save_var(str_filename, rotor):
 
     with open(str_filename, 'w') as f:
         f.write(text)
+
+
+def load_par():
+
+
+def load_var():
+
 
 
 class CatConverter:
