@@ -20,7 +20,7 @@ def step_and_span(settings):
     return step, span
     
     
-def accept_peak(peak, settings):
+def accept_peak(peak, settings, biased_peak_model, estimate_max_height):
     """fidelity test for peak candidates"""
     xxx = peak.xxx
     yyy = peak.yyy    
@@ -35,16 +35,21 @@ def accept_peak(peak, settings):
     # candidate has a maximum
     flag3 = (xxx[0] < peak.params['center'] < xxx[-1])
     
-    if not flag1 or not flag2 or not flag3:
+    # height is positive and sufficient (preliminary)
+    flag4 = (peak.params['height'] / estimate_max_height > settings.min_height_frac)
+    
+    if not flag1 or not flag2 or not flag3 or not flag4:
         return False
+    #else:
+    #    return True
     
     # slope not extreme <=> valid baseline slope estimate
     #max_slope_estimate = (np.max(yyy) - np.min(yyy)) / (xxx[-1] - xxx[0])
     #flag4 = (abs(peak.params['slope']) <= max_slope_estimate)
     
     # line height positive and greater than noise height
-    yyy_debaselined = yyy - eval_local_baseline(peak)
-    min_height_estimate = 3 * np.std(yyy_debaselined)    
+    yyy_noise = yyy - biased_peak_model.eval(peak.params, x=peak.xxx)
+    min_height_estimate = 3 * np.std(yyy_noise)    
     flag5 = (peak.params['height'] >= min_height_estimate)
     
     if not flag5:
@@ -61,11 +66,12 @@ def converged_peak(peak):
 
 def eval_local_baseline(peak):
     
-    local_baseline_model = lmfit_models.LinearModel()
+    local_baseline_model = lmfit_models.QuadraticModel()
     params = local_baseline_model.make_params()
-    params['intercept'].set(value = peak.params['intercept']) 
-    params['slope'].set(value = peak.params['slope'])   
-    
+    params['a'].set(value = peak.params['a']) 
+    params['b'].set(value = peak.params['b'])   
+    params['c'].set(value = peak.params['c'])   
+
     return local_baseline_model.eval(params, x=peak.xxx)
 
 
@@ -81,13 +87,14 @@ def make_peak_model(settings):
 def find_peaks(data_ranges, settings, fev_per_epoch = 16, nepochs = 4):
     
     peak_model = make_peak_model(settings)
-    local_baseline_model = lmfit_models.LinearModel()
+    local_baseline_model = lmfit_models.QuadraticModel()
     biased_peak_model = peak_model + local_baseline_model
     
     nslices = data_ranges.nslices(*step_and_span(settings), nmipmap=2)
     slices  = data_ranges.slices(*step_and_span(settings), nmipmap=2)
     
     peaklist = []    
+    est_max_height = 1e-30
     print('Searching for peaks...')
     for i, d in enumerate(slices):
     
@@ -97,8 +104,9 @@ def find_peaks(data_ranges, settings, fev_per_epoch = 16, nepochs = 4):
         
         # initital peak guess             
         params = peak_model.guess(yyy, x=xxx)
-        params.add('intercept', value=np.mean(yyy))
-        params.add('slope', value=0.0)
+        params.add('a', value=0.0)
+        params.add('b', value=0.0)
+        params.add('c', value=np.mean(yyy))
 
         # peak fitting loop
         scipy_leastsq_sett = {
@@ -117,18 +125,26 @@ def find_peaks(data_ranges, settings, fev_per_epoch = 16, nepochs = 4):
             
             if converged_peak(fit_out): 
                 break
-            if not accept_peak(fit_out, settings):
+            if not accept_peak(fit_out, settings, biased_peak_model, est_max_height):
                 break
 
         # result of peak guess and fit
-        if accept_peak(fit_out, settings):
+        if accept_peak(fit_out, settings, biased_peak_model, est_max_height):
             peaklist.append(fit_out)
+            if fit_out.params['height'] > est_max_height:
+                est_max_height = fit_out.params['height']
         
         if settings.flag_verbose:                        
             print("%3.1f%%" % (float(i) / float(nslices) * 100.0), end='\r')
             sys.stdout.flush()
         
-    return peaklist
+    
+    # additional acceptance loop
+    max_height = max(peaklist, key=lambda p: p.params['height']).params['height']
+    new_peaklist = [p for p in peaklist if
+                    p.params['height'] / max_height > settings.min_height_frac]
+    
+    return new_peaklist
         
 
 def peak_value(peak, flag_area = False):
@@ -191,13 +207,14 @@ def test_emission():
     settings.min_fwhm         = 80  * units.kHz
     settings.max_fwhm         = 1.5 * units.MHz
     settings.step             = 1.0 * units.MHz 
+    settings.min_height_frac  = 0.02  # of heighest line
     settings.peak_model       = "Voigt"
     settings.flag_verbose     = True
     
     folder = "/home/borisov/projects/work/emission/advanced/"
     filename = folder + 'RT_norm_mean_spec.txt'
     
-    data = np.loadtxt(filename)[4000:6500, :]
+    data = np.loadtxt(filename)[5000:6500, :]
     
     # artificial baseline
     data[:, 1] += 0.1* np.sin(data[:, 0]*3)
@@ -243,8 +260,9 @@ def test_absorption():
     settings = LineProfileSettings() 
     settings.data_units       = units.GHz
     settings.min_fwhm         = 150  * units.kHz
-    settings.max_fwhm         = 1000  * units.kHz
-    settings.step             = 400  * units.kHz
+    settings.max_fwhm         = 250  * units.kHz
+    settings.step             = 500  * units.kHz
+    settings.min_height_frac  = 0.01  # of heighest line
     settings.peak_model       = "GaussDerivative"
     settings.flag_verbose     = True
     
