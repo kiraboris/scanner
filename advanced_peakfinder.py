@@ -13,9 +13,9 @@ from pickett.units import Units
 
 def step_and_span(settings):
     
-    step = 1.0 * settings.max_fwhm.to(settings.data_units).magnitude 
+    step = settings.step.to(settings.data_units).magnitude
         
-    span = 4.0 * settings.max_fwhm.to(settings.data_units).magnitude
+    span = 4 * step
     
     return step, span
     
@@ -39,15 +39,15 @@ def accept_peak(peak, settings):
         return False
     
     # slope not extreme <=> valid baseline slope estimate
-    max_slope_estimate = (np.max(yyy) - np.min(yyy)) / (xxx[-1] - xxx[0])
-    flag4 = (abs(peak.params['slope']) <= max_slope_estimate)
+    #max_slope_estimate = (np.max(yyy) - np.min(yyy)) / (xxx[-1] - xxx[0])
+    #flag4 = (abs(peak.params['slope']) <= max_slope_estimate)
     
-    # line height greater than noise height
+    # line height positive and greater than noise height
     yyy_debaselined = yyy - eval_local_baseline(peak)
     min_height_estimate = 3 * np.std(yyy_debaselined)    
-    flag5 = (abs(peak.params['height']) >= min_height_estimate)
+    flag5 = (peak.params['height'] >= min_height_estimate)
     
-    if not flag4 or not flag5:
+    if not flag5:
         return False
     else:
         return True
@@ -190,6 +190,7 @@ def test_emission():
     settings.data_units       = units.GHz
     settings.min_fwhm         = 80  * units.kHz
     settings.max_fwhm         = 1.5 * units.MHz
+    settings.step             = 1.0 * units.MHz 
     settings.peak_model       = "Voigt"
     settings.flag_verbose     = True
     
@@ -240,16 +241,17 @@ def test_absorption():
     
     class LineProfileSettings: pass
     settings = LineProfileSettings() 
-    settings.data_units       = units.MHz
-    settings.min_fwhm         = 50  * units.kHz
-    settings.max_fwhm         = 500 * units.kHz
+    settings.data_units       = units.GHz
+    settings.min_fwhm         = 150  * units.kHz
+    settings.max_fwhm         = 1000  * units.kHz
+    settings.step             = 400  * units.kHz
     settings.peak_model       = "GaussDerivative"
     settings.flag_verbose     = True
     
     folder = "/home/borisov/projects/work/VinylCyanide/"
     filename = folder + 'dots_1.dat'
     
-    data = np.loadtxt(filename)
+    data = np.loadtxt(filename)[5000:6000, :]
     data_ranges = Ranges(arrays=[data])
     
     peaklist = find_peaks(data_ranges, settings)
@@ -272,7 +274,7 @@ def test_absorption():
     ax1.plot(xxx, obs,  color = 'k', lw=1)
     ax2.plot(calc_x, calc_y * 1000, color = 'b', lw=1)
     for p in peaklist: 
-        ax1.plot(p.xxx, p.best_fit, color = 'r', lw=2)
+        ax1.plot(p.xxx + p.offset, p.best_fit, color = 'r', lw=2)
 
     #plt.savefig(folder+'test.png', papertype = 'a4', orientation = 'landscape')
     plt.show()

@@ -1,7 +1,7 @@
 
+import numpy as np
 import lmfit.models as lmfit_models 
 import lmfit.model as lmfit_model_base
-
 
 class GaussDerivativeModel(lmfit_model_base.Model):
 
@@ -10,8 +10,8 @@ class GaussDerivativeModel(lmfit_model_base.Model):
     
     @staticmethod
     def gaussian_second_derivative(x, amplitude=1.0, center=0.0, sigma=1.0):
-        return (0.5*sqrt(2)*amplitude*(-1 + (center - x)**2/sigma**2)*
-            exp(-(center - 1.0*x)**2/(2*sigma**2))/(sqrt(pi)*sigma**3))
+        return (0.5*np.sqrt(2)*amplitude*(-1 + (center - x)**2/sigma**2)*
+            np.exp(-(center - 1.0*x)**2/(2*sigma**2))/(np.sqrt(np.pi)*sigma**3))
         # this expression as well as above were generated with SymPy
     
     
