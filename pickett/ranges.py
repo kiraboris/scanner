@@ -62,7 +62,7 @@ class Ranges:
             where x axis is 1st column, y axis is last column (as above)"""
 
         if arrays:
-            self.__arrs = self.__merge_overlaps(arrays)
+            self.__arrs = self.__merge_overlaps(arrays, merge_parameters=None)
         else:
             self.__arrs = []
 
@@ -71,7 +71,7 @@ class Ranges:
         return max([np.max(a[:, DIM.Y]) - np.min(a[:, DIM.Y])
                     for a in self.__arrs])
 
-    def add(self, arrays, merge_parameters = None):
+    def add(self, arrays, merge_parameters=None):
 
         self.__arrs = self.__merge_overlaps(self.__arrs + arrays, merge_parameters)
 
