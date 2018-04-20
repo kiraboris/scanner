@@ -5,7 +5,7 @@ import bisect
 import sys
 
 import lmfit.models as lmfit_models 
-import lmfit.model as lmfit_model_base
+import lmfit_custom_models
 
 from pickett.ranges import DIM, Ranges 
 from pickett.units import Units
@@ -71,12 +71,12 @@ def eval_local_baseline(peak):
 
 def make_peak_model(settings):
     
-    if settings.peak_model == "GaussDerivative2":
-        return lmfit_models.GaussDerivativeModel()
+    if settings.peak_model == "GaussDerivative":
+        return lmfit_custom_models.GaussDerivativeModel()
     elif settings.peak_model == "Voigt": 
         return lmfit_models.PseudoVoigtModel()
     else:
-        return lmfit_models.GaussModel()
+        return lmfit_models.GaussianModel()
 
 def find_peaks(data_ranges, settings, fev_per_epoch = 16, nepochs = 4):
     
@@ -86,10 +86,11 @@ def find_peaks(data_ranges, settings, fev_per_epoch = 16, nepochs = 4):
     
     nslices = data_ranges.nslices(*step_and_span(settings), nmipmap=2)
     slices  = data_ranges.slices(*step_and_span(settings), nmipmap=2)
-
+    
     peaklist = []    
     print('Searching for peaks...')
     for i, d in enumerate(slices):
+    
         offset = d[0, 0]
         xxx = d[:, 0] - offset
         yyy = d[:, 1]
@@ -242,13 +243,13 @@ def test_absorption():
     settings.data_units       = units.MHz
     settings.min_fwhm         = 50  * units.kHz
     settings.max_fwhm         = 500 * units.kHz
-    settings.peak_model       = "GaussDerivative2"
+    settings.peak_model       = "GaussDerivative"
     settings.flag_verbose     = True
     
-    folder = "/home/borisov/projects/work/emission/advanced/"
-    filename = folder + 'expdata_38-44.dat'
+    folder = "/home/borisov/projects/work/VinylCyanide/"
+    filename = folder + 'dots_1.dat'
     
-    data = np.loadtxt(filename)[5500:6500, :]
+    data = np.loadtxt(filename)
     data_ranges = Ranges(arrays=[data])
     
     peaklist = find_peaks(data_ranges, settings)
@@ -281,4 +282,4 @@ def test_absorption():
     #np.savetxt(folder + "calc_area.txt", np.stack([calc_x, calc_y * 1000]).T)
     
 if __name__ == '__main__':
-    test_emission()
+    test_absorption()
