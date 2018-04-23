@@ -15,12 +15,12 @@ def step_and_span(settings):
     
     step = settings.step.to(settings.data_units).magnitude
         
-    span = 4 * step
+    span = 3 * step
     
     return step, span
     
     
-def accept_peak(peak, settings, biased_peak_model, estimate_max_height):
+def accept_peak(peak, settings, biased_peak_model):
     """fidelity test for peak candidates"""
     xxx = peak.xxx
     yyy = peak.yyy    
@@ -35,27 +35,27 @@ def accept_peak(peak, settings, biased_peak_model, estimate_max_height):
     # candidate has a maximum
     flag3 = (xxx[0] < peak.params['center'] < xxx[-1])
     
-    # height is positive and sufficient (preliminary)
-    flag4 = (peak.params['height'] / estimate_max_height > settings.min_height_frac)
-    
-    if not flag1 or not flag2 or not flag3 or not flag4:
+    if not flag1 or not flag2 or not flag3:
         return False
-    #else:
-    #    return True
-    
-    # slope not extreme <=> valid baseline slope estimate
-    #max_slope_estimate = (np.max(yyy) - np.min(yyy)) / (xxx[-1] - xxx[0])
-    #flag4 = (abs(peak.params['slope']) <= max_slope_estimate)
     
     # line height positive and greater than noise height
     yyy_noise = yyy - biased_peak_model.eval(peak.params, x=peak.xxx)
-    min_height_estimate = 3 * np.std(yyy_noise)    
-    flag5 = (peak.params['height'] >= min_height_estimate)
+    min_height_estimate = settings.nsigma * np.std(yyy_noise)    
+    flag4 = (peak.params['height'] >= min_height_estimate)
+    
+    if not flag4:
+        return False
+    
+    # baseline curvature not extreme
+    yyy_baseline = eval_local_baseline(peak)
+    avg_actual_curvature = abs(np.mean(np.diff(yyy)))
+    avg_baseline_curvature = np.mean(abs(np.diff(yyy_baseline)))
+    flag5 = (avg_baseline_curvature <= avg_actual_curvature)
     
     if not flag5:
         return False
-    else:
-        return True
+    
+    return True
 
 
 def converged_peak(peak):
@@ -94,7 +94,7 @@ def find_peaks(data_ranges, settings, fev_per_epoch = 16, nepochs = 4):
     slices  = data_ranges.slices(*step_and_span(settings), nmipmap=2)
     
     peaklist = []    
-    est_max_height = 1e-30
+    #est_max_height = 1e-30
     print('Searching for peaks...')
     for i, d in enumerate(slices):
     
@@ -125,14 +125,14 @@ def find_peaks(data_ranges, settings, fev_per_epoch = 16, nepochs = 4):
             
             if converged_peak(fit_out): 
                 break
-            if not accept_peak(fit_out, settings, biased_peak_model, est_max_height):
+            if not accept_peak(fit_out, settings, biased_peak_model):
                 break
 
         # result of peak guess and fit
-        if accept_peak(fit_out, settings, biased_peak_model, est_max_height):
+        if accept_peak(fit_out, settings, biased_peak_model):
             peaklist.append(fit_out)
-            if fit_out.params['height'] > est_max_height:
-                est_max_height = fit_out.params['height']
+            #if fit_out.params['height'] > est_max_height:
+            #    est_max_height = fit_out.params['height']
         
         if settings.flag_verbose:                        
             print("%3.1f%%" % (float(i) / float(nslices) * 100.0), end='\r')
@@ -140,11 +140,11 @@ def find_peaks(data_ranges, settings, fev_per_epoch = 16, nepochs = 4):
         
     
     # additional acceptance loop
-    max_height = max(peaklist, key=lambda p: p.params['height']).params['height']
-    new_peaklist = [p for p in peaklist if
-                    p.params['height'] / max_height > settings.min_height_frac]
+    #max_height = max(peaklist, key=lambda p: p.params['height']).params['height']
+    #new_peaklist = [p for p in peaklist if accept_peak_final(peak,  
+    #               p.params['height'] / max_height > settings.min_height_frac]
     
-    return new_peaklist
+    return peaklist
         
 
 def peak_value(peak, flag_area = False):
@@ -157,6 +157,10 @@ def peak_value(peak, flag_area = False):
         
         return full_area - base_area
 
+def peak_maximum(peak):
+    
+    return peak.params['center'] + peak.offset
+
 def extract_peaks(peaklist, xxx, flag_area = False):
     
     calc_x    = np.linspace(xxx[0], xxx[-1], num = 2 * len(xxx))
@@ -165,7 +169,7 @@ def extract_peaks(peaklist, xxx, flag_area = False):
     calc_ny   = np.zeros(calc_x.shape)
     
     for p in peaklist:
-        index = bisect.bisect_left(calc_x, p.params['center'] + p.offset)
+        index = bisect.bisect_left(calc_x, peak_maximum(p))
         
         if index <= 0 or index >= len(calc_x) - 1:
             continue
@@ -259,24 +263,24 @@ def test_absorption():
     class LineProfileSettings: pass
     settings = LineProfileSettings() 
     settings.data_units       = units.GHz
-    settings.min_fwhm         = 150  * units.kHz
+    settings.min_fwhm         = 125  * units.kHz
     settings.max_fwhm         = 250  * units.kHz
     settings.step             = 500  * units.kHz
-    settings.min_height_frac  = 0.01  # of heighest line
+    settings.nsigma           = 5
     settings.peak_model       = "GaussDerivative"
     settings.flag_verbose     = True
     
     folder = "/home/borisov/projects/work/VinylCyanide/"
     filename = folder + 'dots_1.dat'
     
-    data = np.loadtxt(filename)[5000:6000, :]
+    data = np.loadtxt(filename)[0000:6000, :]
     data_ranges = Ranges(arrays=[data])
     
     peaklist = find_peaks(data_ranges, settings)
     
     xxx = data[:, 0]
     obs = data[:, 1]
-    calc_x, calc_y = extract_peaks(peaklist, xxx, flag_area = True)
+    calc_x, calc_y = extract_peaks(peaklist, xxx, flag_area = False)
         
     f1 = plt.figure(figsize=(11.69,8.27))
     ax1 = f1.add_subplot(211)
@@ -293,6 +297,7 @@ def test_absorption():
     ax2.plot(calc_x, calc_y * 1000, color = 'b', lw=1)
     for p in peaklist: 
         ax1.plot(p.xxx + p.offset, p.best_fit, color = 'r', lw=2)
+        ax1.plot(p.xxx + p.offset, eval_local_baseline(p), color = 'g', lw=1)
 
     #plt.savefig(folder+'test.png', papertype = 'a4', orientation = 'landscape')
     plt.show()
