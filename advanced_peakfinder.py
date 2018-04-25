@@ -47,13 +47,13 @@ def accept_peak(peak, settings, biased_peak_model):
         return False
     
     # baseline curvature not extreme
-    yyy_baseline = eval_local_baseline(peak)
-    avg_actual_curvature = abs(np.mean(np.diff(yyy)))
-    avg_baseline_curvature = np.mean(abs(np.diff(yyy_baseline)))
-    flag5 = (avg_baseline_curvature <= avg_actual_curvature)
+    #yyy_baseline = eval_local_baseline(peak)
+    #avg_actual_curvature = abs(np.mean(np.diff(yyy)))
+    #avg_baseline_curvature = np.mean(abs(np.diff(yyy_baseline)))
+    #flag5 = (avg_baseline_curvature <= avg_actual_curvature)
     
-    if not flag5:
-        return False
+    #if not flag5:
+    #    return False
     
     return True
 
@@ -90,8 +90,8 @@ def find_peaks(data_ranges, settings, fev_per_epoch = 16, nepochs = 4):
     local_baseline_model = lmfit_models.QuadraticModel()
     biased_peak_model = peak_model + local_baseline_model
     
-    nslices = data_ranges.nslices(*step_and_span(settings), nmipmap=2)
-    slices  = data_ranges.slices(*step_and_span(settings), nmipmap=2)
+    nslices = data_ranges.nslices(*step_and_span(settings), nmipmap=1)
+    slices  = data_ranges.slices(*step_and_span(settings), nmipmap=1)
     
     peaklist = []    
     #est_max_height = 1e-30
@@ -211,14 +211,14 @@ def test_emission():
     settings.min_fwhm         = 80  * units.kHz
     settings.max_fwhm         = 1.5 * units.MHz
     settings.step             = 1.0 * units.MHz 
-    settings.min_height_frac  = 0.02  # of heighest line
+    settings.nsigma           = 5
     settings.peak_model       = "Voigt"
     settings.flag_verbose     = True
     
     folder = "/home/borisov/projects/work/emission/advanced/"
     filename = folder + 'RT_norm_mean_spec.txt'
     
-    data = np.loadtxt(filename)[5000:6500, :]
+    data = np.loadtxt(filename)#[5000:6500, :]
     
     # artificial baseline
     data[:, 1] += 0.1* np.sin(data[:, 0]*3)
@@ -263,18 +263,22 @@ def test_absorption():
     class LineProfileSettings: pass
     settings = LineProfileSettings() 
     settings.data_units       = units.GHz
-    settings.min_fwhm         = 125  * units.kHz
+    settings.min_fwhm         = 80  * units.kHz
     settings.max_fwhm         = 250  * units.kHz
-    settings.step             = 500  * units.kHz
-    settings.nsigma           = 5
+    settings.step             = 750  * units.kHz
+    settings.nsigma           = 10
     settings.peak_model       = "GaussDerivative"
     settings.flag_verbose     = True
     
     folder = "/home/borisov/projects/work/VinylCyanide/"
-    filename = folder + 'dots_1.dat'
     
-    data = np.loadtxt(filename)[0000:6000, :]
-    data_ranges = Ranges(arrays=[data])
+    arrays = []
+    for i in range(1, 11):
+        filename = folder + 'dots_%i.dat' % i
+        arrays += [np.loadtxt(filename)]
+    
+    data_ranges = Ranges(arrays=arrays)
+    data = data_ranges.export()
     
     peaklist = find_peaks(data_ranges, settings)
     
@@ -304,7 +308,14 @@ def test_absorption():
     plt.close()
     
     # export calc spectrum
-    #np.savetxt(folder + "calc_area.txt", np.stack([calc_x, calc_y * 1000]).T)
+    #np.savetxt(folder + "calc.txt", np.stack([calc_x, calc_y * 1000]).T)
+    with open(folder + "calc.txt", 'w') as f:
+        for p in peaklist:
+            freq = (peak_maximum(p) * settings.data_units).to(units.MHz).magnitude
+            intens = np.log10( peak_value(p, flag_area=True) )
+            f.write("{}\t{}\n".format(freq, intens))
+            
     
 if __name__ == '__main__':
     test_absorption()
+    #test_emission()

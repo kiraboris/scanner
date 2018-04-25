@@ -160,7 +160,7 @@ class Ranges:
         result = None
         for i in range(1, len(arrs)):
 
-            if result:
+            if not result is None:
                 result = np.vstack((result, arrs[i - 1]))
             else:
                 result = arrs[i - 1]
