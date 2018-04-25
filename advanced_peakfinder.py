@@ -97,7 +97,10 @@ def find_peaks(data_ranges, settings, fev_per_epoch = 16, nepochs = 4):
     #est_max_height = 1e-30
     print('Searching for peaks...')
     for i, d in enumerate(slices):
-    
+        
+        if len(d) == 0 or len(d[:, 0]) == 0:
+            continue
+        
         offset = d[0, 0]
         xxx = d[:, 0] - offset
         yyy = d[:, 1]
@@ -116,8 +119,13 @@ def find_peaks(data_ranges, settings, fev_per_epoch = 16, nepochs = 4):
         }
 
         for n in range(0, nepochs):
-            fit_out = biased_peak_model.fit(yyy, params, x = xxx,
-                                            fit_kws = scipy_leastsq_sett)
+            try:
+                fit_out = biased_peak_model.fit(yyy, params, x = xxx,
+                                                fit_kws = scipy_leastsq_sett)
+            except:
+                fit_out = None
+                break
+                
             params = fit_out.params
             fit_out.xxx = xxx 
             fit_out.yyy = yyy
@@ -127,7 +135,10 @@ def find_peaks(data_ranges, settings, fev_per_epoch = 16, nepochs = 4):
                 break
             if not accept_peak(fit_out, settings, biased_peak_model):
                 break
-
+        
+        if fit_out is None:
+            continue
+            
         # result of peak guess and fit
         if accept_peak(fit_out, settings, biased_peak_model):
             peaklist.append(fit_out)
@@ -215,7 +226,7 @@ def test_emission():
     settings.peak_model       = "Voigt"
     settings.flag_verbose     = True
     
-    folder = "/home/borisov/projects/work/emission/advanced/"
+    folder = "/home/borisov/InSync/astro_cologne/work/emission/advanced/"
     filename = folder + 'RT_norm_mean_spec.txt'
     
     data = np.loadtxt(filename)#[5000:6500, :]
@@ -270,7 +281,7 @@ def test_absorption():
     settings.peak_model       = "GaussDerivative"
     settings.flag_verbose     = True
     
-    folder = "/home/borisov/projects/work/VinylCyanide/"
+    folder = "/home/borisov/InSync/astro_cologne/work/VinylCyanide/"
     
     arrays = []
     for i in range(1, 11):
