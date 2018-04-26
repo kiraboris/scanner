@@ -8,7 +8,7 @@ import lmfit.models as lmfit_models
 import lmfit_custom_models
 
 from pickett.ranges import DIM, Ranges 
-from pickett.units import Units
+from pickett.units import units
 
 
 def step_and_span(settings):
@@ -45,15 +45,6 @@ def accept_peak(peak, settings, biased_peak_model):
     
     if not flag4:
         return False
-    
-    # baseline curvature not extreme
-    #yyy_baseline = eval_local_baseline(peak)
-    #avg_actual_curvature = abs(np.mean(np.diff(yyy)))
-    #avg_baseline_curvature = np.mean(abs(np.diff(yyy_baseline)))
-    #flag5 = (avg_baseline_curvature <= avg_actual_curvature)
-    
-    #if not flag5:
-    #    return False
     
     return True
 
@@ -148,12 +139,6 @@ def find_peaks(data_ranges, settings, fev_per_epoch = 16, nepochs = 4):
         if settings.flag_verbose:                        
             print("%3.1f%%" % (float(i) / float(nslices) * 100.0), end='\r')
             sys.stdout.flush()
-        
-    
-    # additional acceptance loop
-    #max_height = max(peaklist, key=lambda p: p.params['height']).params['height']
-    #new_peaklist = [p for p in peaklist if accept_peak_final(peak,  
-    #               p.params['height'] / max_height > settings.min_height_frac]
     
     return peaklist
         
@@ -268,8 +253,6 @@ def test_emission():
 
 def test_absorption():
     """test example for absortion spectra"""
-    
-    units = Units.spec_units()
     
     class LineProfileSettings: pass
     settings = LineProfileSettings() 
