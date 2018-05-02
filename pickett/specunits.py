@@ -32,7 +32,7 @@ def make_spec_units():
                      'meter = s / 299792458 = m',
                      'wavenumber = 1 / cm = wn',
                  ]
-                 + Units.prefixes())
+                 + prefixes())
 
     units = pint.UnitRegistry(None)
     units.load_definitions(lst_units)

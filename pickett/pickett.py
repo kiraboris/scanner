@@ -217,10 +217,10 @@ def save_var(str_filename, rotor):
         f.write(text)
 
 
-def load_par():
+#def load_par():
 
 
-def load_var():
+#def load_var():
 
 
 
@@ -440,7 +440,10 @@ class LinConverter:
     @staticmethod
     def __write_quanta(dict_qu, dict_ql, int_fmt):
         """convert quanta from (dict,dict) to .cat str"""
-
+        
+        if(int_fmt is None):
+            int_fmt = 300
+        
         count_max = 6
         count = int_fmt % 10
         str_quanta = ""
@@ -490,10 +493,12 @@ class LinConverter:
         str_quanta = LinConverter.__write_quanta(obj_line.q_upper,
                                                  obj_line.q_lower,
                                                  obj_line.int_fmt)
-
+        
+        freq_err = obj_line.freq_err if not obj_line.freq_err is None else 0.0
+        
         str_out += "%s" % str_quanta
         str_out += "%15.4f" % obj_line.freq
-        str_out += ("%10.3f" % obj_line.freq_err).replace('0.', '.')
+        str_out += ("%10.3f" % freq_err).replace('0.', '.')
         str_out += "%s" % obj_line.str_lin_text
 
         return str_out

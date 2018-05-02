@@ -70,7 +70,7 @@ class Line(object):
         # additional information
         self.int_deg_freedom = None   # TODO: inherited ?
         self.int_cat_tag = None       # inherited from Rotor
-        self.str_lin_text = None      # custom information for lines
+        self.str_lin_text = ""        # custom information for lines
 
         # pressure broadening, alpha: dv=p*alpha*(T/296)^delta
         self.flt_pressure_alpha = None
