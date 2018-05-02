@@ -131,8 +131,8 @@ class Ranges:
             bins = np.arange(xa[0] + span / 2, xa[-1] - span / 2, step)
 
             for x in bins:
-                while xa[left] <= x - span / 2.0: left = left + 1
-                while xa[right] < x + span / 2.0: right = right + 1
+                while xa[left] <= x - span / 2.0 and left < len(xa)-1: left = left + 1
+                while xa[right] < x + span / 2.0 and right < len(xa)-1: right = right + 1
 
                 mleft = left
                 mright = right
@@ -140,8 +140,8 @@ class Ranges:
 
                     yield a[mleft:mright, :]  # yield spectrum, both DIM.X and DIM.Y
 
-                    mleft += int((mright - mleft) / 4)
-                    mright -= int((mright - mleft) / 4)
+                    mleft += int((mright - mleft) / 8)
+                    mright -= int((mright - mleft) / 8)
 
     def print(self):
 

@@ -1,7 +1,7 @@
 
 from pickett import pickett
 
-filename_test = "/home/borisov/projects/work/VinylCyanide/autofit_0/stage0.lin"
+filename_test = "/home/borisov/projects/work/VinylCyanide/autofit_0/try1stage1.lin"
 filename_cat = "/home/borisov/projects/work/VinylCyanide/c053515.cat"
 
 fmt = pickett.get_quantum_fmt(filename_cat)

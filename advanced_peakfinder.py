@@ -8,42 +8,54 @@ import lmfit.models as lmfit_models
 import lmfit_custom_models
 
 from pickett.ranges import DIM, Ranges 
-from pickett.units import units
+from pickett.specunits import units
 
 
 def step_and_span(settings):
     
-    step = settings.step.to(settings.data_units).magnitude
+    step = 2 * settings.avg_fwhm.to(settings.data_units).magnitude
         
     span = 3 * step
     
     return step, span
     
     
-def accept_peak(peak, settings, biased_peak_model):
+def accept_peak(peak, settings):
     """fidelity test for peak candidates"""
     xxx = peak.xxx
     yyy = peak.yyy    
-    
+
     # line width not extreme
     flag1 = (peak.params['fwhm'] >=
         settings.min_fwhm.to(settings.data_units).magnitude)
         
     flag2 = (peak.params['fwhm'] <=
         settings.max_fwhm.to(settings.data_units).magnitude)
-        
+    
     # candidate has a maximum
     flag3 = (xxx[0] < peak.params['center'] < xxx[-1])
     
-    if not flag1 or not flag2 or not flag3:
+    flag3a = True
+    #if settings.peak_model == "GaussDerivative":
+        # candidate also has at least one minumum
+    #    flag3a = any([peak.best_fit[i-1] > peak.best_fit[i] and 
+                    #peak.best_fit[i+1] > peak.best_fit[i] for
+    #                  i in range(1, len(xxx)-1)])
+    
+    if not flag1 or not flag2 or not flag3 or not flag3a:
         return False
     
-    # line height positive and greater than noise height
-    yyy_noise = yyy - biased_peak_model.eval(peak.params, x=peak.xxx)
-    min_height_estimate = settings.nsigma * np.std(yyy_noise)    
-    flag4 = (peak.params['height'] >= min_height_estimate)
+    # slope not extreme
+    block_height = max(yyy) - min(yyy)
+    block_width = xxx[-1] - xxx[0]
+    flag4 = (peak.params['slope'] <= block_height / block_width)
     
-    if not flag4:
+    # line height positive and greater than noise height
+    yyy_noise = yyy - peak.best_fit
+    min_height_estimate = settings.nsigma * np.std(yyy_noise)    
+    flag5 = (peak.params['height'] >= min_height_estimate)
+    
+    if not flag4 or not flag5:
         return False
     
     return True
@@ -57,11 +69,10 @@ def converged_peak(peak):
 
 def eval_local_baseline(peak):
     
-    local_baseline_model = lmfit_models.QuadraticModel()
+    local_baseline_model = lmfit_models.LinearModel()
     params = local_baseline_model.make_params()
-    params['a'].set(value = peak.params['a']) 
-    params['b'].set(value = peak.params['b'])   
-    params['c'].set(value = peak.params['c'])   
+    params['intercept'].set(value = peak.params['intercept']) 
+    params['slope'].set(value = peak.params['slope'])   
 
     return local_baseline_model.eval(params, x=peak.xxx)
 
@@ -75,19 +86,23 @@ def make_peak_model(settings):
     else:
         return lmfit_models.GaussianModel()
 
-def find_peaks(data_ranges, settings, fev_per_epoch = 16, nepochs = 4):
+def find_peaks(data_ranges, settings, fev_per_epoch = 16, nepochs = 4, nmipmap=1):
     
     peak_model = make_peak_model(settings)
-    local_baseline_model = lmfit_models.QuadraticModel()
+    local_baseline_model = lmfit_models.LinearModel()
     biased_peak_model = peak_model + local_baseline_model
     
-    nslices = data_ranges.nslices(*step_and_span(settings), nmipmap=1)
-    slices  = data_ranges.slices(*step_and_span(settings), nmipmap=1)
+    nslices = data_ranges.nslices(*step_and_span(settings), nmipmap=nmipmap)
+    slices  = data_ranges.slices(*step_and_span(settings), nmipmap=nmipmap)
     
     peaklist = []    
     #est_max_height = 1e-30
     print('Searching for peaks...')
     for i, d in enumerate(slices):
+        
+        if settings.flag_verbose:                        
+            print("%3.1f%%" % (float(i) / float(nslices) * 100.0), end='\r')
+            sys.stdout.flush()
         
         if len(d) == 0 or len(d[:, 0]) == 0:
             continue
@@ -98,9 +113,8 @@ def find_peaks(data_ranges, settings, fev_per_epoch = 16, nepochs = 4):
         
         # initital peak guess             
         params = peak_model.guess(yyy, x=xxx)
-        params.add('a', value=0.0)
-        params.add('b', value=0.0)
-        params.add('c', value=np.mean(yyy))
+        params.add('slope', value=0.0)
+        params.add('intercept', value=np.mean(yyy))
 
         # peak fitting loop
         scipy_leastsq_sett = {
@@ -124,24 +138,24 @@ def find_peaks(data_ranges, settings, fev_per_epoch = 16, nepochs = 4):
             
             if converged_peak(fit_out): 
                 break
-            if not accept_peak(fit_out, settings, biased_peak_model):
+            if not accept_peak(fit_out, settings):
                 break
         
         if fit_out is None:
             continue
             
         # result of peak guess and fit
-        if accept_peak(fit_out, settings, biased_peak_model):
+        if accept_peak(fit_out, settings):
             peaklist.append(fit_out)
             #if fit_out.params['height'] > est_max_height:
             #    est_max_height = fit_out.params['height']
-        
-        if settings.flag_verbose:                        
-            print("%3.1f%%" % (float(i) / float(nslices) * 100.0), end='\r')
-            sys.stdout.flush()
     
     return peaklist
         
+
+def peak_fwhm(peak):
+    
+    return peak.params['fwhm']
 
 def peak_value(peak, flag_area = False):
     
@@ -207,7 +221,7 @@ def test_emission():
     settings.min_fwhm         = 80  * units.kHz
     settings.max_fwhm         = 1.5 * units.MHz
     settings.step             = 1.0 * units.MHz 
-    settings.nsigma           = 5
+    settings.nsigma           = 10
     settings.peak_model       = "Voigt"
     settings.flag_verbose     = True
     
@@ -234,7 +248,7 @@ def test_emission():
     ax1.set_xlabel(r"Frequency [GHz]")
     ax1.set_ylabel(r"Intensity [arb]")
     ax2.set_xlabel(r"Frequency [GHz]")
-    ax2.set_ylabel(r"Peak area [arb * MHz]")
+    ax2.set_ylabel(r"Peak area [arb * GHz]")
     ax1.ticklabel_format(axis='x', useOffset=False)
     ax2.ticklabel_format(axis='x', useOffset=False)
     
@@ -256,21 +270,22 @@ def test_absorption():
     
     class LineProfileSettings: pass
     settings = LineProfileSettings() 
-    settings.data_units       = units.GHz
+    settings.data_units       = units.MHz
     settings.min_fwhm         = 80  * units.kHz
     settings.max_fwhm         = 250  * units.kHz
-    settings.step             = 750  * units.kHz
-    settings.nsigma           = 10
+    settings.avg_fwhm         = 200  * units.kHz
+    settings.nsigma           = 8.0
     settings.peak_model       = "GaussDerivative"
     settings.flag_verbose     = True
     
     folder = "/home/borisov/InSync/astro_cologne/work/VinylCyanide/"
     
     arrays = []
-    for i in range(1, 11):
-        filename = folder + 'dots_%i.dat' % i
-        arrays += [np.loadtxt(filename)]
+    #for i in range(1, 11):
+    #    filename = folder + 'dots_%i.dat' % i
+    #    arrays += [np.loadtxt(filename)]
     
+    arrays += [np.loadtxt(folder + 'whole.dat')]
     data_ranges = Ranges(arrays=arrays)
     data = data_ranges.export()
     
@@ -284,9 +299,9 @@ def test_absorption():
     ax1 = f1.add_subplot(211)
     ax2 = f1.add_subplot(212)
     
-    ax1.set_xlabel(r"Frequency [GHz]")
+    ax1.set_xlabel(r"Frequency [MHz]")
     ax1.set_ylabel(r"Intensity [arb]")
-    ax2.set_xlabel(r"Frequency [GHz]")
+    ax2.set_xlabel(r"Frequency [MHz]")
     ax2.set_ylabel(r"Peak area [arb * MHz]")
     ax1.ticklabel_format(axis='x', useOffset=False)
     ax2.ticklabel_format(axis='x', useOffset=False)
@@ -307,7 +322,8 @@ def test_absorption():
         for p in peaklist:
             freq = (peak_maximum(p) * settings.data_units).to(units.MHz).magnitude
             intens = np.log10( peak_value(p, flag_area=True) )
-            f.write("{}\t{}\n".format(freq, intens))
+            error = (peak_fwhm(p) * settings.data_units).to(units.MHz).magnitude
+            f.write("{}\t{}\t{}\n".format(freq, error, intens))
             
     
 if __name__ == '__main__':
