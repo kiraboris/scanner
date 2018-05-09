@@ -1,4 +1,5 @@
 
+import numpy as np
 from . import entities
 
 def load_lines(filename):
@@ -9,8 +10,14 @@ def load_lines(filename):
             s = s.strip().split()
             
             line = entities.Line()
-            line.freq = float(s[0])
-            line.log_I = float(s[1])
+            
+            if len(s) == 2:
+                line.freq = float(s[0])
+                line.log_I = np.log10(float(s[1]))
+            elif len(s) == 3:
+                line.freq = float(s[0])
+                line.freq_err = float(s[1])
+                line.log_I = float(s[2])
             
             lines.append(line)
             
@@ -21,5 +28,5 @@ def save_lines(filename, lines):
     with open(filename, 'w') as f:
         for line in lines:
             freq = line.freq
-            intens = line.log_I
+            intens = 10 ** line.log_I
             f.write("{}\t{}\n".format(freq, intens))
