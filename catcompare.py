@@ -1,8 +1,9 @@
 
 from pickett import pickett
 
-filename_test = "/home/borisov/projects/work/VinylCyanide/autofit_0/try1stage1.lin"
-filename_cat = "/home/borisov/projects/work/VinylCyanide/c053515.cat"
+
+filename_test = "/home/borisov/InSync/astro_cologne/work/VinylCyanide/autofit_0/try2f.lin"
+filename_cat = "/home/borisov/InSync/astro_cologne/work/VinylCyanide/c053515.cat"
 
 fmt = pickett.get_quantum_fmt(filename_cat)
 linelist_test = pickett.load_pgo_lin(filename_test, fmt)
