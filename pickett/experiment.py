@@ -60,9 +60,9 @@ class Experiment:
         
         for i, i_line in enumerate(lines):
         
-            if abs(i_line.log_I) > threshold * min_log_I:
+            if abs(i_line.log_I) > threshold + min_log_I:
                 continue
-                print("Love")
+
             flag_found = False
             for k, k_line in enumerate(new_lines):
                 if k_line.freq - spacing < i_line.freq < k_line.freq + spacing:
