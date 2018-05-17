@@ -24,7 +24,7 @@ class Experiment:
         self.ranges = None
         self.lines = []
     
-    def load_lines(self, filename, fileformat='cat'):
+    def load_lines(self, filename, fileformat):
         
         if fileformat == 'simple':
             self.lines = simple_io.load_lines(filename)

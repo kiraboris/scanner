@@ -272,9 +272,9 @@ def test_absorption():
     settings = LineProfileSettings() 
     settings.data_units       = units.MHz
     settings.min_fwhm         = 80  * units.kHz
-    settings.max_fwhm         = 250  * units.kHz
+    settings.max_fwhm         = 350  * units.kHz
     settings.avg_fwhm         = 200  * units.kHz
-    settings.nsigma           = 8.0
+    settings.nsigma           = 10.0
     settings.peak_model       = "GaussDerivative"
     settings.flag_verbose     = True
     
@@ -285,7 +285,7 @@ def test_absorption():
     #    filename = folder + 'dots_%i.dat' % i
     #    arrays += [np.loadtxt(filename)]
     
-    arrays += [np.loadtxt(folder + 'whole.dat')]
+    arrays += [np.loadtxt(folder + 'survey.txt')]
     data_ranges = Ranges(arrays=arrays)
     data = data_ranges.export()
     
@@ -318,7 +318,7 @@ def test_absorption():
     
     # export calc spectrum
     #np.savetxt(folder + "calc.txt", np.stack([calc_x, calc_y * 1000]).T)
-    with open(folder + "calc.txt", 'w') as f:
+    with open(folder + "survey_peaks_raw.txt", 'w') as f:
         for p in peaklist:
             freq = (peak_maximum(p) * settings.data_units).to(units.MHz).magnitude
             intens = np.log10( peak_value(p, flag_area=True) )
