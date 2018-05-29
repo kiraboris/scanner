@@ -22,10 +22,10 @@ class RotorSymmetry:
 
 class RotorParameter(object):
 
-    def __init__(self, name, value=1.0, error=float('inf'), flag_fit=True):
+    def __init__(self, name, value=1.0, error=None, flag_fit=True):
         self.name = name
         self.value = value
-        self.error = error
+        self.error = error if error else value / 2
         self.flag_fit = flag_fit
         self.flag_enabled = True
 
@@ -64,7 +64,7 @@ class Rotor(object):
         else:
             Q_rot_base = 0
 
-        Q_rot = ((5.3311 * 10 ** (6)) * (T ** (1.5)) * Q_rot_base)
+        Q_rot = ((5.3311 * 10 ** (6)) * (T ** (1.5)) * Q_rot_base * self.symmetry.Qdegree)
 
         return Q_rot
 
@@ -83,19 +83,19 @@ class Rotor(object):
             a = subprocess.Popen("%s %s" % (spcatname, infilename), stdout=subprocess.PIPE, shell=True)
             a.wait()  # a.stdout.read() seems to be best way to get SPCAT to finish. I tried .wait(), but it outputted everything to screen
 
-    def simulate(self, folder="./temp/"):
-        self.write_params(folder)
+    def simulate(self, folder="./temp/", threshold=-15.0):
+        self.write_params(folder, threshold)
         self.run_simulation(folder)
         self.read_lines(folder)
 
-    def write_params(self, folder="./temp/"):
+    def write_params(self, folder="./temp/", threshold=-15.0):
         if self.simulation_method == "pickett":
             if not os.path.exists(folder):
                 os.makedirs(folder)
             intfile = self.make_filename(folder, '.int')
-            parfile = self.make_filename(folder, '.par')
-            pickett.save_par(parfile, self)
-            pickett.save_int(intfile, self)
+            varfile = self.make_filename(folder, '.var')
+            pickett.save_var(varfile, self)
+            pickett.save_int(intfile, self, inten=threshold)
 
     def read_params(self, catID, folder="./temp/"):
 

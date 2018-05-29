@@ -131,7 +131,7 @@ class ParVarConverter:
 
     @staticmethod
     def write_header(rotor, max_lines=2000, max_error=1.0E+005, max_iters=10,
-                     K_min=0, K_max = 99, diagonalization=0):
+                     K_min=0, K_max = 50, diagonalization=0):
 
         a, b, c, d, e, f = ParVarConverter.symmetry_flags(rotor)
         text = ""
@@ -170,12 +170,12 @@ def load_int(str_filename, rotor):
     return rotor
 
 
-def save_int(str_filename, rotor, tag = 0,
-             J_min=0, J_max=100, inten=-15.0, max_freq=300.0, temperature=300.0):
+def save_int(str_filename, rotor,
+             J_min=0, J_max=100, inten=-15.0, max_freq=500.0, temperature=300.0):
     input_file = ""
     input_file += "%s \n" % rotor.name
     input_file += ("%1d  %d  %f  %3d  %3d  %f  %f  %f  %f\n" %
-                   (int(rotor.flag_wavenumbers)*1000, tag, rotor.Q(temperature),
+                   (int(rotor.flag_wavenumbers)*1000, 0, rotor.Q(temperature),
                     J_min, J_max, inten, inten, max_freq, temperature))
 
     if rotor.mu_A:

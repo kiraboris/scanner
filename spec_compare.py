@@ -52,7 +52,8 @@ def sigmoid(x):
 
 def cross_loss(linelist_calc, linelist_exp, distance_transform_function=np.log):
     
-    loss = -(len(linelist_exp) - 1)*len(linelist_calc)
+    loss = -len(linelist_exp)*len(linelist_calc)
+
     for line_exp in linelist_exp:
         for line_calc in linelist_calc:
             distance = abs(line_calc.freq - line_exp.freq) 
