@@ -5,18 +5,12 @@ import os
 from bidict import bidict
 
 from . import knowledge
-from .entities import Line, State, RotorParameter, qdict
+from .entities import Line, State, qdict
+from .rotor import RotorParameter
 
 db = knowledge.SourceDB(os.path.join(
                         os.path.dirname(os.path.abspath(__file__)), "pickett_db.py"))
 
-
-# def add_param_inversion(name):
-#
-#     if name[0] == '-':
-#         return name
-#     else:
-#         return '-' + name
 
 def strip_possible_param_inversion(name):
 
@@ -29,7 +23,7 @@ def strip_possible_param_inversion(name):
 def param_code(name):
     name = strip_possible_param_inversion(name)
 
-    if not name in db.PARAM_CODES:
+    if name not in db.PARAM_CODES:
         code = int(knowledge.ask("What is the code for %s? " % name))
 
         db.PARAM_CODES[name] = code
@@ -45,7 +39,7 @@ def quanta_headers(int_fmt):
     int_c = int_fmt % 10
     int_Q = int_fmt // 100
 
-    if not int_Q in db.QUANTA_HEADERS:
+    if int_Q not in db.QUANTA_HEADERS:
         str_head = (knowledge.ask(
             'What are the quanta for code %i? (e.g. "N K J F1 F2 F")' % int_Q))
 
@@ -136,16 +130,18 @@ class ParVarConverter:
             return param
 
     @staticmethod
-    def write_header(rotor, max_lines=2000, max_error=1.0E+005, max_iters=100,
+    def write_header(rotor, max_lines=2000, max_error=1.0E+005, max_iters=10,
                      K_min=0, K_max = 99, diagonalization=0):
+
+        a, b, c, d, e, f = ParVarConverter.symmetry_flags(rotor)
         text = ""
         text += "%s \n" % rotor.name
         text += ("   %d  %d   %d    0    0.000E+000   %.4e    1.0000E+000 1.0000000000\n" %
-                 len(rotor.params), max_lines, max_iters,  max_error)
+                 (len(rotor.params), max_lines, max_iters,  max_error))
         text += ("%s   %s%d  %s1  %2d  %2d  %d  %d  %d  %d  %d  %d   %d\n" %
-                 rotor.symmetry.reduction, signum(rotor.symmetry.type == 'asym'),
-                 rotor.symmetry.spin_degeneracy, signum(rotor.symmetry.representation == 'prolate'),
-                 K_min, K_max, *ParVarConverter.symmetry_flags(rotor), diagonalization)
+                 (rotor.symmetry.reduction, signum(rotor.symmetry.type == 'asym'),
+                  rotor.symmetry.spin_degeneracy, signum(rotor.symmetry.representation == 'prolate'),
+                  K_min, K_max, a, b, c, d, e, f, diagonalization))
         return text
 
 
@@ -174,22 +170,22 @@ def load_int(str_filename, rotor):
     return rotor
 
 
-def save_int(str_filename, rotor,
+def save_int(str_filename, rotor, tag = 0,
              J_min=0, J_max=100, inten=-15.0, max_freq=300.0, temperature=300.0):
     input_file = ""
     input_file += "%s \n" % rotor.name
     input_file += ("%1d  %d  %f  %3d  %3d  %f  %f  %f  %f\n" %
-                   (int(rotor.flag_wavenumbers)*1000, rotor.tag, rotor.Q(temperature),
+                   (int(rotor.flag_wavenumbers)*1000, tag, rotor.Q(temperature),
                     J_min, J_max, inten, inten, max_freq, temperature))
 
-    if rotor.u_A:
-        input_file += " 001  %f \n" % rotor.u_A
+    if rotor.mu_A:
+        input_file += " 001  %f \n" % rotor.mu_A
 
-    if rotor.u_B:
-        input_file += " 002  %f \n" % rotor.u_B
+    if rotor.mu_B:
+        input_file += " 002  %f \n" % rotor.mu_B
 
-    if rotor.u_C:
-        input_file += " 003  %f \n" % rotor.u_C
+    if rotor.mu_C:
+        input_file += " 003  %f \n" % rotor.mu_C
 
     with open(str_filename, "w") as fh:
         fh.write(input_file)
@@ -198,7 +194,7 @@ def save_int(str_filename, rotor,
 def save_par(str_filename, rotor):
     text = ParVarConverter.write_header(rotor)
 
-    for param in rotor.params:
+    for param in rotor.params.values():
         if param.flag_enabled:
             text += ParVarConverter.obj_to_par_str(param)
 
@@ -209,7 +205,7 @@ def save_par(str_filename, rotor):
 def save_var(str_filename, rotor):
     text = ParVarConverter.write_header(rotor)
 
-    for param in rotor.params:
+    for param in rotor.params.values():
         if param.flag_enabled:
             text += ParVarConverter.obj_to_var_str(param)
 
@@ -217,11 +213,22 @@ def save_var(str_filename, rotor):
         f.write(text)
 
 
-#def load_par():
+def load_par(str_filename, rotor):
+    with open(str_filename, 'r') as f:
+        line = f.readline()
+        line = f.readline()
+        line = f.readline()
+        for line, param in zip(f, rotor.params.values()):
+            ParVarConverter.par_str_to_obj(line, param)
 
 
-#def load_var():
-
+def load_var(str_filename, rotor):
+    with open(str_filename, 'r') as f:
+        line = f.readline()
+        line = f.readline()
+        line = f.readline()
+        for line, param in zip(f, rotor.params.values()):
+            ParVarConverter.var_str_to_obj(line, param)
 
 
 class CatConverter:

@@ -169,28 +169,6 @@ def qtransform(self, entries, func_transform):
             entry.q_lower = func_transform(entry.q_lower)
 
 
-# *** quantum rotor model ***
-
-class RotorSymmetry:
-
-    def __init__(self):
-        # sample defaults
-        self.type = "asym"
-        self.group = 'C1'
-        self.representation = 'prolate'
-        self.reduction = 's'
-        self.degree = 3   # used in Q() calculation
-        self.spin_degeneracy = 1
-
-
-class RotorParameter(object):
-
-    def __init__(self, name, value=1.0, error=float('inf'), flag_fit=False):
-        self.name = name
-        self.value = value
-        self.error = error
-        self.flag_fit = flag_fit
-        self.flag_enabled = True
 
 
 
