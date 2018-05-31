@@ -171,7 +171,7 @@ def load_int(str_filename, rotor):
 
 
 def save_int(str_filename, rotor,
-             J_min=0, J_max=100, inten=-15.0, max_freq=500.0, temperature=300.0):
+             J_min=0, J_max=51, inten=-15.0, max_freq=150.0, temperature=300.0):
     input_file = ""
     input_file += "%s \n" % rotor.name
     input_file += ("%1d  %d  %f  %3d  %3d  %f  %f  %f  %f\n" %
