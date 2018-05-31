@@ -73,7 +73,7 @@ class Rotor(object):
 
     def __read_lines(self, folder="./temp/"):
         if self.simulation_method == "pickett":
-            catfile = self.make_filename(folder, '.cat')
+            catfile = self.__make_filename(folder, '.cat')
             self.sim_lines = pickett.load_cat(catfile)
 
     def __run_simulation(self, folder="./temp/"):
@@ -83,7 +83,7 @@ class Rotor(object):
             else:
                 progname = "spcat_linux"
 
-            infilename = self.make_filename(folder, '')
+            infilename = self.__make_filename(folder, '')
             spcatname = os.path.join(os.path.dirname(os.path.abspath(__file__)), progname)
             a = subprocess.Popen("%s %s" % (spcatname, infilename), stdout=subprocess.PIPE, shell=True)
             a.stdout.read()
@@ -99,19 +99,19 @@ class Rotor(object):
         if self.simulation_method == "pickett":
             if not os.path.exists(folder):
                 os.makedirs(folder)
-            intfile = self.make_filename(folder, '.int')
-            varfile = self.make_filename(folder, '.var')
+            intfile = self.__make_filename(folder, '.int')
+            varfile = self.__make_filename(folder, '.var')
             pickett.save_var(varfile, self)
             pickett.save_int(intfile, self, inten=threshold, max_freq=max_freq)
 
     def __read_params(self, folder):
 
         if self.simulation_method == "pickett":
-            varfile = self.make_filename(folder, '.var')
+            varfile = self.__make_filename(folder, '.var')
             if varfile:
                 pickett.load_var(varfile, self)
 
-            parfile = self.make_filename(folder, '.par')
+            parfile = self.__make_filename(folder, '.par')
             if parfile:
                 pickett.load_par(parfile, self)
 
