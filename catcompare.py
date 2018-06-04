@@ -1,12 +1,18 @@
 
 from pickett import pickett
 
+def signum(line):
+    if line.int_cat_tag > 0:
+        return " "
+    else:
+        return "+"
+
 def print_line(line, real_line):
-    print("Frequency: {:.4f}, actual frequency {:.4f}".
-          format(line.freq, real_line.freq), end='')
+    print("Frequency: {:.4f}, actual frequency {}{:.4f}".
+          format(line.freq, signum(real_line), real_line.freq), end='')
 
 def criterium(line, real_line):
-    return abs(line.freq - real_line.freq) < 1.500 # MHz
+    return abs(line.freq - real_line.freq) < 1.000 # MHz
 
 
 def compare(filename_test, filename_cat):
@@ -26,6 +32,6 @@ def compare(filename_test, filename_cat):
                 print(" --> ok")
         
 
-filename_test = "/home/borisov/InSync/astro_cologne/work/VinylCyanide/autofit_1/try2stage2a.lin"
-filename_cat = "/home/borisov/InSync/astro_cologne/work/VinylCyanide/c053515.cat"
+filename_test = "/home/borisov/Dropbox/astro_cologne/work/VinylCyanide/autofit_1/try4stage2.lin"
+filename_cat = "/home/borisov/Dropbox/astro_cologne/work/VinylCyanide/c053515.cat"
 compare(filename_test, filename_cat)
