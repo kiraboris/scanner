@@ -544,9 +544,7 @@ class PGopherLinConverter:
         dict_qu, dict_ql = PGopherLinConverter.__read_quanta(str_q, int_fmt)
 
         obj_line.freq = float(str_line[count * 2 * 3:count * 2 * 3 + 18])
-        obj_line.freq_err = float(str_line[count * 2 * 3 + 23:count * 2 * 3 + 30])
-
-        obj_line.str_lin_text = str_line[count * 2 + 33:-1]
+        obj_line.freq_err = float(str_line[count * 2 * 3 + 38:count * 2 * 3 + 59])
 
         obj_line.int_fmt = int_fmt
         obj_line.q_upper = dict_qu
