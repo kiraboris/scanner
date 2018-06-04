@@ -2,6 +2,7 @@
 import lmfit.lineshapes as lineshapes
 import bisect
 import numpy as np
+from scipy.special import erf
 
 def add_gauss(xxx, yyy, line, sigma):
     
@@ -30,6 +31,7 @@ def make_grid(freq_limits, resolution):
     
     return np.arange(freq_min, freq_max, resolution)
 
+
 def make_spectrum(linelist, sigma_MHz, xxx, 
                   add_peak_function=add_impulse):
     
@@ -41,7 +43,7 @@ def make_spectrum(linelist, sigma_MHz, xxx,
     return yyy
     
 
-def loss_product_impulse(exp, calc):
+def product_impulse_loss(exp, calc):
     
     return sum(np.logical_or(exp, calc))
     
@@ -50,14 +52,27 @@ def sigmoid(x):
     
     return 1.0 / (1.0 + np.exp(-x))   
 
-def cross_loss(linelist_calc, linelist_exp, distance_transform_function=np.log):
-    
-    loss = -len(linelist_exp)*len(linelist_calc)
 
-    for line_exp in linelist_exp:
-        for line_calc in linelist_calc:
-            distance = abs(line_calc.freq - line_exp.freq) 
-            loss += sigmoid(distance)
-            
+def cross_loss(linelist_calc, linelist_exp, assign_freq_tol=1.5):
+
+    # lines are sorted; a cutoff window could be introduced
+    # simplest temporary assignment without preserving combinations (most left one inside window)
+
+    loss = 0.0
+    assigned_qids = set()
+    for line_calc in linelist_calc:
+        for line_exp in linelist_exp:
+            distance = abs(line_calc.freq - line_exp.freq)
+            importance = 1.0 - erf(distance / assign_freq_tol)
+
+            if line_exp.assigned_line and line_exp.assigned_line.qid() in assigned_qids:
+                if distance <= assign_freq_tol:
+                    continue
+
+            if distance <= assign_freq_tol:
+                line_exp.assigned_line = line_calc
+                assigned_qids.add(line_calc.qid())
+
+            loss -= importance
+
     return loss
-    

@@ -573,7 +573,11 @@ def load_cat(str_filename):
     lst_lines = []
     with open(str_filename, 'r') as f:
         for str_line in f:
-            obj = CatConverter.str2line(str_line)
+            try:
+                obj = CatConverter.str2line(str_line)
+            except ValueError:
+                return []
+
             lst_lines.append(obj)
 
     return lst_lines

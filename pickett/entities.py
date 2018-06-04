@@ -78,7 +78,7 @@ class Line(object):
 
         # calculated values
         self.Einstein_A = None
-        self.peak = None   # experimental peak
+        self.assigned_line = None
 
     def copy(self):
         return copy.deepcopy(self)
