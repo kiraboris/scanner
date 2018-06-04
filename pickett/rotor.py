@@ -68,43 +68,50 @@ class Rotor(object):
 
         return Q_rot
 
-    def make_filename(self, folder, extension):
+    def __make_filename(self, folder, extension):
         return os.path.join(folder, self.name + extension)
 
-    def read_lines(self, folder="./temp/"):
+    def __read_lines(self, folder="./temp/"):
         if self.simulation_method == "pickett":
-            catfile = self.make_filename(folder, '.cat')
+            catfile = self.__make_filename(folder, '.cat')
             self.sim_lines = pickett.load_cat(catfile)
 
-    def run_simulation(self, folder="./temp/"):
+    def __run_simulation(self, folder="./temp/"):
         if self.simulation_method == "pickett":
-            infilename = self.make_filename(folder, '')
-            spcatname = os.path.join(os.path.dirname(os.path.abspath(__file__)), "spcat")
+            if os.name == 'nt':
+                progname = "spcat.exe"
+            else:
+                progname = "spcat_linux"
+
+            infilename = self.__make_filename(folder, '')
+            spcatname = os.path.join(os.path.dirname(os.path.abspath(__file__)), progname)
             a = subprocess.Popen("%s %s" % (spcatname, infilename), stdout=subprocess.PIPE, shell=True)
-            a.wait()  # a.stdout.read() seems to be best way to get SPCAT to finish. I tried .wait(), but it outputted everything to screen
+            a.stdout.read()
+            # a.stdout.read() seems to be best way to get SPCAT to finish. I tried .wait(),
+            # but it outputted everything to screen
 
-    def simulate(self, folder="./temp/", threshold=-15.0):
-        self.write_params(folder, threshold)
-        self.run_simulation(folder)
-        self.read_lines(folder)
+    def simulate(self, folder="./temp/", threshold=-15.0, max_freq=2000.0):
+        self.__write_params(folder, threshold, max_freq)
+        self.__run_simulation(folder)
+        self.__read_lines(folder)
 
-    def write_params(self, folder="./temp/", threshold=-15.0):
+    def __write_params(self, folder, threshold, max_freq):
         if self.simulation_method == "pickett":
             if not os.path.exists(folder):
                 os.makedirs(folder)
-            intfile = self.make_filename(folder, '.int')
-            varfile = self.make_filename(folder, '.var')
+            intfile = self.__make_filename(folder, '.int')
+            varfile = self.__make_filename(folder, '.var')
             pickett.save_var(varfile, self)
-            pickett.save_int(intfile, self, inten=threshold)
+            pickett.save_int(intfile, self, inten=threshold, max_freq=max_freq)
 
-    def read_params(self, catID, folder="./temp/"):
+    def __read_params(self, folder):
 
         if self.simulation_method == "pickett":
-            varfile = self.make_filename(folder, '.var')
+            varfile = self.__make_filename(folder, '.var')
             if varfile:
                 pickett.load_var(varfile, self)
 
-            parfile = self.make_filename(folder, '.par')
+            parfile = self.__make_filename(folder, '.par')
             if parfile:
                 pickett.load_par(parfile, self)
 
