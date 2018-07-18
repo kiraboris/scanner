@@ -1,10 +1,9 @@
 # python 3
 
 import sys
-import shutil
 import bidict
 
-import pickett.catalog
+import pickett_old.catalog
 import pickett.correctors
 
 def main():
@@ -42,7 +41,7 @@ def main():
     })
     
     
-    qm = pickett.catalog.Formatter(corrector = pickett.correctors.SpinSymmCorrector())   
+    qm = pickett_old.catalog.Formatter(corrector = pickett.correctors.SpinSymmCorrector())
 
     looper = {"042514_hfs": ['cat', 'lin', 'mrg', 'egy']}
 

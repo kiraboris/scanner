@@ -2,8 +2,8 @@
 import numpy as np
 from . import entities
 
+
 def load_lines(filename):
-    
     lines = []
     with open(filename, 'r') as f:
         for s in f:
@@ -23,8 +23,8 @@ def load_lines(filename):
             
     return lines
 
-def save_lines(filename, lines):
 
+def save_lines(filename, lines):
     with open(filename, 'w') as f:
         for line in lines:
             freq = line.freq

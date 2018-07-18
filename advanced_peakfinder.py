@@ -7,8 +7,8 @@ import sys
 import lmfit.models as lmfit_models 
 import lmfit_custom_models
 
-from pickett.ranges import DIM, Ranges 
-from pickett.specunits import units
+from pickett_old.ranges import DIM, Ranges
+from pickett_old.specunits import units
 
 
 def step_and_span(settings):

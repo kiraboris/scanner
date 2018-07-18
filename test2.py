@@ -4,9 +4,9 @@ from copy import deepcopy
 
 from scipy.optimize import differential_evolution, basinhopping
 
-from pickett import experiment
-from pickett.specunits import units
-from pickett import rotor
+from pickett_old import experiment
+from pickett_old.specunits import units
+from pickett_old import rotor
 
 import spec_compare
 
@@ -17,7 +17,7 @@ folder = "C:/Users/Kirill/Dropbox/astro_cologne/work/VinylCyanide/global/"
 myrotor = rotor.Rotor("VinylCyanide")
 myrotor.mu_A = 3.815
 myrotor.mu_B = 0.894
-if 1:
+if 0:
     myrotor.add_param("A", value=4.985069674402932E+004)
     myrotor.add_param("B", value=4.971163651218108E+003)
     myrotor.add_param("C", value=4.513877260055734E+003)

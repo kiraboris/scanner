@@ -20,14 +20,7 @@ class RotorSymmetry:
         self.spin_degeneracy = 1  # for all spins, in Pickett format
 
 
-class RotorParameter(object):
 
-    def __init__(self, name, value=1.0, error=None, flag_fit=True):
-        self.name = name
-        self.value = value
-        self.error = error if error else value / 2
-        self.flag_fit = flag_fit
-        self.flag_enabled = True
 
 
 class Rotor(object):

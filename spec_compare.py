@@ -45,7 +45,7 @@ def make_spectrum(linelist, sigma_MHz, xxx,
 
 def product_impulse_loss(exp, calc):
     
-    return sum(np.logical_or(exp, calc))
+    return -sum(np.logical_or(exp, calc))
     
 
 def sigmoid(x):
