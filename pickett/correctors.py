@@ -7,7 +7,7 @@ from abc import ABC, abstractmethod
 import numpy as np
 import math
 
-from entities.quanta import qid
+from ..entities.quanta import qid
 
 
 class Corrector(ABC):

@@ -1,5 +1,31 @@
 
+import copy
 from ..entities.quanta import qdict
+from .db import quanta_headers
+
+
+def __filter_qdict(qdict, header):
+    new_qdict = {}
+    for q, v in qdict.items():
+        if q in header:
+            new_qdict[q] = v
+    return new_qdict
+
+
+def make_dict(entries, fmt=None):
+    """More powerful version of qdict :=) with respect to Pickett quantum format"""
+
+    newntries = copy.deepcopy(entries)
+
+    if newntries:
+        if fmt and not newntries[0].int_fmt == fmt:
+            new_codes = quanta_headers(fmt)
+            for line in newntries:
+                line.q_upper = __filter_qdict(line.q_upper, new_codes)
+                line.q_lower = __filter_qdict(line.q_lower, new_codes)
+        return qdict(newntries)
+    else:
+        return {}
 
 
 def correct(corrector, entries, file_format):
