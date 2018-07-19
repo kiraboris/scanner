@@ -1,12 +1,7 @@
+from scipy.optimize import differential_evolution
 
-import sys
-from copy import deepcopy
-
-from scipy.optimize import differential_evolution, basinhopping
-
-from pickett_old import experiment
-from pickett_old.specunits import units
-from pickett_old import rotor
+from old import experiment, rotor
+from entities.specunits import units
 
 import spec_compare
 

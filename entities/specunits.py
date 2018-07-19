@@ -1,6 +1,7 @@
 
 import pint
 
+
 def prefixes():
     return [
         'yocto- = 1e-24 = y-',
@@ -25,18 +26,15 @@ def prefixes():
         'yotta- = 1e24  = Y-'
     ]
 
-def make_spec_units():
-    lst_units = ([
-                     'second = [time] = s',
-                     'hertz = 1 / s = Hz',
-                     'meter = s / 299792458 = m',
-                     'wavenumber = 1 / cm = wn',
-                 ]
-                 + prefixes())
 
-    units = pint.UnitRegistry(None)
-    units.load_definitions(lst_units)
+_lst_units = ([
+                 'second = [time] = s',
+                 'hertz = 1 / s = Hz',
+                 'meter = s / 299792458 = m',
+                 'wavenumber = 1 / cm = wn',
+             ]
+             + prefixes())
 
-    return units
+units = pint.UnitRegistry(None)
+units.load_definitions(_lst_units)
 
-units = make_spec_units()

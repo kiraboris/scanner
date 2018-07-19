@@ -1,14 +1,7 @@
-
-from copy import deepcopy
-
-import numpy as np
-import matplotlib.pyplot as plt
-
 from scipy.optimize import differential_evolution
 
-from pickett_old import experiment
-from pickett_old.specunits import units
-from pickett_old import rotor
+from old import experiment, rotor
+from entities.specunits import units
 
 import spec_compare
 

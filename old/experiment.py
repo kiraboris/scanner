@@ -1,13 +1,10 @@
 
 import numpy as np
-from collections import defaultdict
 
-from . import entities
-from . import ranges
-from . import peakfinder
-from . import pickett
-from . import simple_io
-from .specunits import units
+from pickett_old import entities
+from old import peakfinder, simple_io
+from pickett_old import pickett
+from entities.specunits import units
 
 def peak_to_line(peak, factor):
     line = entities.Line()

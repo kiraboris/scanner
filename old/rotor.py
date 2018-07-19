@@ -2,8 +2,8 @@
 import os, os.path
 import subprocess
 
-from . import pickett
-from . import entities
+from pickett_old import pickett
+from pickett_old import entities
 
 # *** quantum rotor model ***
 

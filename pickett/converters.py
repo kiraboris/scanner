@@ -99,12 +99,12 @@ class CatConverter:
         obj_line.freq_err = float(str_line[13:21])
 
         obj_line.log_I = float(str_line[21:29])
-        obj_line.int_deg_freedom = int(str_line[29:31])
+        obj_line.extended['int_deg_freedom'] = int(str_line[29:31])
 
         obj_line.E = float(str_line[31:41])
         obj_line.g = int(str_line[41:44])
 
-        obj_line.int_cat_tag = int(str_line[44:51])
+        obj_line.extended['int_cat_tag'] = int(str_line[44:51])
 
         str_q = str_line[55:79]
         int_fmt = int(str_line[51:55])
@@ -127,9 +127,9 @@ class CatConverter:
                                                  obj_line.int_fmt)
 
         str_out += "%13.4f%8.4f" % (obj_line.freq, obj_line.freq_err)
-        str_out += "%8.4f%2d" % (obj_line.log_I, obj_line.int_deg_freedom)
+        str_out += "%8.4f%2d" % (obj_line.log_I, obj_line.extended['int_deg_freedom'])
         str_out += "%10.4f%3d" % (obj_line.E, obj_line.g)
-        str_out += "%7d" % obj_line.int_cat_tag
+        str_out += "%7d" % obj_line.extended['int_cat_tag']
         str_out += "%4d%s " % (obj_line.int_fmt, str_quanta)
 
         return str_out
@@ -170,13 +170,13 @@ class EgyConverter:
 
         obj_state = State()
 
-        obj_state.str_H_iblk = (str_state[0:6])
-        obj_state.str_H_indx = (str_state[6:11])
+        obj_state.extended['str_H_iblk'] = str_state[0:6]
+        obj_state.extended['str_H_indx'] = str_state[6:11]
 
         obj_state.E = float(str_state[11:29])
         obj_state.E_err = float(str_state[29:47])
 
-        obj_state.str_pmix = (str_state[47:58])
+        obj_state.extended['str_pmix'] = str_state[47:58]
 
         obj_state.int_fmt = int_fmt
         obj_state.q = EgyConverter.__read_quanta(str_state[64:], int_fmt)
@@ -190,9 +190,9 @@ class EgyConverter:
 
         str_out = ""
 
-        str_out += "%s%s" % (obj_state.str_H_iblk, obj_state.str_H_indx)
+        str_out += "%s%s" % (obj_state.extended['str_H_iblk'], obj_state.extended['str_H_indx'])
         str_out += "%18.6f%18.6f" % (obj_state.E, obj_state.E_err)
-        str_out += "%s%5d:" % (obj_state.str_pmix, obj_state.g)
+        str_out += "%s%5d:" % (obj_state.extended['str_pmix'], obj_state.g)
         str_out += EgyConverter.__write_quanta(obj_state.q, obj_state.int_fmt)
 
         return str_out
@@ -256,7 +256,7 @@ class LinConverter:
         obj_line.freq = float(str_line[36:51])
         obj_line.freq_err = float(str_line[51:60])
 
-        obj_line.str_lin_text = str_line[60:-1]
+        obj_line.extended['str_lin_text'] = str_line[60:-1]
 
         str_q = str_line[0:36]
         dict_qu, dict_ql = LinConverter.__read_quanta(str_q, int_fmt)
@@ -282,7 +282,7 @@ class LinConverter:
         str_out += "%s" % str_quanta
         str_out += "%15.4f" % obj_line.freq
         str_out += ("%10.3f" % freq_err).replace('0.', '.')
-        str_out += "%s" % obj_line.str_lin_text
+        str_out += "%s" % obj_line.extended['str_lin_text']
 
         return str_out
 

@@ -1,9 +1,8 @@
 import numpy as np
-import bisect
 import sys
 
-import lmfit.models as lmfit_models 
-import lmfit_custom_models
+import lmfit.models as lmfit_models
+from boltzmann import lmfit_custom_models
 
 
 def step_and_span(settings):

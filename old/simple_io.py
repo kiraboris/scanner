@@ -1,6 +1,6 @@
 
 import numpy as np
-from . import entities
+from pickett_old import entities
 
 
 def load_lines(filename):
