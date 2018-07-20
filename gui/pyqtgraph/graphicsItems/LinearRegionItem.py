@@ -120,11 +120,14 @@ class LinearRegionItem(UIGraphicsItem):
         for l in self.lines:
             l.setBounds(bounds)
         
-    def setMovable(self, m):
+    def setMovable(self, m, lm=None):
         """Set lines to be movable by the user, or not. If lines are movable, they will 
         also accept HoverEvents."""
+        # UPDATE additional parameter controls border lines movement independently
+        if lm is None:
+            lm = m
         for l in self.lines:
-            l.setMovable(m)
+            l.setMovable(lm)
         self.movable = m
         self.setAcceptHoverEvents(m)
 
@@ -208,7 +211,7 @@ class LinearRegionItem(UIGraphicsItem):
         if not self.movable or int(ev.button() & QtCore.Qt.LeftButton) == 0:
             return
         ev.accept()
-        
+
         if ev.isStart():
             bdp = ev.buttonDownPos()
             self.cursorOffsets = [l.pos() - bdp for l in self.lines]

@@ -370,7 +370,7 @@ class GraphicsView(QtGui.QGraphicsView):
             
         if self.clickAccepted:  ## Ignore event if an item in the scene has already claimed it.
             return
-        
+        print("fuck")
         if ev.buttons() == QtCore.Qt.RightButton:
             delta = Point(np.clip(delta[0], -50, 50), np.clip(-delta[1], -50, 50))
             scale = 1.01 ** delta

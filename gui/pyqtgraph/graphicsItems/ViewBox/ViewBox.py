@@ -89,6 +89,7 @@ class ViewBox(GraphicsWidget):
     sigStateChanged = QtCore.Signal(object)
     sigTransformChanged = QtCore.Signal(object)
     sigResized = QtCore.Signal(object)
+    sigMouseClick = QtCore.Signal(object)
     
     ## mouse modes
     PanMode = 3
@@ -1202,9 +1203,14 @@ class ViewBox(GraphicsWidget):
         ##print "view scale:", scale
         #return scale
 
-    def wheelEvent(self, ev, axis=None):
+    def wheelEvent(self, ev, axis = 2):    # UPDATE default axis is now OX
         mask = np.array(self.state['mouseEnabled'], dtype=np.float)
-        if axis is not None and axis >= 0 and axis < len(mask):
+        if axis is not None and axis >= 0 and axis <= 2:
+            if axis == 2:
+                if ev.modifiers() == QtCore.Qt.ShiftModifier:
+                    axis = 1
+                else:
+                    axis = 0
             mv = mask[axis]
             mask[:] = 0
             mask[axis] = mv
@@ -1224,6 +1230,13 @@ class ViewBox(GraphicsWidget):
             ev.accept()
             self.raiseContextMenu(ev)
 
+    def mousePressEvent(self, ev):
+        if ev.button() == QtCore.Qt.LeftButton:
+            pos = ev.pos()
+            pos = self.mapToView(pos) #- self.mapToView(Point(0, 0))
+            self.sigMouseClick.emit(pos)
+        ev.ignore()
+
     def raiseContextMenu(self, ev):
         menu = self.getMenu(ev)
         self.scene().addParentContextMenus(self, menu, ev)
@@ -1235,9 +1248,16 @@ class ViewBox(GraphicsWidget):
     def getContextMenus(self, event):
         return self.menu.actions() if self.menuEnabled() else []
 
-    def mouseDragEvent(self, ev, axis=None):
+    def mouseDragEvent(self, ev, axis=2):
         ## if axis is specified, event will only affect that axis.
         ev.accept()  ## we accept all buttons
+
+        #  UPDATE similar to the one in mouse wheel event
+        if axis == 2:
+            if ev.modifiers() == QtCore.Qt.ShiftModifier:
+                axis = None
+            else:
+                axis = 0
         
         pos = ev.pos()
         lastPos = ev.lastPos()
