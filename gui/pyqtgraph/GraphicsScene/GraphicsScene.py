@@ -98,7 +98,7 @@ class GraphicsScene(QtGui.QGraphicsScene):
         self.hoverItems = weakref.WeakKeyDictionary()
         self.lastHoverEvent = None
         
-        self.contextMenu = [QtGui.QAction("Export...", self)]
+        self.contextMenu = [QtGui.QAction("Export Graphics...", self)]
         self.contextMenu[0].triggered.connect(self.showExportDialog)
         
         self.exportDialog = None

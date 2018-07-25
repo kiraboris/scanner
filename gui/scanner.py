@@ -14,19 +14,24 @@ from .pyqtgraph.Qt import QtGui, QtCore
 
 #generate layout
 app = QtGui.QApplication([])
-win = pg.GraphicsWindow(size=(1000, 500))
+win = pg.GraphicsWindow(size=(1280, 720))
 win.setWindowTitle('scanner')
 label = pg.LabelItem(justify='right')
 
 p1 = win.addPlot(row=2, col=0)
 p2 = win.addPlot(row=1, col=0)
+p0 = win.addPlot(row=3, col=0)
 
+p0.hideButtons()
 p1.hideButtons()
 p2.hideButtons()
+p1.setMenuEnabled(enableMenu=False, enableViewBoxMenu=True)
+p2.setMenuEnabled(enableMenu=False, enableViewBoxMenu=True)
+p0.setMenuEnabled(enableMenu=False, enableViewBoxMenu=True)
 
-win.centralWidget.addItem(label, row=3, col=0)
-win.centralWidget.layout.setRowStretchFactor(2,2)
-
+win.centralWidget.addItem(label, row=4, col=0)
+win.centralWidget.layout.setRowStretchFactor(2,3)
+win.centralWidget.layout.setRowStretchFactor(3,3)
 
 
 region = pg.LinearRegionItem()
@@ -40,6 +45,7 @@ p2.addItem(region, ignoreBounds=True)
 
 #pg.dbg()
 p1.setAutoVisible(y=True)
+p0.setAutoVisible(y=True)
 #p1.setMouseEnabled(True)
 
 
@@ -52,12 +58,16 @@ p1.plot(data, pen="m")
 
 p2.plot(data, pen="m")
 
+p0.plot(data, pen="0ff")
+
 #p2.autoRange(True)
 
 def update():
     region.setZValue(10)
     minX, maxX = region.getRegion()
     p1.setXRange(minX, maxX, padding=0)
+    p0.setXRange(minX, maxX, padding=0)
+
 
 region.sigRegionChanged.connect(update)
 
@@ -71,7 +81,7 @@ def setRegionCenter(pos):
     newRegion = (pos.x() - width / 2, pos.x() + width / 2)
     region.setRegion(newRegion)
 
-
+p0.sigRangeChanged.connect(updateRegion)
 p1.sigRangeChanged.connect(updateRegion)
 p2.getViewBox().sigMouseClick.connect(setRegionCenter)
 
