@@ -20,6 +20,10 @@ label = pg.LabelItem(justify='right')
 
 p1 = win.addPlot(row=2, col=0)
 p2 = win.addPlot(row=1, col=0)
+
+p1.hideButtons()
+p2.hideButtons()
+
 win.centralWidget.addItem(label, row=3, col=0)
 win.centralWidget.layout.setRowStretchFactor(2,2)
 
@@ -36,7 +40,8 @@ p2.addItem(region, ignoreBounds=True)
 
 #pg.dbg()
 p1.setAutoVisible(y=True)
-p1.setMouseEnabled(True)
+#p1.setMouseEnabled(True)
+
 
 
 #create numpy arrays
@@ -54,12 +59,6 @@ def update():
     minX, maxX = region.getRegion()
     p1.setXRange(minX, maxX, padding=0)
 
-    p2range = p2.viewRange()
-    if p2range[0][0] > minX:
-        p2.setXRange(minX, p2range[0][1] - (p2range[0][0] - minX), padding=0)
-    elif p2range[0][1] < maxX:
-        p2.setXRange(p2range[0][0] + (maxX - p2range[0][1]), maxX, padding=0)
-
 region.sigRegionChanged.connect(update)
 
 def updateRegion(window, viewRange):
@@ -76,6 +75,8 @@ def setRegionCenter(pos):
 p1.sigRangeChanged.connect(updateRegion)
 p2.getViewBox().sigMouseClick.connect(setRegionCenter)
 
+
+
 region.setRegion([1800, 2000])
 
 #cross hair
@@ -85,7 +86,8 @@ hLine = pg.InfiniteLine(angle=0, movable=False)
 #p1.addItem(hLine, ignoreBounds=True)
 
 
-vb = p1.vb
+vb = p1.getViewBox()
+
 
 def mouseMoved(evt):
     pos = evt[0]  ## using signal proxy turns original arguments into a tuple

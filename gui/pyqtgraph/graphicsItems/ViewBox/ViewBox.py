@@ -370,7 +370,7 @@ class ViewBox(GraphicsWidget):
             
     def innerSceneItem(self):
         return self.childGroup
-    
+
     def setMouseEnabled(self, x=None, y=None):
         """
         Set whether each axis is enabled for mouse interaction. *x*, *y* arguments must be True or False.
@@ -709,7 +709,7 @@ class ViewBox(GraphicsWidget):
         cause slight changes due to floating-point error).
         """
         if s is not None:
-            scale = Point(s)
+            scale = s
         else:
             scale = [x, y]
         
@@ -1203,24 +1203,31 @@ class ViewBox(GraphicsWidget):
         ##print "view scale:", scale
         #return scale
 
-    def wheelEvent(self, ev, axis = 2):    # UPDATE default axis is now OX
-        mask = np.array(self.state['mouseEnabled'], dtype=np.float)
-        if axis is not None and axis >= 0 and axis <= 2:
-            if axis == 2:
-                if ev.modifiers() == QtCore.Qt.ShiftModifier:
-                    axis = 1
+    def wheelEvent(self, ev, axis = 2):
+        x, y = None, None
+        zoom = 1.02 ** (ev.delta() * self.state['wheelScaleFactor'])
+
+        # UPDATE default axis is now OX, and similar in drag event
+        if axis == 2:
+            if ev.modifiers() == QtCore.Qt.ShiftModifier:
+                axis = None
+            else:
+                axis = 0
+
+        if axis is not None and 0 <= axis <= 1:
+            if self.state['mouseEnabled'][axis]:
+                if axis == 0:
+                    x = zoom
                 else:
-                    axis = 0
-            mv = mask[axis]
-            mask[:] = 0
-            mask[axis] = mv
-        s = ((mask * 0.02) + 1) ** (ev.delta() * self.state['wheelScaleFactor']) # actual scaling factor
+                    y = zoom
+        else:
+            x, y = zoom, zoom
         
         center = Point(fn.invertQTransform(self.childGroup.transform()).map(ev.pos()))
         #center = ev.pos()
         
         self._resetTarget()
-        self.scaleBy(s, center)
+        self.scaleBy(x=x, y=y, center=center)
         self.sigRangeChangedManually.emit(self.state['mouseEnabled'])
         ev.accept()
 
@@ -1252,7 +1259,7 @@ class ViewBox(GraphicsWidget):
         ## if axis is specified, event will only affect that axis.
         ev.accept()  ## we accept all buttons
 
-        #  UPDATE similar to the one in mouse wheel event
+        #  UPDATE as in wheel event
         if axis == 2:
             if ev.modifiers() == QtCore.Qt.ShiftModifier:
                 axis = None
@@ -1290,7 +1297,7 @@ class ViewBox(GraphicsWidget):
                 tr = self.mapToView(tr) - self.mapToView(Point(0,0))
                 x = tr.x() if mask[0] == 1 else None
                 y = tr.y() if mask[1] == 1 else None
-                
+
                 self._resetTarget()
                 if x is not None or y is not None:
                     self.translateBy(x=x, y=y)
