@@ -58,6 +58,14 @@ class ViewBoxMenu(QtGui.QMenu):
             for sig, fn in connects:
                 sig.connect(getattr(self, axis.lower()+fn))
 
+            # UPDATE make some invisible
+            ui.autoPanCheck.setVisible(False)
+            ui.linkCombo.setVisible(False)
+            ui.visibleOnlyCheck.setVisible(False)
+            ui.mouseCheck.setVisible(False)
+            ui.label.setVisible(False)
+            ui.invertCheck.setVisible(False)
+
         self.ctrl[0].invertCheck.toggled.connect(self.xInvertToggled)
         self.ctrl[1].invertCheck.toggled.connect(self.yInvertToggled)
         ## exporting is handled by GraphicsScene now
@@ -65,15 +73,17 @@ class ViewBoxMenu(QtGui.QMenu):
         #self.setExportMethods(view.exportMethods)
         #self.addMenu(self.export)
         
-        self.leftMenu = QtGui.QMenu("Mouse Mode")
+        self.leftMenu = QtGui.QMenu("Mouse Drag Mode")
+        #self.leftMenu.setVisible(False)
         group = QtGui.QActionGroup(self)
         
         # This does not work! QAction _must_ be initialized with a permanent 
         # object as the parent or else it may be collected prematurely.
         #pan = self.leftMenu.addAction("3 button", self.set3ButtonMode)
         #zoom = self.leftMenu.addAction("1 button", self.set1ButtonMode)
-        pan = QtGui.QAction("3 button", self.leftMenu)
-        zoom = QtGui.QAction("1 button", self.leftMenu)
+
+        pan = QtGui.QAction("Panning (default)", self.leftMenu)
+        zoom = QtGui.QAction("GNUPlot mode", self.leftMenu)
         self.leftMenu.addAction(pan)
         self.leftMenu.addAction(zoom)
         pan.triggered.connect(self.set3ButtonMode)
@@ -84,7 +94,7 @@ class ViewBoxMenu(QtGui.QMenu):
         pan.setActionGroup(group)
         zoom.setActionGroup(group)
         self.mouseModes = [pan, zoom]
-        self.addMenu(self.leftMenu)
+        #self.addMenu(self.leftMenu)
         
         self.view().sigStateChanged.connect(self.viewStateChanged)
         

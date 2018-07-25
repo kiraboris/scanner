@@ -1272,14 +1272,14 @@ class ViewBox(GraphicsWidget):
         dif = dif * -1
 
         ## Ignore axes if mouse is disabled
-        mouseEnabled = np.array(self.state['mouseEnabled'], dtype=np.float)
-        mask = mouseEnabled.copy()
+        #mouseEnabled = np.array(self.state['mouseEnabled'], dtype=np.float)
+        mask = np.array(self.state['mouseEnabled'], dtype=np.float)
         if axis is not None:
             mask[1-axis] = 0.0
 
         ## Scale or translate based on mouse button
         if ev.button() & (QtCore.Qt.LeftButton | QtCore.Qt.MidButton):
-            if self.state['mouseMode'] == ViewBox.RectMode:
+            if self.state['mouseMode'] == ViewBox.RectMode or ev.modifiers() == QtCore.Qt.AltModifier:
                 if ev.isFinish():  ## This is the final move in the drag; change the view scale now
                     #print "finish"
                     self.rbScaleBox.hide()
@@ -1304,20 +1304,26 @@ class ViewBox(GraphicsWidget):
                 self.sigRangeChangedManually.emit(self.state['mouseEnabled'])
         elif ev.button() & QtCore.Qt.RightButton:
             #print "vb.rightDrag"
-            if self.state['aspectLocked'] is not False:
-                mask[0] = 0
+            #if self.state['aspectLocked'] is not False:
+            #    mask[0] = 0
             
             dif = ev.screenPos() - ev.lastScreenPos()
             dif = np.array([dif.x(), dif.y()])
             dif[0] *= -1
-            s = ((mask * 0.02) + 1) ** dif
+            zoom = 1.02 ** dif
             
             tr = self.childGroup.transform()
             tr = fn.invertQTransform(tr)
-            
-            x = s[0] if mouseEnabled[0] == 1 else None
-            y = s[1] if mouseEnabled[1] == 1 else None
-            
+
+            x, y = None, None
+            if axis is None:
+                x = zoom[0] if self.state['mouseEnabled'][0] else None
+                y = zoom[1] if self.state['mouseEnabled'][1] else None
+            elif axis == 1:
+                y = zoom[1] if self.state['mouseEnabled'][1] else None
+            else:
+                x = zoom[0] if self.state['mouseEnabled'][0] else None
+
             center = Point(tr.map(ev.buttonDownPos(QtCore.Qt.RightButton)))
             self._resetTarget()
             self.scaleBy(x=x, y=y, center=center)
