@@ -7,6 +7,7 @@ from . import panoram
 
 app = QtGui.QApplication([])
 win = QtGui.QWindow()
+win.show()
 win.setTitle('scanner')
 
 pan = panoram.Panoram()
@@ -16,8 +17,8 @@ label = pg.LabelItem(justify='right')
 #make the numbers large to show that the xrange shows data from 10000 to all the way 0
 data = 10000 + 15000 * pg.gaussianFilter(np.random.random(size=10000), 10) + 3000 * np.random.random(size=10000)
 
-pan.plotUpper(data, pen="m")
-pan.plotLower(data, pen="0ff")
+pan.plotUpper(data=data, pen="m")
+pan.plotLower(data=data, pen="0ff")
 
 pan.region.setRegion([1800, 2000])
 

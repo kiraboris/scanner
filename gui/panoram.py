@@ -33,12 +33,12 @@ class Panoram(pg.GraphicsLayoutWidget):
         plot.setMenuEnabled(enableMenu=False, enableViewBoxMenu=True)
         plot.getViewBox().sigMouseClick.connect(self._setRegionCenter)
 
-    def plotUpper(self, *args, **kwargs):
-        self.__p1.plot(args, kwargs)
-        self.__p2.plot(args, kwargs)
+    def plotUpper(self, **kwargs):
+        self.__p1.plot(kwargs)
+        self.__p2.plot(kwargs)
 
-    def plotLower(self, *args, **kwargs):
-        self.__p3.plot(args, kwargs)
+    def plotLower(self, **kwargs):
+        self.__p3.plot(kwargs)
 
     def _setRegionCenter(self, pos):
         minX, maxX = self.region.getRegion()
