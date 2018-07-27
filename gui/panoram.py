@@ -1,22 +1,22 @@
 
 from . import pyqtgraph as pg
 
-class Panoram(pg.GraphicsLayoutWidget):
+class Panoram:
     def __init__(self, parent=None):
-        pg.GraphicsLayoutWidget.__init__(self, parent)
+        self.widget = pg.GraphicsLayoutWidget(parent)
 
-        self.__p1 = self.addPlot(row=1, col=0)
-        self.__p2 = self.addPlot(row=2, col=0)
-        self.__p3 = self.addPlot(row=3, col=0)
+        self.__p1 = self.widget.addPlot(row=1, col=0)
+        self.__p2 = self.widget.addPlot(row=2, col=0)
+        self.__p3 = self.widget.addPlot(row=3, col=0)
 
-        self.centralWidget.layout.setRowStretchFactor(2, 3)
-        self.centralWidget.layout.setRowStretchFactor(3, 3)
+        self.widget.centralWidget.layout.setRowStretchFactor(2, 3)
+        self.widget.centralWidget.layout.setRowStretchFactor(3, 3)
 
-        self.region = pg.LinearRegionItem()
-        self.region.setZValue(10)
-        self.region.setMovable(m=True, lm=False)
-        self.region.sigRegionChanged.connect(self._updateRanges)
-        self.__p1.addItem(self.region, ignoreBounds=True)
+        self.__region = pg.LinearRegionItem()
+        self.__region.setZValue(10)
+        self.__region.setMovable(m=True, lm=False)
+        self.__region.sigRegionChanged.connect(self._updateRanges)
+        self.__p1.addItem(self.__region, ignoreBounds=True)
 
         self._setupMasterPlot(self.__p1)
         self._setupSlavePlot(self.__p2)
@@ -33,26 +33,35 @@ class Panoram(pg.GraphicsLayoutWidget):
         plot.setMenuEnabled(enableMenu=False, enableViewBoxMenu=True)
         plot.getViewBox().sigMouseClick.connect(self._setRegionCenter)
 
-    def plotUpper(self, **kwargs):
-        self.__p1.plot(kwargs)
-        self.__p2.plot(kwargs)
+    def plotUpper(self, *args, **kwargs):
+        self.__p1.plot(*args, **kwargs)
+        self.__p2.plot(*args, **kwargs)
 
-    def plotLower(self, **kwargs):
-        self.__p3.plot(kwargs)
+    def plotLower(self, *args, **kwargs):
+        self.__p3.plot(*args, **kwargs)
+
+    def clearUpper(self):
+        self.__p1.clearPlots()
+        self.__p2.clearPlots()
+
+    def clearLower(self):
+        self.__p3.clearPlots()
+
+    def setRegion(self, rgn):
+        self.__region.setRegion(rgn)
 
     def _setRegionCenter(self, pos):
-        minX, maxX = self.region.getRegion()
+        minX, maxX = self.__region.getRegion()
         width = maxX - minX
         newRegion = (pos.x() - width / 2, pos.x() + width / 2)
-        self.region.setRegion(newRegion)
+        self.__region.setRegion(newRegion)
 
     def _updateRanges(self):
-        self.region.setZValue(10)
-        minX, maxX = self.region.getRegion()
-        self.__p1.setXRange(minX, maxX, padding=0)
+        self.__region.setZValue(10)
+        minX, maxX = self.__region.getRegion()
         self.__p2.setXRange(minX, maxX, padding=0)
         self.__p3.setXRange(minX, maxX, padding=0)
 
     def _updateRegion(self, window, viewRange):
         rgn = viewRange[0]
-        self.region.setRegion(rgn)
+        self.__region.setRegion(rgn)
