@@ -1,14 +1,16 @@
 
 
-from ..gui import panoram
-from ..gui.pyqtgraph.Qt.QtGui import QApplication
+from gui import panoram
+from gui.pyqtgraph.Qt import QtGui, QtCore
 
-Application = QApplication
+Application = QtGui.QApplication
 
 
 class ExpDock(QtGui.QDockWidget):
 
-    sigAddFile = QtCore.Signal(object)
+    sigAddItem = QtCore.Signal(object)
+    sigRemoveItem = QtCore.Signal(object)
+
 
     def __init__(self):
         QtGui.QDockWidget.__init__(self, "Experimental data")
@@ -31,7 +33,7 @@ class ExpDock(QtGui.QDockWidget):
     def addButtonClick(self):
         fileName = QtGui.QFileDialog.getOpenFileName(self, 'Add experimetal data')
         if fileName:
-            self.sigAddFile.emit(fileName[0])
+            self.sigAddItem.emit(fileName[0])
 
     def addItem(self, name):
         item = QtGui.QListWidgetItem(name, self.listWidget)
@@ -39,7 +41,10 @@ class ExpDock(QtGui.QDockWidget):
         item.setCheckState(QtCore.Qt.Checked)
 
     def removeButtonClick(self):
-        item = self.listWidget.takeItem(self.listWidget.currentRow())
+        row = self.listWidget.currentRow()
+        item = self.listWidget.takeItem(row)
+        if item:
+            self.sigRemoveItem.emit(row)
         item = None
 
 

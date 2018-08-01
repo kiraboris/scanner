@@ -33,12 +33,12 @@ class Panoram:
         plot.setMenuEnabled(enableMenu=False, enableViewBoxMenu=True)
         plot.getViewBox().sigMouseClick.connect(self._setRegionCenter)
 
-    def plotUpper(self, *args, **kwargs):
-        self.__p1.plot(*args, **kwargs)
-        self.__p2.plot(*args, **kwargs)
+    def plotUpper(self, data):
+        self.__p1.plot(data)
+        self.__p2.plot(data)
 
-    def plotLower(self, *args, **kwargs):
-        self.__p3.plot(*args, **kwargs)
+    def plotLower(self, data):
+        self.__p3.plot(data)
 
     def clearUpper(self):
         self.__p1.clearPlots()

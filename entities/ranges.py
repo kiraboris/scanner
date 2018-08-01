@@ -150,6 +150,10 @@ class Ranges:
     def export(self):
         """convert Ranges to single array, filling gaps with zeros"""
 
+        if not self.__arrs:
+            data = 10000  + 3000 * np.random.random(size=10000)
+            return data
+
         arrs = sorted(self.__arrs, key = lambda arr: arr[0, DIM.X])
 
         step = max([max(arr[1:, DIM.X] - arr[:-1, DIM.X]) for arr in arrs])
@@ -179,6 +183,14 @@ class Ranges:
 
         return result
 
+    def add_data_file(self, name):
+        return True
+
+    def deserialize(self, stream):
+        return True
+
+    def remove(self, index):
+        return True
 
 
 if __name__ == "__main__":

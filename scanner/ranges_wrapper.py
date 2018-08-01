@@ -1,16 +1,16 @@
 
 import sys
-from scanner.scannergui import MainWindow
-from gui.pyqtgraph.Qt import QtGui, QtCore
+
+from gui.pyqtgraph.Qt import QtCore
 from entities import ranges
 
 
-class RangesWrapper(ranges.Ranges):
+class RangesWrapper(QtCore.QObject, ranges.Ranges):
 
-    sigUpdated = QtCore.Signal(object, object)
+    sigUpdated = QtCore.Signal(object)
 
     def emit_updated(self):
-        self.sigUpdated.emit(self, self.export())
+        self.sigUpdated.emit(self.export())
 
     def add_data_file(self, name):
         if ranges.Ranges.add_data_file(self, name):
