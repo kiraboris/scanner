@@ -27,7 +27,7 @@ exp.sigUpdated.connect(win.pan.plotUpper)
 exp.sigAdded.connect(win.expDock.confirmAddingItems)
 win.expDock.sigAddItems.connect(exp.add_data_files)
 win.expDock.sigRemoveItem.connect(exp.remove)
-
+win.expDock.sigItemChecked.connect(exp.set_visibility)
 
 # execute
 win.show()

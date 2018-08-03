@@ -142,7 +142,7 @@ class Ranges:
 
     def visible_arrs(self):
         arrs = []
-        for i, arr in self.__arrs:
+        for i, arr in enumerate(self.__arrs):
             if i not in self.__invisible_indexes:
                 arrs.append(arr)
         return arrs
@@ -178,16 +178,16 @@ class Ranges:
     def remove(self, index):
         if index < len(self.__arrs):
             del self.__arrs[index]
-            self.__invisible_indexes.remove(index)
+            self.__invisible_indexes.discard(index)
             return True
         else:
             return False
 
     def set_visibility(self, index, flag):
-        if flag:
+        if not flag:
             self.__invisible_indexes.add(index)
         else:
-            self.__invisible_indexes.remove(index)
+            self.__invisible_indexes.discard(index)
 
 
 if __name__ == "__main__":

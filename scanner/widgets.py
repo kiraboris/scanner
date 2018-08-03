@@ -10,8 +10,9 @@ Application = QtGui.QApplication
 
 class ExpDock(QtGui.QDockWidget):
 
-    sigAddItems = QtCore.Signal(object)
-    sigRemoveItem = QtCore.Signal(object)
+    sigAddItems = QtCore.Signal(list)
+    sigRemoveItem = QtCore.Signal(int)
+    sigItemChecked = QtCore.Signal(int, bool)
 
     def __init__(self):
         QtGui.QDockWidget.__init__(self, "Experimental data")
@@ -19,6 +20,8 @@ class ExpDock(QtGui.QDockWidget):
         layout = QtGui.QGridLayout()
 
         self.listWidget = QtGui.QListWidget()
+        self.listWidget.itemChanged.connect(self._itemChecked)
+
         addButton = QtGui.QPushButton('Add...')
         addButton.clicked.connect(self._addButtonClick)
         removeButton = QtGui.QPushButton('Remove')
@@ -53,9 +56,12 @@ class ExpDock(QtGui.QDockWidget):
                 self.sigAddItems.emit(newNames)
 
     def _addItem(self, name):
-        item = QtGui.QListWidgetItem(name, self.listWidget)
+        item = QtGui.QListWidgetItem(name)
         item.setFlags(item.flags() | QtCore.Qt.ItemIsUserCheckable)
         item.setCheckState(QtCore.Qt.Checked)
+        self.listWidget.addItem(item)
+        #check_box = self.listWidget.itemWidget(item)
+        #check_box.stateChanged.connect(self._itemChecked2)
 
     def _removeButtonClick(self):
         row = self.listWidget.currentRow()
@@ -64,6 +70,10 @@ class ExpDock(QtGui.QDockWidget):
             self.sigRemoveItem.emit(row)
             del self.__filenames[row]
             item = None
+
+    def _itemChecked(self, item):
+        row = self.listWidget.row(item)
+        self.sigItemChecked.emit(row, item.checkState() == QtCore.Qt.Checked)
 
 
 class MainWindow(QtGui.QMainWindow):

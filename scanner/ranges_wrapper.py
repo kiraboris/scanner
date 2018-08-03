@@ -25,5 +25,7 @@ class RangesWrapper(QtCore.QObject, ranges.Ranges):
         if ranges.Ranges.remove(self, index):
             self.emit_updated()
 
-
+    def set_visibility(self, index, flag):
+        ranges.Ranges.set_visibility(self, index, flag)
+        self.emit_updated()
 
