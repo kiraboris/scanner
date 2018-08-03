@@ -1,5 +1,7 @@
 
 
+import os.path
+
 from gui import panoram
 from gui.pyqtgraph.Qt import QtGui, QtCore
 
@@ -11,7 +13,6 @@ class ExpDock(QtGui.QDockWidget):
     sigAddItem = QtCore.Signal(object)
     sigRemoveItem = QtCore.Signal(object)
 
-
     def __init__(self):
         QtGui.QDockWidget.__init__(self, "Experimental data")
         widget = QtGui.QWidget()
@@ -19,9 +20,9 @@ class ExpDock(QtGui.QDockWidget):
 
         self.listWidget = QtGui.QListWidget()
         addButton = QtGui.QPushButton('Add...')
-        addButton.clicked.connect(self.addButtonClick)
+        addButton.clicked.connect(self._addButtonClick)
         removeButton = QtGui.QPushButton('Remove')
-        removeButton.clicked.connect(self.removeButtonClick)
+        removeButton.clicked.connect(self._removeButtonClick)
 
         layout.addWidget(self.listWidget, 0, 0, 1, 2)
         layout.addWidget(addButton, 1, 0)
@@ -29,18 +30,26 @@ class ExpDock(QtGui.QDockWidget):
 
         widget.setLayout(layout)
         self.setWidget(widget)
+        self._setFilenames = set()
 
-    def addButtonClick(self):
+    def confirmAddingItem(self):
+        self._addItem(os.path.basename(self.__confirmationName))
+        self._setFilenames.add(self.__confirmationName)
+
+    def _addButtonClick(self):
         fileName = QtGui.QFileDialog.getOpenFileName(self, 'Add experimetal data')
         if fileName:
-            self.sigAddItem.emit(fileName[0])
+            fileName = fileName[0]
+            if fileName not in self._setFilenames:
+                self.__confirmationName = fileName
+                self.sigAddItem.emit(fileName)
 
-    def addItem(self, name):
+    def _addItem(self, name):
         item = QtGui.QListWidgetItem(name, self.listWidget)
         item.setFlags(item.flags() | QtCore.Qt.ItemIsUserCheckable)
         item.setCheckState(QtCore.Qt.Checked)
 
-    def removeButtonClick(self):
+    def _removeButtonClick(self):
         row = self.listWidget.currentRow()
         item = self.listWidget.takeItem(row)
         if item:

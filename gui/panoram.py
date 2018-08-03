@@ -34,11 +34,16 @@ class Panoram:
         plot.getViewBox().sigMouseClick.connect(self._setRegionCenter)
 
     def plotUpper(self, data):
-        self.__p1.plot(data)
-        self.__p2.plot(data)
+        self.clearUpper()
+        if data is not None:
+            self.__p1.plot(data)
+            self.__p1.getViewBox().autoRange()
+            self.__p2.plot(data)
 
     def plotLower(self, data):
-        self.__p3.plot(data)
+        self.clearLower()
+        if data is not None:
+            self.__p3.plot(data)
 
     def clearUpper(self):
         self.__p1.clearPlots()

@@ -7,47 +7,84 @@ class DIM:
     X = 0
     Y = -1
 
+
 def interpolate(x1, y1, x2, y2, x):
     assert (x2 >= x >= x1 and x2 > x1)
     y = y1 + (y2 - y1) / (x2 - x1) * (x - x1)
     return y
 
-def avg_data(data):
+
+def _make_xvalues(datasets, flag_fill_gaps=False):
+    # datasets must be already sorted here
+    default_step = max([max(arr[1:, DIM.X] - arr[:-1, DIM.X]) for arr in datasets])
+    set_xvalues = set()
+    prev_a = None
+    for a in datasets:
+        insert_x = []
+        if flag_fill_gaps and prev_a is not None:
+            gap_l = prev_a[-1, DIM.X]
+            gap_r = a[0, DIM.X]
+
+            if gap_r > gap_l:
+                insert_x = np.arange(gap_l + default_step, gap_r, default_step)
+
+            prev_a = a
+
+        for x in insert_x:
+            set_xvalues.add(x)
+
+        for x in a[:, DIM.X]:
+            set_xvalues.add(x)
+
+    xvalues = sorted(list(set_xvalues))
+    return xvalues
+
+
+def _special_increase(x):
+    if x < 0:
+        return 1
+    else:
+        return x + 1
+
+
+def _special_initvalue():
+    return -1
+
+
+def avg_data(data, flag_fill_gaps=False):
     """data must be a list of ndarrays
        matched by 1st column (x), averaged by last column (y) (as above)"""
 
     datasets = [a[a[:, DIM.X].argsort()] for a in data]
 
-    set_xvalues = set()  # uniqueness needed here
-    for a in datasets:
-        for x in a[:, DIM.X]:
-            set_xvalues.add(x)
-
-    xvalues = sorted(list(set_xvalues))
+    xvalues = _make_xvalues(datasets, flag_fill_gaps)
     ysumvalues = np.zeros(len(xvalues))
-    ynarrays   = np.zeros(len(xvalues))
+    ynarrays = np.zeros(len(xvalues))
 
     trav = [0] * len(datasets)  # traversion index for each input array
     for (i, x_i) in enumerate(xvalues):
+        ynarrays[i] = _special_initvalue()
+        ysumvalues[i] = 0
         for j in range(len(trav)):
 
             while trav[j] < len(datasets[j]) and datasets[j][trav[j], DIM.X] < x_i:
                 trav[j] = trav[j] + 1
 
             if trav[j] == len(datasets[j]):
-                continue # to next j
+                continue  # to next j
 
             x_trav_j = datasets[j][trav[j], DIM.X]
             y_trav_j = datasets[j][trav[j], DIM.Y]
 
             if x_trav_j == x_i:
+                ynarrays[i] = _special_increase(ynarrays[i])
                 ysumvalues[i] += y_trav_j
-                ynarrays[i] += 1
+
             elif x_trav_j > x_i and trav[j] > 0:
                 x_trav_j_minus = datasets[j][trav[j] - 1, DIM.X]
                 y_trav_j_minus = datasets[j][trav[j] - 1, DIM.Y]
 
-                ynarrays[i] +=1
+                ynarrays[i] = _special_increase(ynarrays[i])
                 ysumvalues[i] += interpolate(x_trav_j_minus, y_trav_j_minus,
                                              x_trav_j, y_trav_j, x_i)
 
@@ -62,135 +99,78 @@ class Ranges:
             where x axis is 1st column, y axis is last column (as above)"""
 
         if arrays:
-            self.__arrs = self.__merge_overlaps(arrays, merge_parameters=None)
+            self.__arrs = arrays
         else:
             self.__arrs = []
 
-    def spread(self):
+    def spread_y(self):
 
         return max([np.max(a[:, DIM.Y]) - np.min(a[:, DIM.Y])
                     for a in self.__arrs])
 
-    def add(self, arrays, merge_parameters=None):
+    def add(self, arrays):
 
-        self.__arrs = self.__merge_overlaps(self.__arrs + arrays, merge_parameters)
-
-    @staticmethod
-    def __merge_overlaps(arrs, merge_parameters):
-
-        if len(arrs) <= 1:
-            return arrs
-
-        result = []
-
-        excluded = set()
-        for i,ai in enumerate(arrs):
-
-            if i in excluded:
-                continue
-
-            excluded.add(i)
-
-            intersect = [(j,aj) for (j,aj) in enumerate(arrs)
-                         if not j in excluded and aj[0, DIM.X] <= ai[-1, DIM.X]]
-
-            if intersect:
-                arrs_intersect = [aj for (j,aj) in intersect]
-                j_intersect = [j for (j,aj) in intersect]
-
-                result.append(avg_data([ai] + arrs_intersect))
-                excluded.update(j_intersect)
-            else:
-                result.append(ai)
-
-        return result
-
-    def nslices(self, step, span, nmipmap=0):
-
-        nbins = 0
-        for a in self.__arrs:
-            left = 0
-            right = 0
-
-            xa = a[:, DIM.X]
-
-            nbins += (((xa[-1] - span / 2) - (xa[0] + span / 2)) / step) * (nmipmap + 1)
-
-        return int(nbins)
+        self.__arrs = self.__arrs + arrays
 
     def slices(self, step, span, nmipmap=0):
         """'span': size of slice,
            'step': offset of each next slice from begin of previous one"""
 
-        for a in self.__arrs:
-            left = 0
-            right = 0
+        a = self.export()
 
-            xa = a[:, DIM.X]
+        left = 0
+        right = 0
 
-            bins = np.arange(xa[0] + span / 2, xa[-1] - span / 2, step)
+        xa = a[:, DIM.X]
 
-            for x in bins:
-                while xa[left] <= x - span / 2.0 and left < len(xa)-1: left = left + 1
-                while xa[right] < x + span / 2.0 and right < len(xa)-1: right = right + 1
+        nbins = (((xa[-1] - span / 2) - (xa[0] + span / 2)) / step) * (nmipmap + 1)
+        bins = np.arange(xa[0] + span / 2, xa[-1] - span / 2, step)
 
-                mleft = left
-                mright = right
-                for n in range(0, nmipmap + 1):
+        for i, x in enumerate(bins):
+            while xa[left] <= x - span / 2.0 and left < len(xa)-1: left = left + 1
+            while xa[right] < x + span / 2.0 and right < len(xa)-1: right = right + 1
 
-                    yield a[mleft:mright, :]  # yield spectrum, both DIM.X and DIM.Y
+            mleft = left
+            mright = right
+            for n in range(0, nmipmap + 1):
 
-                    mleft += int((mright - mleft) / 8)
-                    mright -= int((mright - mleft) / 8)
+                yield a[mleft:mright, :], float(i) / nbins
+
+                mleft += int((mright - mleft) / 8)
+                mright -= int((mright - mleft) / 8)
 
     def print(self):
-
         print(self.export())
 
     def export(self):
         """convert Ranges to single array, filling gaps with zeros"""
 
         if not self.__arrs:
-            data = 10000  + 3000 * np.random.random(size=10000)
-            return data
-
-        arrs = sorted(self.__arrs, key = lambda arr: arr[0, DIM.X])
-
-        step = max([max(arr[1:, DIM.X] - arr[:-1, DIM.X]) for arr in arrs])
-
-        if len(arrs) == 1:
-            return arrs[0]
-        
-        result = None
-        for i in range(1, len(arrs)):
-
-            if not result is None:
-                result = np.vstack((result, arrs[i - 1]))
-            else:
-                result = arrs[i - 1]
-
-            gap_l = arrs[i-1][-1, DIM.X]
-            gap_r = arrs[i][0, DIM.X]
-
-            insert_x = np.arange(gap_l + step, gap_r, step)
-            insert_y = np.zeros(len(insert_x))
-
-            insert = np.stack((insert_x, insert_y)).T
-
-            result = np.vstack((result, insert))
-
-        result = np.vstack((result, arrs[1]))
-
-        return result
+            return None
+        elif len(self.__arrs) == 1:
+           return self.__arrs[0]
+        else:
+            return avg_data(self.__arrs, flag_fill_gaps=True)
 
     def add_data_file(self, name):
-        return True
+
+        try:
+            arr = np.loadtxt(name)
+            self.add([arr])
+            return True
+        except:
+            return False
 
     def deserialize(self, stream):
         return True
 
     def remove(self, index):
-        return True
+
+        if index < len(self.__arrs):
+            del self.__arrs[index]
+            return True
+        else:
+            return False
 
 
 if __name__ == "__main__":

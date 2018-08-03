@@ -23,6 +23,7 @@ def save_project(filename):
 
 # connect components
 exp.sigUpdated.connect(win.pan.plotUpper)
+exp.sigAdded.connect(win.expDock.confirmAddingItem)
 win.expDock.sigAddItem.connect(exp.add_data_file)
 win.expDock.sigRemoveItem.connect(exp.remove)
 
