@@ -17,26 +17,22 @@ def interpolate(x1, y1, x2, y2, x):
 def _make_xvalues(datasets, flag_fill_gaps=False):
     # datasets must be already sorted here
     default_step = max([max(arr[1:, DIM.X] - arr[:-1, DIM.X]) for arr in datasets])
-    set_xvalues = set()
+    xvalues_arrs = []
     prev_a = None
     for a in datasets:
-        insert_x = []
         if flag_fill_gaps and prev_a is not None:
             gap_l = prev_a[-1, DIM.X]
             gap_r = a[0, DIM.X]
 
             if gap_r > gap_l:
                 insert_x = np.arange(gap_l + default_step, gap_r, default_step)
+                xvalues_arrs.append(insert_x.reshape((1,-1)))
 
             prev_a = a
 
-        for x in insert_x:
-            set_xvalues.add(x)
+        xvalues_arrs.append(a[:, DIM.X])
 
-        for x in a[:, DIM.X]:
-            set_xvalues.add(x)
-
-    xvalues = sorted(list(set_xvalues))
+    xvalues = np.unique(np.hstack(xvalues_arrs))
     return xvalues
 
 
@@ -189,7 +185,7 @@ if __name__ == "__main__":
     a4 = np.stack((x4, y)).T
 
     r = Ranges([a1, a2])
-    r.add(a3)
-    r.add(a4)
+    r.add([a3])
+    r.add([a4])
 
     r.print()
