@@ -21,10 +21,11 @@ def save_project(filename):
         # sim.serialize(f)
         exp.serialize(f)
 
+
 # connect components
 exp.sigUpdated.connect(win.pan.plotUpper)
-exp.sigAdded.connect(win.expDock.confirmAddingItem)
-win.expDock.sigAddItem.connect(exp.add_data_file)
+exp.sigAdded.connect(win.expDock.confirmAddingItems)
+win.expDock.sigAddItems.connect(exp.add_data_files)
 win.expDock.sigRemoveItem.connect(exp.remove)
 
 

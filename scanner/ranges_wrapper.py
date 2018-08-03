@@ -6,14 +6,15 @@ from entities import ranges
 class RangesWrapper(QtCore.QObject, ranges.Ranges):
 
     sigUpdated = QtCore.Signal(object)
-    sigAdded = QtCore.Signal()
+    sigAdded = QtCore.Signal(list)
 
     def emit_updated(self):
         self.sigUpdated.emit(self.export())
 
-    def add_data_file(self, name):
-        if ranges.Ranges.add_data_file(self, name):
-            self.sigAdded.emit()
+    def add_data_files(self, names):
+        addedNames = ranges.Ranges.add_data_files(self, names)
+        if addedNames:
+            self.sigAdded.emit(addedNames)
             self.emit_updated()
 
     def deserialize(self, stream):

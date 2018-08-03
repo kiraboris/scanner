@@ -10,7 +10,7 @@ Application = QtGui.QApplication
 
 class ExpDock(QtGui.QDockWidget):
 
-    sigAddItem = QtCore.Signal(object)
+    sigAddItems = QtCore.Signal(object)
     sigRemoveItem = QtCore.Signal(object)
 
     def __init__(self):
@@ -30,19 +30,27 @@ class ExpDock(QtGui.QDockWidget):
 
         widget.setLayout(layout)
         self.setWidget(widget)
-        self._setFilenames = set()
+        self.__filenames = []
 
-    def confirmAddingItem(self):
-        self._addItem(os.path.basename(self.__confirmationName))
-        self._setFilenames.add(self.__confirmationName)
+    def confirmAddingItems(self, names):
+        for name in names:
+            self._addItem(os.path.basename(name))
+            self.__filenames.append(name)
+
+    def _purifyFileNames(self, names):
+        newNames = []
+        for fileName in names:
+            if fileName not in self.__filenames:
+                newNames.append(fileName)
+        return newNames
 
     def _addButtonClick(self):
-        fileName = QtGui.QFileDialog.getOpenFileName(self, 'Add experimetal data')
-        if fileName:
-            fileName = fileName[0]
-            if fileName not in self._setFilenames:
-                self.__confirmationName = fileName
-                self.sigAddItem.emit(fileName)
+        fileNames = QtGui.QFileDialog.getOpenFileNames(self, 'Add experimetal data file(s)...')
+        fileNames = fileNames[0]
+        if fileNames:
+            newNames = self._purifyFileNames(fileNames)
+            if newNames:
+                self.sigAddItems.emit(newNames)
 
     def _addItem(self, name):
         item = QtGui.QListWidgetItem(name, self.listWidget)
@@ -54,7 +62,8 @@ class ExpDock(QtGui.QDockWidget):
         item = self.listWidget.takeItem(row)
         if item:
             self.sigRemoveItem.emit(row)
-        item = None
+            del self.__filenames[row]
+            item = None
 
 
 class MainWindow(QtGui.QMainWindow):

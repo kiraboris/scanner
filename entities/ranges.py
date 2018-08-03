@@ -26,7 +26,7 @@ def _make_xvalues(datasets, flag_fill_gaps=False):
 
             if gap_r > gap_l:
                 insert_x = np.arange(gap_l + default_step, gap_r, default_step)
-                xvalues_arrs.append(insert_x.reshape((1,-1)))
+                xvalues_arrs.append(insert_x.reshape((1, -1)))
 
             prev_a = a
 
@@ -99,6 +99,8 @@ class Ranges:
         else:
             self.__arrs = []
 
+        self.__invisible_indexes = set()
+
     def spread_y(self):
 
         return max([np.max(a[:, DIM.Y]) - np.min(a[:, DIM.Y])
@@ -138,35 +140,54 @@ class Ranges:
     def print(self):
         print(self.export())
 
+    def visible_arrs(self):
+        arrs = []
+        for i, arr in self.__arrs:
+            if i not in self.__invisible_indexes:
+                arrs.append(arr)
+        return arrs
+
     def export(self):
         """convert Ranges to single array, filling gaps with zeros"""
-
-        if not self.__arrs:
+        arrs = self.visible_arrs()
+        if not arrs:
             return None
-        elif len(self.__arrs) == 1:
-           return self.__arrs[0]
+        elif len(arrs) == 1:
+           return arrs[0]
         else:
-            return avg_data(self.__arrs, flag_fill_gaps=True)
+            return avg_data(arrs, flag_fill_gaps=True)
 
-    def add_data_file(self, name):
-
-        try:
-            arr = np.loadtxt(name)
-            self.add([arr])
-            return True
-        except:
-            return False
+    def add_data_files(self, names):
+        newNames = []
+        arrs = []
+        for name in names:
+            try:
+                arr = np.loadtxt(name)
+                arrs.append(arr)
+                newNames.append(name)
+            except:
+                # who the heck would care?
+                pass
+        if arrs:
+            self.add(arrs)
+        return newNames
 
     def deserialize(self, stream):
         return True
 
     def remove(self, index):
-
         if index < len(self.__arrs):
             del self.__arrs[index]
+            self.__invisible_indexes.remove(index)
             return True
         else:
             return False
+
+    def set_visibility(self, index, flag):
+        if flag:
+            self.__invisible_indexes.add(index)
+        else:
+            self.__invisible_indexes.remove(index)
 
 
 if __name__ == "__main__":
