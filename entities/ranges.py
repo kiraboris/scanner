@@ -1,6 +1,6 @@
 
 import numpy as np
-
+from bisect import bisect_left, bisect_right
 
 class DIM:
     """ndarray dimensions"""
@@ -14,57 +14,51 @@ def interpolate(x1, y1, x2, y2, x):
     return y
 
 
-def _make_xvalues(datasets, flag_fill_gaps=False):
-    # datasets must be already sorted here
-    default_step = max([max(arr[1:, DIM.X] - arr[:-1, DIM.X]) for arr in datasets])
-    xvalues_arrs = []
-    prev_a = None
-    for a in datasets:
-        if flag_fill_gaps and prev_a is not None:
-            gap_l = prev_a[-1, DIM.X]
-            gap_r = a[0, DIM.X]
+def _make_intervals(data, flag_fill_gaps=False):
+    # arrays in data must contain at least 2 rows
 
-            if gap_r > gap_l:
-                insert_x = np.arange(gap_l + default_step, gap_r, default_step)
-                xvalues_arrs.append(insert_x.reshape((1, -1)))
+    default_step = max([max(arr[1:, DIM.X] - arr[:-1, DIM.X]) for arr in data])
+    left_edges = [(i, arr[0, DIM.X], True) for i, arr in enumerate(data)]
+    right_edges = [(i, arr[-1, DIM.X], False) for i, arr in enumerate(data)]
+    edges_sorted = sorted(right_edges + left_edges, key=lambda x: x[1])
 
-            prev_a = a
+    intervals = []
+    prev_edge = edges_sorted[0]
+    open_numbers = {edges_sorted[0][0]}
+    for edge in edges_sorted[1:]:
+        if open_numbers:
+            interval_datasets = [arr[bisect_left(arr[:, DIM.X], prev_edge[1]):bisect_right(arr[:, DIM.X], edge[1]), :]
+                                 for i, arr in enumerate(data) if i in open_numbers]
 
-        xvalues_arrs.append(a[:, DIM.X])
+            interval_xvalues = np.unique(np.hstack(interval_datasets)[:, DIM.X])
+            intervals.append((interval_datasets, interval_xvalues))
+        elif flag_fill_gaps:
+            insert_x = np.arange(prev_edge[1] + default_step, edge[1], default_step)
+            insert_y = np.zeros(insert_x.shape)
+            intervals.append(([np.column_stack((insert_x, insert_y))], insert_x))
 
-    xvalues = np.unique(np.hstack(xvalues_arrs))
-    return xvalues
+        if edge[2]:
+            open_numbers.add(edge[0])
+        else:
+            open_numbers.remove(edge[0])
+
+        prev_edge = edge
+    return intervals
 
 
-def _special_increase(x):
-    if x < 0:
-        return 1
-    else:
-        return x + 1
-
-
-def _special_initvalue():
-    return -1
-
-
-def avg_data(data, flag_fill_gaps=False):
+def _avg_data(datasets, xvalues):
     """data must be a list of ndarrays
        matched by 1st column (x), averaged by last column (y) (as above)"""
 
-    datasets = [a[a[:, DIM.X].argsort()] for a in data]
-
-    xvalues = _make_xvalues(datasets, flag_fill_gaps)
     ysumvalues = np.zeros(len(xvalues))
     ynarrays = np.zeros(len(xvalues))
 
     trav = [0] * len(datasets)  # traversion index for each input array
     for (i, x_i) in enumerate(xvalues):
-        ynarrays[i] = _special_initvalue()
-        ysumvalues[i] = 0
         for j in range(len(trav)):
 
             while trav[j] < len(datasets[j]) and datasets[j][trav[j], DIM.X] < x_i:
-                trav[j] = trav[j] + 1
+                trav[j] += 1
 
             if trav[j] == len(datasets[j]):
                 continue  # to next j
@@ -73,19 +67,33 @@ def avg_data(data, flag_fill_gaps=False):
             y_trav_j = datasets[j][trav[j], DIM.Y]
 
             if x_trav_j == x_i:
-                ynarrays[i] = _special_increase(ynarrays[i])
+                ynarrays[i] += 1
                 ysumvalues[i] += y_trav_j
 
             elif x_trav_j > x_i and trav[j] > 0:
                 x_trav_j_minus = datasets[j][trav[j] - 1, DIM.X]
                 y_trav_j_minus = datasets[j][trav[j] - 1, DIM.Y]
 
-                ynarrays[i] = _special_increase(ynarrays[i])
+                ynarrays[i] += 1
                 ysumvalues[i] += interpolate(x_trav_j_minus, y_trav_j_minus,
                                              x_trav_j, y_trav_j, x_i)
+        if ynarrays[i] == 0:
+            ynarrays[i] = 1
 
-    out = np.column_stack((xvalues, ysumvalues / ynarrays))
+    out = np.column_stack((xvaluess, ysumvalues / ynarrays))
     return out
+
+
+def quick_avg_data(data, flag_fill_gaps=False):
+    #data_sorted = [a[a[:, DIM.X].argsort()] for a in data]
+    intervals = _make_intervals(data, flag_fill_gaps)
+    out_pieces = []
+    for interval_datasets, interval_xvalues in intervals:
+        if len(interval_datasets) > 1:
+            out_pieces.append(_avg_data(interval_datasets, interval_xvalues))
+        else:
+            out_pieces.append(interval_datasets[0])
+    return np.vstack(out_pieces)
 
 
 class Ranges:
@@ -155,7 +163,7 @@ class Ranges:
         elif len(arrs) == 1:
            return arrs[0]
         else:
-            return avg_data(arrs, flag_fill_gaps=True)
+            return quick_avg_data(arrs, flag_fill_gaps=True)
 
     def add_data_files(self, names):
         newNames = []
