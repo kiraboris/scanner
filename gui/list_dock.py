@@ -37,18 +37,23 @@ class ListDock(QtGui.QDockWidget):
         row = self.listWidget.currentRow()
         item = self.listWidget.takeItem(row)
         if item:
-            self._removeItem(item, row)
+            self.removeItem(row)
             item = None
 
-    def _addItem(self, name):
+    def addItem(self, name):
         item = QtGui.QListWidgetItem(name)
         item.setFlags(item.flags() | QtCore.Qt.ItemIsUserCheckable)
         item.setCheckState(QtCore.Qt.Checked)
         self.listWidget.addItem(item)
 
-    def _removeItem(self, item, row):
+    def addItems(self, names):
+        for name in names:
+            self.addItem(name)
+
+    def removeItem(self, row):
         self.sigRemoveItem.emit(row)
 
     def _itemChecked(self, item):
         row = self.listWidget.row(item)
         self.sigItemChecked.emit(row, item.checkState() == QtCore.Qt.Checked)
+

@@ -97,7 +97,6 @@ def quick_avg_data(data, flag_fill_gaps=False):
 
 
 class Ranges:
-
     def __init__(self, arrays=()):
         """'arrays': list of ndnumpy arrays
             where x axis is 1st column, y axis is last column (as above)"""
@@ -166,19 +165,19 @@ class Ranges:
             return quick_avg_data(arrs, flag_fill_gaps=True)
 
     def add_data_files(self, names):
-        newNames = []
+        added_names_dict = {}
         arrs = []
         for name in names:
             try:
                 arr = np.loadtxt(name)
                 arrs.append(arr)
-                newNames.append(name)
+                added_names_dict[len(arrs) - 1] = name
             except:
                 # who the heck would care?
                 pass
         if arrs:
             self.add(arrs)
-        return newNames
+        return added_names_dict
 
     def deserialize(self, stream):
         return True

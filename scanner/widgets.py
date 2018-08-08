@@ -1,6 +1,6 @@
 
 
-import os.path
+
 
 from gui import panoram, list_dock
 from gui.pyqtgraph.Qt import QtGui, QtCore
@@ -11,31 +11,14 @@ Application = QtGui.QApplication
 class ExpDock(list_dock.ListDock):
     def __init__(self):
         list_dock.ListDock.__init__(self, "Experimental data")
-        self.__filenames = []
-
-    def confirmAddingItems(self, names):
-        for name in names:
-            self._addItem(os.path.basename(name))
-            self.__filenames.append(name)
-
-    def __purifyFileNames(self, names):
-        newNames = []
-        for fileName in names:
-            if fileName not in self.__filenames:
-                newNames.append(fileName)
-        return newNames
 
     def _addButtonClick(self):
-        fileNames = QtGui.QFileDialog.getOpenFileNames(self, 'Add experimetal data file(s)...')
-        fileNames = fileNames[0]
-        if fileNames:
-            newNames = self.__purifyFileNames(fileNames)
-            if newNames:
-                self.sigAddItems.emit(newNames)
+        file_names = QtGui.QFileDialog.getOpenFileNames(self, 'Add experimetal data file(s)...')
+        file_names = file_names[0]
+        if file_names:
+            self.sigAddItems.emit(file_names)
 
-    def _removeItem(self, item, row):
-        del self.__filenames[row]
-        list_dock.ListDock._removeItem(self, item, row)
+
 
 
 class MainWindow(QtGui.QMainWindow):

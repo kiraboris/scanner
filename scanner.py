@@ -26,7 +26,7 @@ engine = ScannerEngine(sim_ranges, exp_ranges)
 
 # connect components
 exp_ranges.sigUpdated.connect(win.pan.plotUpper)
-exp_ranges.sigAdded.connect(win.expDock.confirmAddingItems)
+exp_ranges.sigAdded.connect(win.expDock.addItems)
 win.expDock.sigAddItems.connect(exp_ranges.add_data_files)
 win.expDock.sigRemoveItem.connect(exp_ranges.remove)
 win.expDock.sigItemChecked.connect(exp_ranges.set_visibility)
