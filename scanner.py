@@ -1,33 +1,35 @@
 
 import sys
 from scanner.widgets import MainWindow, Application
-from scanner.ranges_wrapper import RangesWrapper
+from scanner.engine import ScannerEngine
+from gui.ranges_wrapper import RangesWrapper
 #from scanner.simu
 
 # create components
 app = Application([])
 win = MainWindow()
-exp = RangesWrapper()
-#sim = Simulation()
+exp_ranges = RangesWrapper()
+sim_ranges = RangesWrapper()
+engine = ScannerEngine(sim_ranges, exp_ranges)
 
 # open and save project routines
-def open_project(filename):
-    with open(filename, 'rb') as f:
+#def open_project(filename):
+#    with open(filename, 'rb') as f:
         #sim.deserialize(f)
-        exp.deserialize(f)
+#        exp.deserialize(f)
 
-def save_project(filename):
-    with open(filename, 'wb') as f:
+#def save_project(filename):
+ #   with open(filename, 'wb') as f:
         # sim.serialize(f)
-        exp.serialize(f)
+ #       exp.serialize(f)
 
 
 # connect components
-exp.sigUpdated.connect(win.pan.plotUpper)
-exp.sigAdded.connect(win.expDock.confirmAddingItems)
-win.expDock.sigAddItems.connect(exp.add_data_files)
-win.expDock.sigRemoveItem.connect(exp.remove)
-win.expDock.sigItemChecked.connect(exp.set_visibility)
+exp_ranges.sigUpdated.connect(win.pan.plotUpper)
+exp_ranges.sigAdded.connect(win.expDock.confirmAddingItems)
+win.expDock.sigAddItems.connect(exp_ranges.add_data_files)
+win.expDock.sigRemoveItem.connect(exp_ranges.remove)
+win.expDock.sigItemChecked.connect(exp_ranges.set_visibility)
 
 # execute
 win.show()

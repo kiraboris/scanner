@@ -2,37 +2,15 @@
 
 import os.path
 
-from gui import panoram
+from gui import panoram, list_dock
 from gui.pyqtgraph.Qt import QtGui, QtCore
 
 Application = QtGui.QApplication
 
 
-class ExpDock(QtGui.QDockWidget):
-
-    sigAddItems = QtCore.Signal(list)
-    sigRemoveItem = QtCore.Signal(int)
-    sigItemChecked = QtCore.Signal(int, bool)
-
+class ExpDock(list_dock.ListDock):
     def __init__(self):
-        QtGui.QDockWidget.__init__(self, "Experimental data")
-        widget = QtGui.QWidget()
-        layout = QtGui.QGridLayout()
-
-        self.listWidget = QtGui.QListWidget()
-        self.listWidget.itemChanged.connect(self._itemChecked)
-
-        addButton = QtGui.QPushButton('Add...')
-        addButton.clicked.connect(self._addButtonClick)
-        removeButton = QtGui.QPushButton('Remove')
-        removeButton.clicked.connect(self._removeButtonClick)
-
-        layout.addWidget(self.listWidget, 0, 0, 1, 2)
-        layout.addWidget(addButton, 1, 0)
-        layout.addWidget(removeButton, 1, 1)
-
-        widget.setLayout(layout)
-        self.setWidget(widget)
+        list_dock.ListDock.__init__(self, "Experimental data")
         self.__filenames = []
 
     def confirmAddingItems(self, names):
@@ -40,7 +18,7 @@ class ExpDock(QtGui.QDockWidget):
             self._addItem(os.path.basename(name))
             self.__filenames.append(name)
 
-    def _purifyFileNames(self, names):
+    def __purifyFileNames(self, names):
         newNames = []
         for fileName in names:
             if fileName not in self.__filenames:
@@ -51,29 +29,13 @@ class ExpDock(QtGui.QDockWidget):
         fileNames = QtGui.QFileDialog.getOpenFileNames(self, 'Add experimetal data file(s)...')
         fileNames = fileNames[0]
         if fileNames:
-            newNames = self._purifyFileNames(fileNames)
+            newNames = self.__purifyFileNames(fileNames)
             if newNames:
                 self.sigAddItems.emit(newNames)
 
-    def _addItem(self, name):
-        item = QtGui.QListWidgetItem(name)
-        item.setFlags(item.flags() | QtCore.Qt.ItemIsUserCheckable)
-        item.setCheckState(QtCore.Qt.Checked)
-        self.listWidget.addItem(item)
-        #check_box = self.listWidget.itemWidget(item)
-        #check_box.stateChanged.connect(self._itemChecked2)
-
-    def _removeButtonClick(self):
-        row = self.listWidget.currentRow()
-        item = self.listWidget.takeItem(row)
-        if item:
-            self.sigRemoveItem.emit(row)
-            del self.__filenames[row]
-            item = None
-
-    def _itemChecked(self, item):
-        row = self.listWidget.row(item)
-        self.sigItemChecked.emit(row, item.checkState() == QtCore.Qt.Checked)
+    def _removeItem(self, item, row):
+        del self.__filenames[row]
+        list_dock.ListDock._removeItem(self, item, row)
 
 
 class MainWindow(QtGui.QMainWindow):

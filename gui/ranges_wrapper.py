@@ -1,5 +1,5 @@
 
-from gui.pyqtgraph.Qt import QtCore
+from .pyqtgraph.Qt import QtCore
 from entities import ranges
 
 
@@ -12,9 +12,9 @@ class RangesWrapper(QtCore.QObject, ranges.Ranges):
         self.sigUpdated.emit(self.export())
 
     def add_data_files(self, names):
-        addedNames = ranges.Ranges.add_data_files(self, names)
-        if addedNames:
-            self.sigAdded.emit(addedNames)
+        added_names = ranges.Ranges.add_data_files(self, names)
+        if added_names:
+            self.sigAdded.emit(added_names)
             self.emit_updated()
 
     def deserialize(self, stream):

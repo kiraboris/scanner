@@ -80,7 +80,7 @@ def _avg_data(datasets, xvalues):
         if ynarrays[i] == 0:
             ynarrays[i] = 1
 
-    out = np.column_stack((xvaluess, ysumvalues / ynarrays))
+    out = np.column_stack((xvalues, ysumvalues / ynarrays))
     return out
 
 

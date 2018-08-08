@@ -5,9 +5,9 @@ import subprocess
 from .io import *
 
 
-def simulate(rotor, folder="./temp/", threshold=-15.0, max_freq=2000.0):
+def make_lines(rotor, folder="./temp/", threshold=-15.0, max_freq=2000.0):
     __write_params(folder=folder, rotor=rotor, threshold=threshold, max_freq=max_freq)
-    __run_simulation(folder=folder, rotor=rotor)
+    __run_spcat(folder=folder, rotor=rotor)
     return __read_lines(folder=folder, rotor=rotor)
 
 
@@ -20,7 +20,7 @@ def __read_lines(rotor, folder="./temp/"):
     return load_cat(catfile)
 
 
-def __run_simulation(rotor, folder="./temp/"):
+def __run_spcat(rotor, folder="./temp/"):
     if os.name == 'nt':
         progname = "spcat.exe"
     else:
@@ -30,7 +30,7 @@ def __run_simulation(rotor, folder="./temp/"):
     spcatname = os.path.join(os.path.dirname(os.path.abspath(__file__)), progname)
     a = subprocess.Popen("%s %s" % (spcatname, infilename), stdout=subprocess.PIPE, shell=True)
     a.stdout.read()
-    # a.stdout.read() seems to be best way to get SPCAT to finish
+    # seems to be best way to get SPCAT to finish
 
 
 def __write_params(rotor, folder, threshold, max_freq):
