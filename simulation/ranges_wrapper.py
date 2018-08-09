@@ -1,9 +1,12 @@
 
 from gui.pyqtgraph.Qt import QtCore
-from entities import ranges
 import os.path
 
-class RangesWrapper(QtCore.QObject, ranges.Ranges):
+from . import ranges
+from . import unique_name_holder
+
+
+class RangesWrapper(QtCore.QObject, ranges.Ranges, unique_name_holder.UniqueNameHolder):
 
     sigUpdated = QtCore.Signal(object)
     sigAdded = QtCore.Signal(list)
@@ -12,24 +15,13 @@ class RangesWrapper(QtCore.QObject, ranges.Ranges):
     def __init__(self, parent=None):
         QtCore.QObject.__init__(self, parent)
         ranges.Ranges.__init__(self)
-        self.__filenames = {}
-        self.__flag_files_unque = True
+        unique_name_holder.UniqueNameHolder.__init__(self)
         self.__x_unit_name = "MHz"
         self.__y_unit_name = "arb"
-
-    def __purify_names(self, names):
-        new_names = []
-        for file_name in names:
-            if file_name not in self.__filenames.values():
-                new_names.append(file_name)
-        return new_names
 
     @staticmethod
     def __make_basenames(names):
         return [os.path.basename(name) for name in names]
-
-    def set_files_unique_flag(self, flag):
-        self.__flag_files_unque = flag
 
     def set_unit_name(self, x_name=None, y_name=None):
         if x_name:
@@ -42,10 +34,10 @@ class RangesWrapper(QtCore.QObject, ranges.Ranges):
 
     def add_data_files(self, names):
         if self.__flag_files_unque:
-            names = self.__purify_names(names)
+            names = self._purify_names(names)
         added_names_dict = ranges.Ranges.add_data_files(self, names)
         if added_names_dict:
-            self.__filenames.update(added_names_dict)
+            self._add_unique_names(added_names_dict)
             basenames = self.__make_basenames(added_names_dict.values())
             self.sigAdded.emit(basenames)
             self.emit_updated()
@@ -56,7 +48,7 @@ class RangesWrapper(QtCore.QObject, ranges.Ranges):
 
     def remove(self, index):
         if ranges.Ranges.remove(self, index):
-            self.__filenames.pop(index, None)
+            self._remove_unique_name(index)
             self.emit_updated()
 
     def set_visibility(self, index, flag):
@@ -68,9 +60,9 @@ class RangesWrapper(QtCore.QObject, ranges.Ranges):
         for key, value in info_dict.items():
             newvalue = value
             if 'X' in key:
-                newvalue = str(value) + ' ' + self.__x_unit_name
+                newvalue = str(value) + ' ' + str(self.__x_unit_name)
             elif 'Y' in key:
-                newvalue = str(value) + ' ' + self.__y_unit_name
+                newvalue = str(value) + ' ' + str(self.__y_unit_name)
             new_info_dict[key] = newvalue
         return new_info_dict
 
@@ -78,3 +70,5 @@ class RangesWrapper(QtCore.QObject, ranges.Ranges):
         info_dict = ranges.Ranges.make_info(self, index)
         info_dict = self.__add_unit_names(info_dict)
         self.sigInfo.emit(info_dict)
+
+

@@ -7,7 +7,7 @@ import sys
 import lmfit.models as lmfit_models
 from boltzmann import lmfit_custom_models
 
-from entities.ranges import Ranges
+from simulation.ranges import Ranges
 from entities.specunits import units
 
 

@@ -1,6 +1,9 @@
 
-from .converters import *
 
+import os.path
+
+from .converters import *
+from . import db
 
 def get_fit_rms(str_fit_filename):
     rms_fit = None
@@ -13,7 +16,8 @@ def get_fit_rms(str_fit_filename):
     return rms_fit
 
 
-def __write_parvar_header(rotor, max_lines=2000, max_error=1.0E+005, max_iters=10):
+def __write_parvar_header(rotor, max_error=1.0E+005, max_iters=10):
+    max_lines = len(rotor.exp_lines)
     text = ""
     text += "%s \n" % rotor.name
     text += ("   %d  %d   %d    0    0.000E+000   %.4e    1.0000E+000 1.0000000000\n" %
@@ -92,7 +96,8 @@ def load_par(str_filename, rotor):
         _ = f.readline()
         _ = f.readline()
         _ = f.readline()
-        for line, param in zip(f, rotor.params.values()):
+        for line in f:
+            param = rotor.param(ParameterConverter.rotor_parameter_name(line))
             ParameterConverter.par_str_to_obj(line, param)
 
 
@@ -101,7 +106,8 @@ def load_var(str_filename, rotor):
         _ = f.readline()
         _ = f.readline()
         _ = f.readline()
-        for line, param in zip(f, rotor.params.values()):
+        for line in f:
+            param = rotor.param(ParameterConverter.rotor_parameter_name(line))
             ParameterConverter.var_str_to_obj(line, param)
 
 
@@ -192,3 +198,34 @@ def save_egy(str_filename, lst_states):
         for obj_state in lst_states:
             textline = EgyConverter.state2str(obj_state)
             f.write(textline + "\n")
+
+
+def make_filename(folder, extension, name):
+    return os.path.join(folder, name + extension)
+
+
+def load_rotor(rotor, basepath, files=db.MODEL_EXTENSIONS):
+    # order is important!
+    if '.int' in files:
+        intfile = basepath + '.int'
+        load_int(intfile, rotor)
+    if '.par' in files:
+        parfile = basepath + '.par'
+        load_par(parfile, rotor)
+    if '.var' in files:
+        varfile = basepath + '.var'
+        load_var(varfile, rotor)
+
+
+def write_rotor(rotor, folder, threshold, max_freq, files = db.MODEL_EXTENSIONS):
+    if not os.path.exists(folder):
+        os.makedirs(folder)
+    if '.var' in files:
+        varfile = make_filename(folder, '.var', rotor.name)
+        save_var(varfile, rotor)
+    if '.par' in files:
+        parfile = make_filename(folder, '.par', rotor.name)
+        save_par(parfile, rotor)
+    if '.int' in files:
+        intfile = make_filename(folder, '.int', rotor.name)
+        save_int(intfile, rotor, inten=threshold, max_freq=max_freq)

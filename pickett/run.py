@@ -11,8 +11,7 @@ def make_lines(rotor, folder="./temp/", threshold=-15.0, max_freq=2000.0):
     return __read_lines(folder=folder, rotor=rotor)
 
 
-def __make_filename(folder, extension, name):
-    return os.path.join(folder, name + extension)
+
 
 
 def __read_lines(rotor, folder="./temp/"):
@@ -33,10 +32,4 @@ def __run_spcat(rotor, folder="./temp/"):
     # seems to be best way to get SPCAT to finish
 
 
-def __write_params(rotor, folder, threshold, max_freq):
-    if not os.path.exists(folder):
-        os.makedirs(folder)
-    intfile = __make_filename(folder, '.int', rotor.name)
-    varfile = __make_filename(folder, '.var', rotor.name)
-    save_var(varfile, rotor)
-    save_int(intfile, rotor, inten=threshold, max_freq=max_freq)
+

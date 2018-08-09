@@ -351,46 +351,43 @@ class ParameterConverter:
                 % (param_code(obj.name), obj.value, obj.error, obj.name))
 
     @staticmethod
-    def par_str_to_obj(line, param=None, thresh_flag_fit=1.0):
+    def rotor_parameter_name(line):
+        line_lst = line.strip().split()
+        return line_lst[-1]
+
+    @staticmethod
+    def par_str_to_obj(line, param, thresh_flag_fit=1.0):
 
         line_lst = line.strip().split()
-        name = line_lst[-1]
+        code = line_lst[0]
         value = float(line_lst[1])
         if float(line_lst[2]) > thresh_flag_fit:
             flag_fit = True
         else:
             flag_fit = False
 
-        if not param:
-            return RotorParameter(name=name, value=value, flag_fit=flag_fit)
-        else:
-            if not param.name:
-                param.name = name
-            if not param.value:
-                param.value = value
+        if not param.code:
+            param.code = code
 
-            param.flag_fit = flag_fit
+        param.value = value
+        param.flag_fit = flag_fit
 
-            return param
+        return param
 
     @staticmethod
     def var_str_to_obj(line, param=None):
         line_lst = line.strip().split()
-        name = line_lst[-1]
+        code = line_lst[0]
         value = float(line_lst[1])
         error = float(line_lst[2])
 
-        if not param:
-            return RotorParameter(name=name, value=value, error=error)
-        else:
-            if not param.name:
-                param.name = name
-            if not param.value:
-                param.value = value
+        if not param.code:
+            param.code = code
 
-            param.error = error
+        param.value = value
+        param.error = error
 
-            return param
+        return param
 
 
 

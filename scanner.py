@@ -2,7 +2,7 @@
 import sys
 from scanner.widgets import MainWindow, Application
 from scanner.engine import ScannerEngine
-from scanner.ranges_wrapper import RangesWrapper
+from simulation.ranges_wrapper import RangesWrapper
 #from scanner.simu
 
 # create components

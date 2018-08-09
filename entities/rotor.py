@@ -1,8 +1,6 @@
 
-from enum import Enum
 
-
-class RotorType(Enum):
+class RotorType:
     lin = 1
     sym = 2
     asym = 3
@@ -11,8 +9,8 @@ class RotorType(Enum):
 class RotorParameter(object):
     """Rotor Hamiltonian expansion parameter (e.g. B, D) as in CDMS"""
 
-    def __init__(self, name, value=1.0, error=None, flag_fit=True):
-        self.name = name
+    def __init__(self, code=None, value=None, error=None, flag_fit=True):
+        self.code = code
         self.value = value
         self.error = error
         self.flag_fit = flag_fit
@@ -21,26 +19,32 @@ class RotorParameter(object):
 
 class Rotor(object):
 
-    def __init__(self, name="noname"):
+    def __init__(self, name=None):
 
         self.type = RotorType.asym
         self.name = name
-        self.params = {}
+        self.__params = {}
         self.flag_wavenumbers = False
 
-        self.extended = {}
+        self.extended = {} # additional information
 
         self.mu_A = None
         self.mu_B = None
         self.mu_C = None
 
-    def param(self, name):
+        self.exp_lines = []  # assignment
+        self.sim_lines = []  # passed from quantum simulation to plot simulation
 
-        return self.params[name]
+    def param(self, name):
+        try:
+            return self.__params[name]
+        except KeyError:
+            return self.add_param(name)
 
     def add_param(self, name, **kwargs):
-
-        self.params[name] = RotorParameter(name, **kwargs)
+        new_par = RotorParameter(name, **kwargs)
+        self.__params[name] = new_par
+        return new_par
 
     def Q(self, T):
         if self.type == RotorType.asym:

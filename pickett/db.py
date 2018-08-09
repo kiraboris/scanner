@@ -14,6 +14,7 @@ QUANTA_HEADERS = {2: ['N', 'K', 'J', 'F1', 'F2','F'],
                   13: ['N', 'K', 'v', 'J', 'F1', 'F'],
                   14: ['N', 'Ka', 'Kc', 'v', 'J', 'F']}
 
+MODEL_EXTENSIONS = [".par", ".var", ".int"]
 
 def strip_possible_param_inversion(name):
 
