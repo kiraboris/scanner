@@ -197,6 +197,17 @@ class Ranges:
             self.__invisible_indexes.discard(index)
 
 
+    def make_info(self, index):
+        info = {}
+        arr = self.__arrs[index]
+        info['X Min'] = np.min(arr[:, DIM.X])
+        info['X Max'] = np.max(arr[:, DIM.X])
+        info['X Resolution'] = np.mean(arr[1:, DIM.X] - arr[:-1, DIM.X])
+        #y_arr = np.unique(arr[:, DIM.Y])
+        #info['Y Resolution'] = np.mean(y_arr[1:] - y_arr[:-1])
+        return info
+
+
 if __name__ == "__main__":
     """unit test"""
 
@@ -217,3 +228,4 @@ if __name__ == "__main__":
     r.add([a4])
 
     r.print()
+    #print(r.make_info(2))

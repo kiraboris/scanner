@@ -1,16 +1,13 @@
 
-
-
-
-from gui import panoram, list_dock
+from gui import panoram, list_dock, table_dock
 from gui.pyqtgraph.Qt import QtGui, QtCore
 
 Application = QtGui.QApplication
-
+#InfoDock = table_dock.TableInfoDock("")
 
 class ExpDock(list_dock.ListDock):
     def __init__(self):
-        list_dock.ListDock.__init__(self, "Experimental data")
+        list_dock.ListDock.__init__(self, "Experiments")
 
     def _addButtonClick(self):
         file_names = QtGui.QFileDialog.getOpenFileNames(self, 'Add experimetal data file(s)...')
@@ -19,6 +16,16 @@ class ExpDock(list_dock.ListDock):
             self.sigAddItems.emit(file_names)
 
 
+class SimDock(list_dock.ListDock):
+    def __init__(self):
+        list_dock.ListDock.__init__(self, "Simulations")
+        self.__default_name_number = 1
+
+    def _addButtonClick(self):
+        name = "Species%i" % self.__default_name_number
+        self.__default_name_number += 1
+        self.addItem(name)
+        self.sigAddItem.emit(name)
 
 
 class MainWindow(QtGui.QMainWindow):
@@ -32,10 +39,12 @@ class MainWindow(QtGui.QMainWindow):
 
         self.pan = panoram.Panoram()
         self.expDock = ExpDock()
-        #self.simDock = SimDock()
+        self.simDock = SimDock()
+        #self.infoDock = TableInfoDock("")
 
         self.setCentralWidget(self.pan.widget)
-        self.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.expDock)
+        self.addDockWidget(QtCore.Qt.LeftDockWidgetArea, self.expDock)
+        self.addDockWidget(QtCore.Qt.LeftDockWidgetArea, self.simDock)
 
         self._createMainMenu()
 
@@ -65,10 +74,12 @@ class MainWindow(QtGui.QMainWindow):
 
 
         winMenu = menu.addMenu("&Window")
-        showExpWinAction = QtGui.QAction("&Experimental data...", self)
-        showExpWinAction.triggered.connect(self.expDock.show)
-        winMenu.addAction(showExpWinAction)
-
+        action = QtGui.QAction("&Experiments", self)
+        action.triggered.connect(self.expDock.show)
+        winMenu.addAction(action)
+        action = QtGui.QAction("&Simulations", self)
+        action.triggered.connect(self.simDock.show)
+        winMenu.addAction(action)
 
 
 

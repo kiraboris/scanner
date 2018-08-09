@@ -2,7 +2,7 @@
 import sys
 from scanner.widgets import MainWindow, Application
 from scanner.engine import ScannerEngine
-from gui.ranges_wrapper import RangesWrapper
+from scanner.ranges_wrapper import RangesWrapper
 #from scanner.simu
 
 # create components
@@ -30,6 +30,8 @@ exp_ranges.sigAdded.connect(win.expDock.addItems)
 win.expDock.sigAddItems.connect(exp_ranges.add_data_files)
 win.expDock.sigRemoveItem.connect(exp_ranges.remove)
 win.expDock.sigItemChecked.connect(exp_ranges.set_visibility)
+win.expDock.sigCurrentRowChanged.connect(exp_ranges.make_info)
+exp_ranges.sigInfo.connect(win.expDock.setInfoSheet)
 
 # execute
 win.show()
