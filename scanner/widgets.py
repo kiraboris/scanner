@@ -3,14 +3,17 @@ from gui import panoram, list_dock, table_dock
 from gui.pyqtgraph.Qt import QtGui, QtCore
 
 Application = QtGui.QApplication
-#InfoDock = table_dock.TableInfoDock("")
+
 
 class ExpDock(list_dock.ListDock):
     def __init__(self):
         list_dock.ListDock.__init__(self, "Experiments")
 
     def _addButtonClick(self):
-        file_names = QtGui.QFileDialog.getOpenFileNames(self, 'Add experimetal data file(s)...')
+        filter = "Plain data (*.dat, *.txt);;All files (*.*)"
+        file_names = QtGui.QFileDialog.getOpenFileNames(self,
+                                                        'Add experimetal data file(s)...',
+                                                        filter=filter)
         file_names = file_names[0]
         if file_names:
             self.sigAddItems.emit(file_names)
@@ -18,14 +21,16 @@ class ExpDock(list_dock.ListDock):
 
 class SimDock(list_dock.ListDock):
     def __init__(self):
-        list_dock.ListDock.__init__(self, "Simulations")
-        self.__default_name_number = 1
+        list_dock.ListDock.__init__(self, "Models")
 
     def _addButtonClick(self):
-        name = "Species%i" % self.__default_name_number
-        self.__default_name_number += 1
-        self.addItem(name)
-        self.sigAddItem.emit(name)
+        filter = "Pickett (*.par, *.var, *.int);;All files (*.*)"
+        file_name = QtGui.QFileDialog.getOpenFileName(self,
+                                                      'Add quantum model...',
+                                                      filter=filter)
+        file_name = file_name[0]
+        if file_name:
+            self.sigAddItem.emit(file_name)
 
 
 class MainWindow(QtGui.QMainWindow):
@@ -77,7 +82,7 @@ class MainWindow(QtGui.QMainWindow):
         action = QtGui.QAction("&Experiments", self)
         action.triggered.connect(self.expDock.show)
         winMenu.addAction(action)
-        action = QtGui.QAction("&Simulations", self)
+        action = QtGui.QAction("&Models", self)
         action.triggered.connect(self.simDock.show)
         winMenu.addAction(action)
 
