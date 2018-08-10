@@ -94,8 +94,9 @@ def save_var(str_filename, rotor):
 def load_par(str_filename, rotor):
     with open(str_filename, 'r') as f:
         _ = f.readline()
-        _ = f.readline()
-        _ = f.readline()
+        a = f.readline()
+        b = f.readline()
+        rotor.extended['pickett_header'] = a + b
         for line in f:
             param = rotor.param(ParameterConverter.rotor_parameter_name(line))
             ParameterConverter.par_str_to_obj(line, param)
@@ -104,8 +105,9 @@ def load_par(str_filename, rotor):
 def load_var(str_filename, rotor):
     with open(str_filename, 'r') as f:
         _ = f.readline()
-        _ = f.readline()
-        _ = f.readline()
+        a = f.readline()
+        b = f.readline()
+        rotor.extended['pickett_header'] = a + b
         for line in f:
             param = rotor.param(ParameterConverter.rotor_parameter_name(line))
             ParameterConverter.var_str_to_obj(line, param)

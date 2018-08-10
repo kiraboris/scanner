@@ -15,10 +15,10 @@ class SimulationParams:
 
 
 class SimulationObject:
-    def __init__(self, basepath, extension):
+    def __init__(self, basepath, extension, params):
         self.rotor = Rotor()
         self.basepath = basepath
-        self.params = SimulationParams()
+        self.params = params
         self.load_rotor(basepath, extension)
 
     def __setup_qworker(self, extension):

@@ -190,9 +190,9 @@ class Ranges:
     def update(self, index, arr):
         if index < len(self.__arrs):
             self.__arrs[index] = arr
-            return True
         else:
-            return False
+            self.__arrs.append(arr)
+        return True
 
     def set_visibility(self, index, flag):
         if not flag:
