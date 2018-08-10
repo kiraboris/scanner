@@ -13,9 +13,13 @@ class UniqueNameHolder:
         else:
             new_names = []
             for file_name in names:
-                if file_name not in self.__filenames.values():
+                if self._check_name(file_name):
                     new_names.append(file_name)
             return new_names
+
+    def _check_name(self, name):
+        """returns True if name or part of name has NOT been recorded"""
+        return all(name not in record for record in self.__filenames.values())
 
     def _add_unique_names(self, names_dict):
         self.__filenames.update(names_dict)

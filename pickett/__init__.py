@@ -1,13 +1,13 @@
 
-
 from . import db
 from .io import load_rotor, write_rotor
+from .run import make_lines, fit_lines
 
 
 def name():
     return "Pickett"
 
 
-def is_valid_extension(ext):
-    return ext in db.MODEL_EXTENSIONS
+def valid_extensions():
+    return db.MODEL_EXTENSIONS
 

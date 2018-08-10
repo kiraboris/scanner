@@ -6,16 +6,17 @@ from .io import *
 
 
 def make_lines(rotor, folder="./temp/", threshold=-15.0, max_freq=2000.0):
-    __write_params(folder=folder, rotor=rotor, threshold=threshold, max_freq=max_freq)
+    write_rotor(folder=folder, rotor=rotor, threshold=threshold, max_freq=max_freq)
     __run_spcat(folder=folder, rotor=rotor)
     return __read_lines(folder=folder, rotor=rotor)
 
 
-
+def fit_lines():
+    pass
 
 
 def __read_lines(rotor, folder="./temp/"):
-    catfile = __make_filename(folder, '.cat', rotor.name)
+    catfile = make_filename(folder, '.cat', rotor.name)
     return load_cat(catfile)
 
 
@@ -25,7 +26,7 @@ def __run_spcat(rotor, folder="./temp/"):
     else:
         progname = "spcat_linux"
 
-    infilename = __make_filename(folder, '', rotor.name)
+    infilename = make_filename(folder, '', rotor.name)
     spcatname = os.path.join(os.path.dirname(os.path.abspath(__file__)), progname)
     a = subprocess.Popen("%s %s" % (spcatname, infilename), stdout=subprocess.PIPE, shell=True)
     a.stdout.read()

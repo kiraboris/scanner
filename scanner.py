@@ -1,16 +1,20 @@
 
 import sys
 from scanner.widgets import MainWindow, Application
-from scanner.engine import ScannerEngine
+#from scanner.engine import ScannerEngine
 from simulation.ranges_wrapper import RangesWrapper
-#from scanner.simu
+from simulation.simulation_group import SimulationGroup
 
 # create components
 app = Application([])
 win = MainWindow()
 exp_ranges = RangesWrapper()
 sim_ranges = RangesWrapper()
-engine = ScannerEngine(sim_ranges, exp_ranges)
+sim = SimulationGroup(sim_ranges)
+#engine = ScannerEngine(sim_ranges, exp_ranges)
+
+# set defaults
+
 
 # open and save project routines
 #def open_project(filename):

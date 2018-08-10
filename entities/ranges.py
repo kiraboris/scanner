@@ -2,6 +2,7 @@
 import numpy as np
 from bisect import bisect_left, bisect_right
 
+
 class DIM:
     """ndarray dimensions"""
     X = 0
@@ -100,7 +101,6 @@ class Ranges:
     def __init__(self, arrays=()):
         """'arrays': list of ndnumpy arrays
             where x axis is 1st column, y axis is last column (as above)"""
-
         if arrays:
             self.__arrs = arrays
         else:
@@ -109,18 +109,12 @@ class Ranges:
         self.__invisible_indexes = set()
 
     def spread_y(self):
-
         return max([np.max(a[:, DIM.Y]) - np.min(a[:, DIM.Y])
                     for a in self.__arrs])
-
-    def add(self, arrays):
-
-        self.__arrs = self.__arrs + arrays
 
     def slices(self, step, span, nmipmap=0):
         """'span': size of slice,
            'step': offset of each next slice from begin of previous one"""
-
         a = self.export()
 
         left = 0
@@ -160,7 +154,7 @@ class Ranges:
         if not arrs:
             return None
         elif len(arrs) == 1:
-           return arrs[0]
+            return arrs[0]
         else:
             return quick_avg_data(arrs, flag_fill_gaps=True)
 
@@ -182,10 +176,20 @@ class Ranges:
     def deserialize(self, stream):
         return True
 
+    def add(self, arrays):
+        self.__arrs = self.__arrs + arrays
+
     def remove(self, index):
         if index < len(self.__arrs):
             del self.__arrs[index]
             self.__invisible_indexes.discard(index)
+            return True
+        else:
+            return False
+
+    def update(self, index, arr):
+        if index < len(self.__arrs):
+            self.__arrs[index] = arr
             return True
         else:
             return False

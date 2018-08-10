@@ -1,8 +1,8 @@
 
-from gui.pyqtgraph.Qt import QtCore
 import os.path
 
-from . import ranges
+from gui.pyqtgraph.Qt import QtCore
+from entities import ranges
 from . import unique_name_holder
 
 
@@ -48,6 +48,11 @@ class RangesWrapper(QtCore.QObject, ranges.Ranges, unique_name_holder.UniqueName
 
     def remove(self, index):
         if ranges.Ranges.remove(self, index):
+            self._remove_unique_name(index)
+            self.emit_updated()
+
+    def update(self, index, arr):
+        if ranges.Ranges.update(self, index, arr):
             self._remove_unique_name(index)
             self.emit_updated()
 
