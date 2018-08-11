@@ -12,7 +12,7 @@ class SimulationParams:
         self.threshold = threshold   # minumum intensity in Pickett units
         self.min_freq = min_freq
         self.max_freq = max_freq
-
+        self.x_unit_name = 'MHz'
 
 class SimulationObject:
     def __init__(self, basepath, extension, params):
@@ -45,4 +45,15 @@ class SimulationObject:
             max_freq = self.params.max_freq
         return spectrum_tools.make_rotor_spectrum(self.rotor, min_freq, max_freq, self.params)
 
-
+    def make_info(self):
+        info = {}
+        info['Method'] = self.qworker.name()
+        #info['X Resolution'] = str(self.params.resolution) + ' ' + str(self.params.x_unit_name)
+        #info['X Min'] = str(self.params.min_freq) + ' ' + str(self.params.x_unit_name)
+        #info['X Max'] = str(self.params.max_freq) + ' ' + str(self.params.x_unit_name)
+        info['Y Threshold'] = str(self.params.threshold) + " PU"
+        info['Y Factor'] = str(self.params.intensity_factor)
+        info['u_A'] = str(self.rotor.mu_A) + " D"
+        info['u_B'] = str(self.rotor.mu_B) + " D"
+        info['u_C'] = str(self.rotor.mu_C) + " D"
+        return info

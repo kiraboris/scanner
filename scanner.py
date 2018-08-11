@@ -38,9 +38,11 @@ win.expDock.sigCurrentRowChanged.connect(exp_ranges.make_info)
 
 sim.sigUpdateRange.connect(sim_ranges.update)
 sim.sigAdded.connect(win.simDock.addItem)
+sim.sigInfo.connect(win.simDock.setInfoSheet)
 sim_ranges.sigUpdated.connect(win.pan.plotLower)
 win.simDock.sigAddItem.connect(sim.add_rotor)
-
+win.simDock.sigRemoveItem.connect(sim.remove_rotor)
+win.simDock.sigCurrentRowChanged.connect(sim.make_info)
 
 # execute
 win.show()

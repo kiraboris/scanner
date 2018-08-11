@@ -34,18 +34,17 @@ def load_int(str_filename, rotor):
                     rotor.name = line.strip()
             if i == 1:
                 line_lst = line.strip().split()
-                rotor.flag_wavenumbers = bool(line_lst[0] % 1000)
-                if not rotor.tag:
-                    rotor.tag = int(line_lst[1])
+                rotor.flag_wavenumbers = bool(int(line_lst[0]) % 1000)
+                rotor.extended['pickett_tag'] = int(line_lst[1])
             if i >= 2:
                 line_lst = line.strip().split()
                 axis = int(line_lst[0])
                 if axis == 1:
-                    rotor.u_A = float(line_lst[1])
+                    rotor.mu_A = float(line_lst[1])
                 elif axis == 2:
-                    rotor.u_B = float(line_lst[1])
+                    rotor.mu_B = float(line_lst[1])
                 elif axis == 3:
-                    rotor.u_C = float(line_lst[1])
+                    rotor.mu_C = float(line_lst[1])
     return rotor
 
 
@@ -53,7 +52,7 @@ def save_int(str_filename, rotor, J_min=0, J_max=100, inten=-15.0, max_freq=150.
     input_file = ""
     input_file += "%s \n" % rotor.name
     input_file += ("%1d  %d  %f  %3d  %3d  %f  %f  %f  %f\n" %
-                   (int(rotor.flag_wavenumbers)*1000, 0, rotor.Q(temperature),
+                   (int(rotor.flag_wavenumbers)*1000, rotor.extended['pickett_tag'], rotor.Q(temperature),
                     J_min, J_max, inten, inten, max_freq, temperature))
 
     if rotor.mu_A:
@@ -94,6 +93,7 @@ def save_var(str_filename, rotor):
 def load_par(str_filename, rotor):
     with open(str_filename, 'r') as f:
         _ = f.readline()
+        _ = f.readline()
         a = f.readline()
         b = f.readline()
         rotor.extended['pickett_header'] = a + b
@@ -104,6 +104,7 @@ def load_par(str_filename, rotor):
 
 def load_var(str_filename, rotor):
     with open(str_filename, 'r') as f:
+        _ = f.readline()
         _ = f.readline()
         a = f.readline()
         b = f.readline()
@@ -221,12 +222,11 @@ def load_rotor(rotor, basepath, files=db.MODEL_EXTENSIONS):
         except:
             pass
     if '.var' in files:
+        varfile = basepath + '.var'
         try:
-            varfile = basepath + '.var'
             load_var(varfile, rotor)
         except:
             pass
-
 
 
 def write_rotor(rotor, folder, threshold, max_freq, files = db.MODEL_EXTENSIONS):
