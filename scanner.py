@@ -37,6 +37,8 @@ win.expDock.sigItemChecked.connect(exp_ranges.set_visibility)
 win.expDock.sigCurrentRowChanged.connect(exp_ranges.make_info)
 
 sim.sigUpdateRange.connect(sim_ranges.update)
+sim_ranges.sigUpdated.connect(win.pan.plotLower)
+win.simDock.sigAddItem.connect(sim.add_rotor)
 
 # execute
 win.show()

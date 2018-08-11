@@ -220,7 +220,7 @@ if __name__ == "__main__":
     x3 = np.linspace(25, 34, 10)
     x4 = np.linspace(5, 14, 10)
 
-    y  = np.linspace(10, 100, 10)
+    y = np.linspace(10, 100, 10)
 
     a1 = np.stack((x1, y)).T
     a2 = np.stack((x2, y)).T

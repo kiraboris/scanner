@@ -1,5 +1,5 @@
 
-from . import simulate_spectrum
+from . import spectrum_tools
 from entities.rotor import Rotor
 
 import pickett
@@ -43,6 +43,6 @@ class SimulationObject:
             min_freq = self.params.min_freq
         if not max_freq:
             max_freq = self.params.max_freq
-        return simulate_spectrum.simulate(self.rotor, min_freq, max_freq, self.params.intensity_factor)
+        return spectrum_tools.make_rotor_spectrum(self.rotor, min_freq, max_freq, self.params)
 
 

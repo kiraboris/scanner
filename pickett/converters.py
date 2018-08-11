@@ -2,9 +2,9 @@
 from bidict import bidict
 
 from .db import quanta_headers, param_code
-from ..entities.line import Line
-from ..entities.state import State
-from ..entities.rotor import RotorParameter
+from entities.line import Line
+from entities.state import State
+from entities.rotor import RotorParameter
 
 
 class CatConverter:

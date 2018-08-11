@@ -33,8 +33,7 @@ class RangesWrapper(QtCore.QObject, ranges.Ranges, unique_name_holder.UniqueName
         self.sigUpdated.emit(self.export())
 
     def add_data_files(self, names):
-        if self.__flag_files_unque:
-            names = self._purify_names(names)
+        names = self._purify_names(names)
         added_names_dict = ranges.Ranges.add_data_files(self, names)
         if added_names_dict:
             self._add_unique_names(added_names_dict)

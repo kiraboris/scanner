@@ -210,12 +210,21 @@ def load_rotor(rotor, basepath, files=db.MODEL_EXTENSIONS):
     # order is important!
     if '.int' in files:
         intfile = basepath + '.int'
-        load_int(intfile, rotor)
+        try:
+            load_int(intfile, rotor)
+        except:
+            pass
     if '.par' in files:
         parfile = basepath + '.par'
-        load_par(parfile, rotor)
+        try:
+            load_par(parfile, rotor)
+        except:
+            pass
     if '.var' in files:
-        varfile = basepath + '.var'
+        try:
+            varfile = basepath + '.var'
+        except:
+            pass
         load_var(varfile, rotor)
 
 
