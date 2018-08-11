@@ -9,6 +9,7 @@ from . import unique_name_holder
 class SimulationGroup(QtCore.QObject, unique_name_holder.UniqueNameHolder):
 
     sigUpdateRange = QtCore.Signal(int, object)
+    sigAdded = QtCore.Signal(str)
 
     def __init__(self, parent=None):
         QtCore.QObject.__init__(self, parent)
@@ -20,11 +21,12 @@ class SimulationGroup(QtCore.QObject, unique_name_holder.UniqueNameHolder):
         basepath, extension = os.path.splitext(filename)
         if self._check_name(basepath):
             try:
-                rotor = simulation_object.SimulationObject(basepath, extension, self.__defaults)
-                index = len(self.__rotors)
+                obj = simulation_object.SimulationObject(basepath, extension, self.__defaults)
+                index = len(self.__objects)
                 self._add_unique_names({index: basepath})
-                self.__objects.append(rotor)
-                self._make_spectrum(index, flag_update_lines=True)
+                self.__objects.append(obj)
+                #self._make_spectrum(index, flag_update_lines=True)
+                self.sigAdded.emit(obj.rotor.name)
             except:
                 return
 

@@ -51,9 +51,10 @@ class RangesWrapper(QtCore.QObject, ranges.Ranges, unique_name_holder.UniqueName
             self.emit_updated()
 
     def update(self, index, arr):
-        if ranges.Ranges.update(self, index, arr):
-            self._remove_unique_name(index)
-            self.emit_updated()
+        new_index = ranges.Ranges.update(self, index, arr)
+        if index != new_index:
+            self.sigAdded.emit([])
+        self.emit_updated()
 
     def set_visibility(self, index, flag):
         ranges.Ranges.set_visibility(self, index, flag)

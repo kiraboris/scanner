@@ -1,8 +1,8 @@
 
-from . import spectrum_tools
 from entities.rotor import Rotor
 
 import pickett
+from . import spectrum_tools
 
 
 class SimulationParams:
@@ -30,7 +30,7 @@ class SimulationObject:
     def load_rotor(self, basepath, extension):
         self.__setup_qworker(extension)
         try:
-            self.qworker.load_rotor(self, basepath)
+            self.qworker.load_rotor(self.rotor, self.basepath)
         except:
             raise Exception()
 

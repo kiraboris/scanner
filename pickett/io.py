@@ -223,9 +223,10 @@ def load_rotor(rotor, basepath, files=db.MODEL_EXTENSIONS):
     if '.var' in files:
         try:
             varfile = basepath + '.var'
+            load_var(varfile, rotor)
         except:
             pass
-        load_var(varfile, rotor)
+
 
 
 def write_rotor(rotor, folder, threshold, max_freq, files = db.MODEL_EXTENSIONS):
