@@ -5,28 +5,29 @@ import subprocess
 from .io import *
 
 
-def make_lines(rotor, folder="./temp/", threshold=-15.0, max_freq=2000.0):
-    write_rotor(folder=folder, rotor=rotor, threshold=threshold, max_freq=max_freq)
-    __run_spcat(folder=folder, rotor=rotor)
-    return __read_lines(folder=folder, rotor=rotor)
+def make_lines(rotor, folder="./temp/", basename="temp", threshold=-15.0, max_freq=2000.0):
+    write_rotor(folder=folder, rotor=rotor, threshold=threshold, max_freq=max_freq, basename=basename)
+    __run_spcat(folder=folder, rotor=rotor, basename=basename)
+    lines = __read_lines(folder=folder, rotor=rotor, basename=basename)
+    return lines
 
 
 def fit_lines():
     pass
 
 
-def __read_lines(rotor, folder="./temp/"):
-    catfile = make_filename(folder, '.cat', rotor.name)
+def __read_lines(rotor, basename, folder="./temp/"):
+    catfile = make_filename(folder, '.cat', basename)
     return load_cat(catfile)
 
 
-def __run_spcat(rotor, folder="./temp/"):
+def __run_spcat(rotor, basename, folder="./temp/"):
     if os.name == 'nt':
         progname = "spcat.exe"
     else:
         progname = "spcat_linux"
 
-    infilename = make_filename(folder, '', rotor.name)
+    infilename = make_filename(os.path.abspath(folder), '', basename)
     spcatname = os.path.join(os.path.dirname(os.path.abspath(__file__)), progname)
     a = subprocess.Popen("%s %s" % (spcatname, infilename), stdout=subprocess.PIPE, shell=True)
     a.stdout.read()

@@ -13,7 +13,8 @@ sim = SimulationGroup()
 # engine = ScannerEngine(sim_ranges, exp_ranges)
 
 # set defaults
-sim.set_defaults(resolution=0.1, min_freq=1000, max_freq=200000, threshold=-10.0, intensity_factor=1.0)
+sim.set_defaults(resolution=0.05, min_freq=170000.0, max_freq=200000.0,
+                 threshold=-4.0, intensity_factor=1.0, sigma=0.2)
 
 # open and save project routines
 # def open_project(filename):
@@ -37,6 +38,7 @@ win.expDock.sigItemChecked.connect(exp_ranges.set_visibility)
 win.expDock.sigCurrentRowChanged.connect(exp_ranges.make_info)
 
 sim.sigUpdateRange.connect(sim_ranges.update)
+sim.sigRemoveRange.connect(sim_ranges.remove)
 sim.sigAdded.connect(win.simDock.addItem)
 sim.sigInfo.connect(win.simDock.setInfoSheet)
 sim_ranges.sigUpdated.connect(win.pan.plotLower)

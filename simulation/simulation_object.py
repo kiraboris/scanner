@@ -6,13 +6,14 @@ from . import spectrum_tools
 
 
 class SimulationParams:
-    def __init__(self, resolution=None, min_freq=None, max_freq=None, threshold=None, intensity_factor=None):
+    def __init__(self, sigma=None, resolution=None, min_freq=None, max_freq=None, threshold=None, intensity_factor=None):
         self.intensity_factor = intensity_factor
         self.resolution = resolution
         self.threshold = threshold   # minumum intensity in Pickett units
         self.min_freq = min_freq
         self.max_freq = max_freq
         self.x_unit_name = 'MHz'
+        self.sigma = sigma
 
 
 class SimulationObject:
