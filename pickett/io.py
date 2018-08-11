@@ -5,6 +5,7 @@ import os.path
 from .converters import *
 from . import db
 
+
 def get_fit_rms(str_fit_filename):
     rms_fit = None
     with open(str_fit_filename) as f:
@@ -71,9 +72,9 @@ def save_int(str_filename, rotor, J_min=0, J_max=100, inten=-15.0, max_freq=150.
 def save_par(str_filename, rotor):
     text = __write_parvar_header(rotor)
 
-    for param in rotor.params.values():
+    for name, param in rotor.params.items():
         if param.flag_enabled:
-            text += ParameterConverter.obj_to_par_str(param)
+            text += ParameterConverter.obj_to_par_str(param, name)
 
     with open(str_filename, 'w') as f:
         f.write(text)
@@ -82,9 +83,9 @@ def save_par(str_filename, rotor):
 def save_var(str_filename, rotor):
     text = __write_parvar_header(rotor)
 
-    for param in rotor.params.values():
+    for name, param in rotor.params.items():
         if param.flag_enabled:
-            text += ParameterConverter.obj_to_var_str(param)
+            text += ParameterConverter.obj_to_var_str(param, name)
 
     with open(str_filename, 'w') as f:
         f.write(text)

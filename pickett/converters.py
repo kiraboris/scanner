@@ -342,13 +342,13 @@ class ParameterConverter:
     @staticmethod
     def obj_to_par_str(obj, name):
         return ("%13i  %.23e 1.00000000E%s50 %s\n"
-                % (obj.code, obj.value,
-                   ParameterConverter.signum(obj.flag_fit), obj.name))
+                % (int(obj.code), obj.value,
+                   ParameterConverter.signum(obj.flag_fit), name))
 
     @staticmethod
     def obj_to_var_str(obj, name):
         return ("%13i %.23e %.14e %s\n"
-                % (obj.code, obj.value, obj.error, obj.name))
+                % (int(obj.code), obj.value, obj.error, name))
 
     @staticmethod
     def rotor_parameter_name(line):
@@ -357,7 +357,6 @@ class ParameterConverter:
 
     @staticmethod
     def par_str_to_obj(line, param, thresh_flag_fit=1.0):
-
         line_lst = line.strip().split()
         code = line_lst[0]
         value = float(line_lst[1])
@@ -371,6 +370,8 @@ class ParameterConverter:
 
         param.value = value
         param.flag_fit = flag_fit
+        if not param.error:
+            param.error = value / 2
 
         return param
 

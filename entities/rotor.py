@@ -8,7 +8,6 @@ class RotorType:
 
 class RotorParameter(object):
     """Rotor Hamiltonian expansion parameter (e.g. B, D) as in CDMS"""
-
     def __init__(self, code=None, value=None, error=None, flag_fit=True):
         self.code = code
         self.value = value
@@ -18,9 +17,7 @@ class RotorParameter(object):
 
 
 class Rotor(object):
-
     def __init__(self, name=None):
-
         self.type = RotorType.asym
         self.name = name
         self.params = {}
@@ -42,7 +39,7 @@ class Rotor(object):
             return self.add_param(name)
 
     def add_param(self, name, **kwargs):
-        new_par = RotorParameter(name, **kwargs)
+        new_par = RotorParameter(**kwargs)
         self.params[name] = new_par
         return new_par
 

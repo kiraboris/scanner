@@ -14,6 +14,7 @@ class SimulationParams:
         self.max_freq = max_freq
         self.x_unit_name = 'MHz'
 
+
 class SimulationObject:
     def __init__(self, basepath, extension, params):
         self.rotor = Rotor()
