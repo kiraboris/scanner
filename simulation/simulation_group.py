@@ -27,7 +27,7 @@ class SimulationGroup(QtCore.QObject, unique_name_holder.UniqueNameHolder):
                 index = len(self.__objects)
                 self._add_unique_names({index: basepath})
                 self.__objects.append(obj)
-                #self._make_spectrum(index, flag_update_lines=True)
+                self._make_spectrum(index, flag_update_lines=True)
                 self.sigAdded.emit(obj.rotor.name)
             except:
                 return
@@ -50,3 +50,5 @@ class SimulationGroup(QtCore.QObject, unique_name_holder.UniqueNameHolder):
     def make_info(self, index):
         info_dict = self.__objects[index].make_info()
         self.sigInfo.emit(info_dict)
+
+

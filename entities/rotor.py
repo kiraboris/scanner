@@ -23,7 +23,7 @@ class Rotor(object):
 
         self.type = RotorType.asym
         self.name = name
-        self.__params = {}
+        self.params = {}
         self.flag_wavenumbers = False
 
         self.extended = {} # additional information
@@ -37,13 +37,13 @@ class Rotor(object):
 
     def param(self, name):
         try:
-            return self.__params[name]
+            return self.params[name]
         except KeyError:
             return self.add_param(name)
 
     def add_param(self, name, **kwargs):
         new_par = RotorParameter(name, **kwargs)
-        self.__params[name] = new_par
+        self.params[name] = new_par
         return new_par
 
     def Q(self, T):

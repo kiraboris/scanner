@@ -35,8 +35,9 @@ class SimulationObject:
             raise Exception()
 
     def update_lines(self):
-        self.rotor.sim_lines = self.qworker.make_lines(self,
-                                                       threshold=self.params.threshold, max_freq=self.params.max_freq)
+        self.rotor.sim_lines = self.qworker.make_lines(self.rotor,
+                                                       threshold=self.params.threshold,
+                                                       max_freq=self.params.max_freq)
 
     def make_spectrum(self, min_freq=None, max_freq=None):
         if not min_freq:

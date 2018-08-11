@@ -340,15 +340,15 @@ class ParameterConverter:
             return '-'
 
     @staticmethod
-    def obj_to_par_str(obj):
-        return ("%13i  %.23e 1.00000000E%s50 /%s\n"
-                % (param_code(obj.name), obj.value,
+    def obj_to_par_str(obj, name):
+        return ("%13i  %.23e 1.00000000E%s50 %s\n"
+                % (obj.code, obj.value,
                    ParameterConverter.signum(obj.flag_fit), obj.name))
 
     @staticmethod
-    def obj_to_var_str(obj):
-        return ("%13i %.23e %.14e /%s\n"
-                % (param_code(obj.name), obj.value, obj.error, obj.name))
+    def obj_to_var_str(obj, name):
+        return ("%13i %.23e %.14e %s\n"
+                % (obj.code, obj.value, obj.error, obj.name))
 
     @staticmethod
     def rotor_parameter_name(line):
