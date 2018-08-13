@@ -31,20 +31,23 @@ sim.set_defaults(resolution=0.05, min_freq=170000.0, max_freq=200000.0,
 # connect components
 exp_ranges.sigUpdated.connect(win.pan.plotUpper)
 exp_ranges.sigAdded.connect(win.expDock.addItems)
-exp_ranges.sigInfo.connect(win.expDock.setInfoSheet)
+exp_ranges.sigSettings.connect(win.expSettings.setSheet)
 win.expDock.sigAddItems.connect(exp_ranges.add_data_files)
 win.expDock.sigRemoveItem.connect(exp_ranges.remove)
 win.expDock.sigItemChecked.connect(exp_ranges.set_visibility)
-win.expDock.sigCurrentRowChanged.connect(exp_ranges.make_info)
+win.expDock.sigSettingsRequest.connect(exp_ranges.get_settings)
+win.expDock.sigSettingsRequest.connect(win.expSettings.show)
 
 sim.sigUpdateRange.connect(sim_ranges.update)
 sim.sigRemoveRange.connect(sim_ranges.remove)
 sim.sigAdded.connect(win.simDock.addItem)
-sim.sigInfo.connect(win.simDock.setInfoSheet)
+sim.sigSettings.connect(win.simSettings.setSheet)
 sim_ranges.sigUpdated.connect(win.pan.plotLower)
 win.simDock.sigAddItem.connect(sim.add_rotor)
 win.simDock.sigRemoveItem.connect(sim.remove_rotor)
-win.simDock.sigCurrentRowChanged.connect(sim.make_info)
+win.simDock.sigSettingsRequest.connect(sim.get_settings)
+win.simDock.sigSettingsRequest.connect(win.simSettings.show)
+win.simDock.sigItemChecked.connect(sim_ranges.set_visibility)
 
 # execute
 win.show()

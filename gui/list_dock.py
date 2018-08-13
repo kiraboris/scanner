@@ -13,6 +13,8 @@ class ListDock(QtGui.QDockWidget):
     sigItemNameChanged = QtCore.Signal(int, str)
     sigCurrentRowChanged = QtCore.Signal(int)
 
+    sigSettingsRequest = QtCore.Signal(int, str)
+
     def __init__(self, dock_name):
         QtGui.QDockWidget.__init__(self, dock_name)
         widget = QtGui.QWidget()
@@ -22,49 +24,51 @@ class ListDock(QtGui.QDockWidget):
         self.listWidget = QtGui.QListWidget()
         self.listWidget.itemChanged.connect(self._itemChanged)
         self.listWidget.currentRowChanged.connect(self.sigCurrentRowChanged)
+        self.listWidget.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        self.listWidget.customContextMenuRequested.connect(self.ctxMenu)
         layout.addWidget(self.listWidget, 0, 0, 1, 2)
-
-        self.tableWidget = QtGui.QTableWidget()
-        self.tableWidget.setShowGrid(True)
-        style = ("QTableView"
-                "{{"
-               # "color: {color};"
-                "background: {color};"
-                #"}}"
-                #"QTableView::item"
-                #"{{"
-               # "background: {color};"
-                "}}".format(color="#eee"))
-        self.tableWidget.setStyleSheet(style)
-        self.tableWidget.horizontalHeader().hide()
-        self.tableWidget.verticalHeader().hide()
-        layout.addWidget(self.tableWidget, 1, 0, 1, 2)
-
-        #self.setInfoSheet({'item': 'value'})
 
         addButton = QtGui.QPushButton('Add')
         addButton.clicked.connect(self._addButtonClick)
         removeButton = QtGui.QPushButton('Remove')
         removeButton.clicked.connect(self._removeButtonClick)
-        layout.addWidget(addButton, 2, 0)
-        layout.addWidget(removeButton, 2, 1)
+        layout.addWidget(addButton, 1, 0)
+        layout.addWidget(removeButton, 1, 1)
 
         widget.setLayout(layout)
         self.setWidget(widget)
 
-    def setInfoSheet(self, props_dict):
-        self.tableWidget.clearContents()
-        self.tableWidget.setRowCount(len(props_dict))
-        self.tableWidget.setColumnCount(2)
-        for row, (key, value) in enumerate(props_dict.items()):
-            nameitem = QtGui.QTableWidgetItem(key)
-            codeitem = QtGui.QTableWidgetItem(value)
-            self.tableWidget.setItem(row, 0, nameitem)
-            self.tableWidget.setItem(row, 1, codeitem)
-
     @abstractmethod
     def _addButtonClick(self):
         pass
+
+    def renameCurrentItem(self):
+        cur = self.listWidget.currentItem()
+        self.listWidget.editItem(cur)
+
+    def emitSettingsRequest(self):
+        cur = self.listWidget.currentItem()
+        row = self.listWidget.row(cur)
+        name = cur.text()
+        self.sigSettingsRequest.emit(row, name)
+
+    def ctxMenu(self, point):
+        cur = self.listWidget.currentItem()
+        if not cur:
+            return
+
+        menu = QtGui.QMenu(self)
+        renameAction = QtGui.QAction("Rename", self)
+        renameAction.triggered.connect(self.renameCurrentItem)
+        menu.addAction(renameAction)
+        menu.addSeparator()
+        settingsAction = QtGui.QAction("Settings && Info...", self)
+        settingsAction.triggered.connect(self.emitSettingsRequest)
+        menu.addAction(settingsAction)
+
+        parentPosition = self.listWidget.mapToGlobal(QtCore.QPoint(0, 0))
+        menu.move(parentPosition + point)
+        menu.show()
 
     def _removeButtonClick(self):
         row = self.listWidget.currentRow()

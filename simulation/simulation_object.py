@@ -9,11 +9,25 @@ class SimulationParams:
     def __init__(self, sigma=None, resolution=None, min_freq=None, max_freq=None, threshold=None, intensity_factor=None):
         self.intensity_factor = intensity_factor
         self.resolution = resolution
-        self.threshold = threshold   # minumum intensity in Pickett units
+        self.threshold = threshold  # minumum intensity in Pickett units
         self.min_freq = min_freq
         self.max_freq = max_freq
         self.x_unit_name = 'MHz'
         self.sigma = sigma
+
+    def set(self, sigma=None, resolution=None, min_freq=None, max_freq=None, threshold=None, intensity_factor=None):
+        if intensity_factor:
+            self.intensity_factor = intensity_factor
+        if resolution:
+            self.resolution = resolution
+        if threshold:
+            self.threshold = threshold   # minumum intensity in Pickett units
+        if min_freq:
+            self.min_freq = min_freq
+        if max_freq:
+            self.max_freq = max_freq
+        if sigma:
+            self.sigma = sigma
 
 
 class SimulationObject:

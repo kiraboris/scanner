@@ -11,7 +11,7 @@ class SimulationGroup(QtCore.QObject, unique_name_holder.UniqueNameHolder):
     sigUpdateRange = QtCore.Signal(int, object)
     sigRemoveRange = QtCore.Signal(int)
     sigAdded = QtCore.Signal(str)
-    sigInfo = QtCore.Signal(dict)
+    sigSettings = QtCore.Signal(dict)
 
     def __init__(self, parent=None):
         QtCore.QObject.__init__(self, parent)
@@ -45,10 +45,11 @@ class SimulationGroup(QtCore.QObject, unique_name_holder.UniqueNameHolder):
         self.sigUpdateRange.emit(index, spec)
 
     def set_defaults(self, **kwargs):
-        self.__defaults = simulation_object.SimulationParams(**kwargs)
+        self.__defaults.set(**kwargs)
 
-    def make_info(self, index):
+    def get_settings(self, index):
         info_dict = self.__objects[index].make_info()
-        self.sigInfo.emit(info_dict)
+        #info_dict['Name'] =
+        self.sigSettings.emit(info_dict)
 
 

@@ -1,5 +1,5 @@
 
-from gui import panoram, list_dock, table_dock
+from gui import panoram, list_dock, table_dialog
 from gui.pyqtgraph.Qt import QtGui, QtCore
 
 Application = QtGui.QApplication
@@ -45,7 +45,8 @@ class MainWindow(QtGui.QMainWindow):
         self.pan = panoram.Panoram()
         self.expDock = ExpDock()
         self.simDock = SimDock()
-        #self.infoDock = TableInfoDock("")
+        self.expSettings = table_dialog.TableDialog()
+        self.simSettings = table_dialog.TableDialog()
 
         self.setCentralWidget(self.pan.widget)
         self.addDockWidget(QtCore.Qt.LeftDockWidgetArea, self.expDock)

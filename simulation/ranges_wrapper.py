@@ -10,7 +10,7 @@ class RangesWrapper(QtCore.QObject, ranges.Ranges, unique_name_holder.UniqueName
 
     sigUpdated = QtCore.Signal(object)
     sigAdded = QtCore.Signal(list)
-    sigInfo = QtCore.Signal(dict)
+    sigSettings = QtCore.Signal(int, str, dict)
 
     def __init__(self, parent=None):
         QtCore.QObject.__init__(self, parent)
@@ -71,9 +71,9 @@ class RangesWrapper(QtCore.QObject, ranges.Ranges, unique_name_holder.UniqueName
             new_info_dict[key] = newvalue
         return new_info_dict
 
-    def make_info(self, index):
-        info_dict = ranges.Ranges.make_info(self, index)
+    def get_settings(self, index, name):
+        info_dict = self.make_info(index)
         info_dict = self.__add_unit_names(info_dict)
-        self.sigInfo.emit(info_dict)
+        self.sigSettings.emit(index, name, info_dict)
 
 
