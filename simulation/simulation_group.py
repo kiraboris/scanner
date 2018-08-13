@@ -27,7 +27,7 @@ class SimulationGroup(QtCore.QObject, unique_name_holder.UniqueNameHolder):
                 index = len(self.__objects)
                 self._add_unique_names({index: basepath})
                 self.__objects.append(obj)
-                self._make_spectrum(index, flag_update_lines=True)
+                self._emit_spectrum(index, flag_update_lines=True)
                 self.sigAdded.emit(obj.rotor.name)
             except:
                 return
@@ -38,7 +38,7 @@ class SimulationGroup(QtCore.QObject, unique_name_holder.UniqueNameHolder):
             self._remove_unique_name(index)
             self.sigRemoveRange.emit(index)
 
-    def _make_spectrum(self, index, flag_update_lines=False):
+    def _emit_spectrum(self, index, flag_update_lines=False):
         if flag_update_lines:
             self.__objects[index].update_lines()
         spec = self.__objects[index].make_spectrum()
@@ -56,7 +56,7 @@ class SimulationGroup(QtCore.QObject, unique_name_holder.UniqueNameHolder):
         if new_info != old_info:
             self.__objects[index].set_params(new_info)
             flag_update_lines = self.__need_update_lines_on_change(old_info, new_info)
-            self._make_spectrum(index, flag_update_lines=flag_update_lines)
+            self._emit_spectrum(index, flag_update_lines=flag_update_lines)
         self.sigInfo.emit(new_info)
 
     @staticmethod
