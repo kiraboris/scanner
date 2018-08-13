@@ -11,7 +11,7 @@ class SimulationGroup(QtCore.QObject, unique_name_holder.UniqueNameHolder):
     sigUpdateRange = QtCore.Signal(int, object)
     sigRemoveRange = QtCore.Signal(int)
     sigAdded = QtCore.Signal(str)
-    sigSettings = QtCore.Signal(int, str, dict)
+    sigInfo = QtCore.Signal(dict)
 
     def __init__(self, parent=None):
         QtCore.QObject.__init__(self, parent)
@@ -47,9 +47,9 @@ class SimulationGroup(QtCore.QObject, unique_name_holder.UniqueNameHolder):
     def set_defaults(self, **kwargs):
         self.__defaults.set(**kwargs)
 
-    def get_settings(self, index, name):
+    def get_settings(self, index):
         info_dict = self.__objects[index].make_info()
-        self.sigSettings.emit(index, name, info_dict)
+        self.sigInfo.emit(info_dict)
 
     def apply_settings(self, index, new_info):
         old_info = self.__objects[index].make_info()
@@ -57,6 +57,7 @@ class SimulationGroup(QtCore.QObject, unique_name_holder.UniqueNameHolder):
             self.__objects[index].set_params(new_info)
             flag_update_lines = self.__need_update_lines_on_change(old_info, new_info)
             self._make_spectrum(index, flag_update_lines=flag_update_lines)
+        self.sigInfo.emit(new_info)
 
     @staticmethod
     def __need_update_lines_on_change(old_info, new_info):

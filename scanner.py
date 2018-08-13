@@ -13,7 +13,7 @@ sim = SimulationGroup()
 # engine = ScannerEngine(sim_ranges, exp_ranges)
 
 # set defaults
-sim.set_defaults(resolution=0.05, min_freq=1000.0, max_freq=200000.0,
+sim.set_defaults(resolution=0.05, min_freq=150000.0, max_freq=200000.0,
                  threshold=-4.0, intensity_factor=1.0, sigma=0.2)
 
 # open and save project routines
@@ -31,24 +31,24 @@ sim.set_defaults(resolution=0.05, min_freq=1000.0, max_freq=200000.0,
 # connect components
 exp_ranges.sigUpdated.connect(win.pan.plotUpper)
 exp_ranges.sigAdded.connect(win.expDock.addItems)
-exp_ranges.sigSettings.connect(win.expSettings.setSheet)
+exp_ranges.sigInfo.connect(win.expDock.setSheet)
 win.expDock.sigAddItems.connect(exp_ranges.add_data_files)
 win.expDock.sigRemoveItem.connect(exp_ranges.remove)
 win.expDock.sigItemChecked.connect(exp_ranges.set_visibility)
-win.expDock.sigSettingsRequest.connect(exp_ranges.get_settings)
-win.expDock.sigSettingsRequest.connect(win.expSettings.show)
+win.expDock.sigCurrentRowChanged.connect(exp_ranges.get_settings)
+win.expDock.sigSheetRejected.connect(exp_ranges.get_settings)
 
 sim.sigUpdateRange.connect(sim_ranges.update)
 sim.sigRemoveRange.connect(sim_ranges.remove)
 sim.sigAdded.connect(win.simDock.addItem)
-sim.sigSettings.connect(win.simSettings.setSheet)
+sim.sigInfo.connect(win.simDock.setSheet)
 sim_ranges.sigUpdated.connect(win.pan.plotLower)
 win.simDock.sigAddItem.connect(sim.add_rotor)
 win.simDock.sigRemoveItem.connect(sim.remove_rotor)
-win.simDock.sigSettingsRequest.connect(sim.get_settings)
-win.simDock.sigSettingsRequest.connect(win.simSettings.show)
+win.simDock.sigCurrentRowChanged.connect(sim.get_settings)
+win.simDock.sigSheetRejected.connect(sim.get_settings)
 win.simDock.sigItemChecked.connect(sim_ranges.set_visibility)
-win.simSettings.sigSheetChanged.connect(sim.apply_settings)
+win.simDock.sigSheetChanged.connect(sim.apply_settings)
 
 # execute
 win.show()

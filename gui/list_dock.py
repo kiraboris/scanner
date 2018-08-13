@@ -13,7 +13,8 @@ class ListDock(QtGui.QDockWidget):
     sigItemNameChanged = QtCore.Signal(int, str)
     sigCurrentRowChanged = QtCore.Signal(int)
 
-    sigSettingsRequest = QtCore.Signal(int, str)
+    sigSheetChanged = QtCore.Signal(int, dict)
+    sigSheetRejected = QtCore.Signal(int)
 
     def __init__(self, dock_name):
         QtGui.QDockWidget.__init__(self, dock_name)
@@ -24,9 +25,14 @@ class ListDock(QtGui.QDockWidget):
         self.listWidget = QtGui.QListWidget()
         self.listWidget.itemChanged.connect(self._itemChanged)
         self.listWidget.currentRowChanged.connect(self.sigCurrentRowChanged)
-        self.listWidget.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
-        self.listWidget.customContextMenuRequested.connect(self.ctxMenu)
         layout.addWidget(self.listWidget, 0, 0, 1, 2)
+
+        self.tableWidget = QtGui.QTableWidget()
+        self.tableWidget.setShowGrid(True)
+        self.tableWidget.horizontalHeader().hide()
+        self.tableWidget.horizontalHeader().setStretchLastSection(True)
+        self.tableWidget.verticalHeader().hide()
+        self.tableWidget.itemChanged.connect(self._enableSheetButtons)
 
         addButton = QtGui.QPushButton('Add')
         addButton.clicked.connect(self._addButtonClick)
@@ -35,40 +41,22 @@ class ListDock(QtGui.QDockWidget):
         layout.addWidget(addButton, 1, 0)
         layout.addWidget(removeButton, 1, 1)
 
+        layout.addWidget(self.tableWidget, 2, 0, 1, 2)
+
+        self.saveButton = QtGui.QPushButton('Apply')
+        self.saveButton.clicked.connect(self._emitSheetChanged)
+        self.rejectButton = QtGui.QPushButton('Revert')
+        self.rejectButton.clicked.connect(self._emitSheetRejected)
+        layout.addWidget(self.saveButton, 3, 0)
+        layout.addWidget(self.rejectButton, 3, 1)
+        self._disableSheetButtons()
+
         widget.setLayout(layout)
         self.setWidget(widget)
 
     @abstractmethod
     def _addButtonClick(self):
         pass
-
-    def renameCurrentItem(self):
-        cur = self.listWidget.currentItem()
-        self.listWidget.editItem(cur)
-
-    def emitSettingsRequest(self):
-        cur = self.listWidget.currentItem()
-        row = self.listWidget.row(cur)
-        name = cur.text()
-        self.sigSettingsRequest.emit(row, name)
-
-    def ctxMenu(self, point):
-        cur = self.listWidget.currentItem()
-        if not cur:
-            return
-
-        menu = QtGui.QMenu(self)
-        renameAction = QtGui.QAction("Rename", self)
-        renameAction.triggered.connect(self.renameCurrentItem)
-        menu.addAction(renameAction)
-        menu.addSeparator()
-        settingsAction = QtGui.QAction("Settings && Info...", self)
-        settingsAction.triggered.connect(self.emitSettingsRequest)
-        menu.addAction(settingsAction)
-
-        parentPosition = self.listWidget.mapToGlobal(QtCore.QPoint(0, 0))
-        menu.move(parentPosition + point)
-        menu.show()
 
     def _removeButtonClick(self):
         row = self.listWidget.currentRow()
@@ -96,4 +84,35 @@ class ListDock(QtGui.QDockWidget):
         row = self.listWidget.row(item)
         self.sigItemChecked.emit(row, item.checkState() == QtCore.Qt.Checked)
         self.sigItemNameChanged.emit(row, item.text())
+
+    def _emitSheetRejected(self):
+        self.sigSheetRejected.emit(self.listWidget.currentRow())
+
+    def _emitSheetChanged(self):
+        new_props = {}
+        for row in range(0, self.tableWidget.rowCount()):
+            twi0 = self.tableWidget.item(row, 0)
+            twi1 = self.tableWidget.item(row, 1)
+            new_props[twi0.text()] = twi1.text()
+        self.sigSheetChanged.emit(self.listWidget.currentRow(), new_props)
+
+    def setSheet(self, props_dict):
+        self.tableWidget.clearContents()
+        self.tableWidget.setRowCount(len(props_dict))
+        self.tableWidget.setColumnCount(2)
+        for row, (key, value) in enumerate(props_dict.items()):
+            nameitem = QtGui.QTableWidgetItem(key)
+            nameitem.setFlags(nameitem.flags() ^ QtCore.Qt.ItemIsEditable)
+            codeitem = QtGui.QTableWidgetItem(value)
+            self.tableWidget.setItem(row, 0, nameitem)
+            self.tableWidget.setItem(row, 1, codeitem)
+        self._disableSheetButtons()
+
+    def _enableSheetButtons(self):
+        self.saveButton.setEnabled(True)
+        self.rejectButton.setEnabled(True)
+
+    def _disableSheetButtons(self):
+        self.saveButton.setEnabled(False)
+        self.rejectButton.setEnabled(False)
 

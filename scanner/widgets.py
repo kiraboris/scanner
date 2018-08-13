@@ -45,8 +45,8 @@ class MainWindow(QtGui.QMainWindow):
         self.pan = panoram.Panoram()
         self.expDock = ExpDock()
         self.simDock = SimDock()
-        self.expSettings = table_dialog.TableDialog()
-        self.simSettings = table_dialog.TableDialog()
+        #self.expSettings = table_dialog.TableDialog()
+        #self.simSettings = table_dialog.TableDialog()
 
         self.setCentralWidget(self.pan.widget)
         self.addDockWidget(QtCore.Qt.LeftDockWidgetArea, self.expDock)

@@ -13,7 +13,7 @@ def add_gauss(xxx, yyy, line, sigma):
                                #amplitude=np.sqrt(2 * np.pi) * max(1.e-15, sigma))
                                amplitude=np.exp(line.log_I))
 
-    yyy[index_left:index_right] = np.maximum(yyy[index_left:index_right], peak)
+    yyy[index_left:index_right] = yyy[index_left:index_right] + peak
 
 
 def add_impulse(xxx, yyy, line, sigma):
@@ -36,7 +36,8 @@ def make_spectrum(linelist, sigma, xxx, min_freq, max_freq, add_peak_function):
     return yyy
 
 
-def make_rotor_spectrum(rotor, min_freq, max_freq, params):
-    xxx = make_grid(min_freq, max_freq, params.resolution)
-    yyy = make_spectrum(rotor.sim_lines, params.sigma, xxx, min_freq, max_freq, add_peak_function=add_gauss)
+def make_rotor_spectrum(rotor, params):
+    xxx = make_grid(params.min_freq, params.max_freq, params.resolution)
+    yyy = make_spectrum(rotor.sim_lines, params.sigma, xxx,
+                        params.min_freq, params.max_freq, add_peak_function=add_gauss)
     return np.column_stack((xxx, yyy * params.intensity_factor))
