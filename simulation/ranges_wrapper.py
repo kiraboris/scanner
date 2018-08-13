@@ -12,9 +12,9 @@ class RangesWrapper(QtCore.QObject, ranges.Ranges, unique_name_holder.UniqueName
     sigAdded = QtCore.Signal(list)
     sigInfo = QtCore.Signal(dict)
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, **kwargs):
         QtCore.QObject.__init__(self, parent)
-        ranges.Ranges.__init__(self)
+        ranges.Ranges.__init__(self, **kwargs)
         unique_name_holder.UniqueNameHolder.__init__(self)
         self.__x_unit_name = "MHz"
         self.__y_unit_name = "arb"

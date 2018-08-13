@@ -7,8 +7,8 @@ from simulation.simulation_group import SimulationGroup
 # create components
 app = Application([])
 win = MainWindow()
-exp_ranges = RangesWrapper()
-sim_ranges = RangesWrapper()
+exp_ranges = RangesWrapper(flag_no_division=False)
+sim_ranges = RangesWrapper(flag_no_division=True)
 sim = SimulationGroup()
 # engine = ScannerEngine(sim_ranges, exp_ranges)
 

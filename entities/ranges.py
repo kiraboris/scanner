@@ -47,7 +47,7 @@ def _make_intervals(data, flag_fill_gaps=False):
     return intervals
 
 
-def _avg_data(datasets, xvalues):
+def _avg_data(datasets, xvalues, flag_no_division):
     """data must be a list of ndarrays
        matched by 1st column (x), averaged by last column (y) (as above)"""
 
@@ -81,24 +81,43 @@ def _avg_data(datasets, xvalues):
         if ynarrays[i] == 0:
             ynarrays[i] = 1
 
-    out = np.column_stack((xvalues, ysumvalues / ynarrays))
+    if flag_no_division:
+        out = np.column_stack((xvalues, ysumvalues))
+    else:
+        out = np.column_stack((xvalues, ysumvalues / ynarrays))
     return out
 
 
-def quick_avg_data(data, flag_fill_gaps=False):
-    #data_sorted = [a[a[:, DIM.X].argsort()] for a in data]
-    intervals = _make_intervals(data, flag_fill_gaps)
-    out_pieces = []
-    for interval_datasets, interval_xvalues in intervals:
-        if len(interval_datasets) > 1:
-            out_pieces.append(_avg_data(interval_datasets, interval_xvalues))
+def _simple_avg_data(data, flag_no_division):
+    xvalues = data[0][:, DIM.X]
+    other_xvalues = [d[:, DIM.X] for d in data[1:]]
+    if all([np.allclose(xvalues, other_x) for other_x in other_xvalues]):
+        if flag_no_division:
+            yvalues = np.sum([d[:, DIM.Y] for d in data], axis=0)
         else:
-            out_pieces.append(interval_datasets[0])
-    return np.vstack(out_pieces)
+            yvalues = np.mean([d[:, DIM.Y] for d in data], axis=0)
+        return np.column_stack((xvalues, yvalues))
+    else:
+        return None
+
+
+def quick_avg_data(data, flag_fill_gaps=False, flag_no_division=False):
+    try_out = _simple_avg_data(data, flag_no_division)
+    if try_out is not None:
+        return try_out
+    else:
+        intervals = _make_intervals(data, flag_fill_gaps)
+        out_pieces = []
+        for interval_datasets, interval_xvalues in intervals:
+            if len(interval_datasets) > 1:
+                out_pieces.append(_avg_data(interval_datasets, interval_xvalues, flag_no_division))
+            else:
+                out_pieces.append(interval_datasets[0])
+        return np.vstack(out_pieces)
 
 
 class Ranges:
-    def __init__(self, arrays=()):
+    def __init__(self, arrays=(), flag_no_division=False):
         """'arrays': list of ndnumpy arrays
             where x axis is 1st column, y axis is last column (as above)"""
         if arrays:
@@ -107,6 +126,7 @@ class Ranges:
             self.__arrs = []
 
         self.__invisible_indexes = set()
+        self.__flag_no_division = flag_no_division
 
     def spread_y(self):
         return max([np.max(a[:, DIM.Y]) - np.min(a[:, DIM.Y])
@@ -156,7 +176,8 @@ class Ranges:
         elif len(arrs) == 1:
             return arrs[0]
         else:
-            return quick_avg_data(arrs, flag_fill_gaps=True)
+            return quick_avg_data(arrs,
+                                  flag_fill_gaps=True, flag_no_division=self.__flag_no_division)
 
     def add_data_files(self, names):
         added_names_dict = {}
@@ -216,7 +237,7 @@ if __name__ == "__main__":
     """unit test"""
 
     x1 = np.linspace(1, 10, 10)
-    x2 = np.linspace(10, 19, 10)
+    x2 = np.linspace(1, 10, 10)
     x3 = np.linspace(25, 34, 10)
     x4 = np.linspace(5, 14, 10)
 
@@ -228,8 +249,8 @@ if __name__ == "__main__":
     a4 = np.stack((x4, y)).T
 
     r = Ranges([a1, a2])
-    r.add([a3])
-    r.add([a4])
+    #r.add([a3])
+    #r.add([a4])
 
     r.print()
     #print(r.make_info(2))
