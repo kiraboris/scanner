@@ -65,12 +65,46 @@ class SimulationObject:
     def make_info(self):
         info = {}
         info['Method'] = self.qworker.name()
-        #info['X Resolution'] = str(self.params.resolution) + ' ' + str(self.params.x_unit_name)
-        #info['X Min'] = str(self.params.min_freq) + ' ' + str(self.params.x_unit_name)
-        #info['X Max'] = str(self.params.max_freq) + ' ' + str(self.params.x_unit_name)
+        info['X Resolution'] = str(self.params.resolution) + ' ' + str(self.params.x_unit_name)
+        info['X Min'] = str(self.params.min_freq) + ' ' + str(self.params.x_unit_name)
+        info['X Max'] = str(self.params.max_freq) + ' ' + str(self.params.x_unit_name)
         info['Y Threshold'] = str(self.params.threshold) + " PU"
         info['Y Factor'] = str(self.params.intensity_factor)
         info['u_A'] = str(self.rotor.mu_A) + " D"
         info['u_B'] = str(self.rotor.mu_B) + " D"
         info['u_C'] = str(self.rotor.mu_C) + " D"
         return info
+
+    def set_params(self, info):
+        try:
+            self.params.resolution = float(info['X Resolution'].strip().split()[0])
+        except:
+            pass
+        try:
+            self.params.min_freq = float(info['X Min'].strip().split()[0])
+        except:
+            pass
+        try:
+            self.params.max_freq = float(info['X Max'].strip().split()[0])
+        except:
+            pass
+        try:
+            self.params.intensity_factor = float(info['Y Factor'].strip().split()[0])
+        except:
+            pass
+        try:
+            self.params.threshold = float(info['Y Threshold'].strip().split()[0])
+        except:
+            pass
+        try:
+            self.rotor.mu_A = float(info['u_A'].strip().split()[0])
+        except:
+            pass
+        try:
+            self.rotor.mu_B = float(info['u_B'].strip().split()[0])
+        except:
+            pass
+        try:
+            self.rotor.mu_C = float(info['u_C'].strip().split()[0])
+        except:
+            pass

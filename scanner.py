@@ -13,7 +13,7 @@ sim = SimulationGroup()
 # engine = ScannerEngine(sim_ranges, exp_ranges)
 
 # set defaults
-sim.set_defaults(resolution=0.05, min_freq=170000.0, max_freq=200000.0,
+sim.set_defaults(resolution=0.05, min_freq=1000.0, max_freq=200000.0,
                  threshold=-4.0, intensity_factor=1.0, sigma=0.2)
 
 # open and save project routines
@@ -48,6 +48,7 @@ win.simDock.sigRemoveItem.connect(sim.remove_rotor)
 win.simDock.sigSettingsRequest.connect(sim.get_settings)
 win.simDock.sigSettingsRequest.connect(win.simSettings.show)
 win.simDock.sigItemChecked.connect(sim_ranges.set_visibility)
+win.simSettings.sigSheetChanged.connect(sim.apply_settings)
 
 # execute
 win.show()

@@ -11,7 +11,7 @@ class SimulationGroup(QtCore.QObject, unique_name_holder.UniqueNameHolder):
     sigUpdateRange = QtCore.Signal(int, object)
     sigRemoveRange = QtCore.Signal(int)
     sigAdded = QtCore.Signal(str)
-    sigSettings = QtCore.Signal(dict)
+    sigSettings = QtCore.Signal(int, str, dict)
 
     def __init__(self, parent=None):
         QtCore.QObject.__init__(self, parent)
@@ -47,9 +47,26 @@ class SimulationGroup(QtCore.QObject, unique_name_holder.UniqueNameHolder):
     def set_defaults(self, **kwargs):
         self.__defaults.set(**kwargs)
 
-    def get_settings(self, index):
+    def get_settings(self, index, name):
         info_dict = self.__objects[index].make_info()
-        #info_dict['Name'] =
-        self.sigSettings.emit(info_dict)
+        self.sigSettings.emit(index, name, info_dict)
 
+    def apply_settings(self, index, new_info):
+        old_info = self.__objects[index].make_info()
+        if new_info != old_info:
+            self.__objects[index].set_params(new_info)
+            flag_update_lines = self.__need_update_lines_on_change(old_info, new_info)
+            self._make_spectrum(index, flag_update_lines=flag_update_lines)
 
+    @staticmethod
+    def __need_update_lines_on_change(old_info, new_info):
+        if old_info['u_A'] != new_info['u_A']:
+            return True
+        if old_info['u_B'] != new_info['u_B']:
+            return True
+        if old_info['u_C'] != new_info['u_C']:
+            return True
+        if old_info['Y Threshold'] != new_info['Y Threshold']:
+            return True
+
+        return False

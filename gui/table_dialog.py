@@ -34,8 +34,13 @@ class TableDialog(QtGui.QDialog):
         self.__saved_index = None
 
     def _emitSheet(self):
+        new_props = {}
+        for row in range(0, self.tableWidget.rowCount()):
+            twi0 = self.tableWidget.item(row, 0)
+            twi1 = self.tableWidget.item(row, 1)
+            new_props[twi0.text()] = twi1.text()
         self.hide()
-        self.sigSheetChanged.emit(self.__saved_index, {})
+        self.sigSheetChanged.emit(self.__saved_index, new_props)
 
     def setSheet(self, index, name, props_dict):
         self.__saved_index = index
