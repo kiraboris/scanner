@@ -1,5 +1,5 @@
 import sys
-from scanner.widgets import MainWindow, Application
+from scanner_widgets import MainWindow, Application
 # from scanner.engine import ScannerEngine
 from simulation.ranges_wrapper import RangesWrapper
 from simulation.simulation_group import SimulationGroup
@@ -13,7 +13,7 @@ sim = SimulationGroup()
 # engine = ScannerEngine(sim_ranges, exp_ranges)
 
 # set defaults
-sim.set_defaults(resolution=0.05, min_freq=150000.0, max_freq=200000.0,
+sim.set_defaults(resolution=0.025, min_freq=150000.0, max_freq=200000.0,
                  threshold=-4.0, intensity_factor=1.0, sigma=0.2)
 
 # open and save project routines
@@ -44,10 +44,12 @@ sim.sigRemoveRange.connect(sim_ranges.remove)
 sim.sigLockRanges.connect(sim_ranges.lock)
 sim.sigAdded.connect(win.simDock.addItem)
 sim.sigInfo.connect(win.simDock.setSheet)
+sim.sigInfo2.connect(win.parDock.setItems)
 sim_ranges.sigUpdated.connect(win.pan.plotLower)
 win.simDock.sigAddItem.connect(sim.add_rotor)
 win.simDock.sigRemoveItem.connect(sim.remove_rotor)
 win.simDock.sigCurrentRowChanged.connect(sim.get_settings)
+win.simDock.sigCurrentRowChanged.connect(sim.get_rotor_params)
 win.simDock.sigItemChecked.connect(sim_ranges.set_visibility)
 win.simDock.sigSheetChanged.connect(sim.apply_settings)
 

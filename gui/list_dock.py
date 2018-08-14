@@ -15,7 +15,7 @@ class ListDock(QtGui.QDockWidget):
 
     sigSheetChanged = QtCore.Signal(int, dict)
 
-    def __init__(self, dock_name):
+    def __init__(self, dock_name, flag_table=True):
         QtGui.QDockWidget.__init__(self, dock_name)
         widget = QtGui.QWidget()
         layout = QtGui.QGridLayout()
@@ -32,6 +32,8 @@ class ListDock(QtGui.QDockWidget):
         self.tableWidget.horizontalHeader().setStretchLastSection(True)
         self.tableWidget.verticalHeader().hide()
         self.tableWidget.itemChanged.connect(self._emitSheetChanged)
+        if not flag_table:
+            self.tableWidget.setVisible(False)
 
         addButton = QtGui.QPushButton('Add')
         addButton.clicked.connect(self._addButtonClick)
@@ -41,13 +43,6 @@ class ListDock(QtGui.QDockWidget):
         layout.addWidget(removeButton, 1, 1)
 
         layout.addWidget(self.tableWidget, 2, 0, 1, 2)
-
-        #self.saveButton = QtGui.QPushButton('Apply')
-        #self.saveButton.clicked.connect(self._emitSheetChanged)
-        #self.rejectButton = QtGui.QPushButton('Revert')
-        #self.rejectButton.clicked.connect(self._emitSheetRejected)
-        #layout.addWidget(self.saveButton, 3, 0)
-        #layout.addWidget(self.rejectButton, 3, 1)
 
         widget.setLayout(layout)
         self.setWidget(widget)
@@ -63,17 +58,28 @@ class ListDock(QtGui.QDockWidget):
             self.removeItem(row)
             item = None
 
-    def addItem(self, name):
+    def addItem(self, name, flag_checked=True):
         item = QtGui.QListWidgetItem(name)
         item.setFlags(item.flags() | QtCore.Qt.ItemIsUserCheckable | QtCore.Qt.ItemIsEditable)
-        item.setCheckState(QtCore.Qt.Checked)
+        if flag_checked:
+            item.setCheckState(QtCore.Qt.Checked)
+        else:
+            item.setCheckState(QtCore.Qt.Unchecked)
+
         self.listWidget.addItem(item)
-        if(self.listWidget.currentRow() < 0):
+        if self.listWidget.currentRow() < 0:
             self.listWidget.setCurrentRow(0)
 
-    def addItems(self, names):
-        for name in names:
-            self.addItem(name)
+    def addItems(self, names, checked_dict=None):
+        for i, name in enumerate(names):
+            if checked_dict:
+                self.addItem(name, checked_dict.get(i, False))
+            else:
+                self.addItem(name)
+
+    def setItems(self, names, checked_dict=None):
+        self.listWidget.clear()
+        self.addItems(names, checked_dict)
 
     def removeItem(self, row):
         self.sigRemoveItem.emit(row)
@@ -82,11 +88,6 @@ class ListDock(QtGui.QDockWidget):
         row = self.listWidget.row(item)
         self.sigItemChecked.emit(row, item.checkState() == QtCore.Qt.Checked)
         self.sigItemNameChanged.emit(row, item.text())
-
-    #def _emitSheetRejected(self):
-    #    cur_row = self.listWidget.currentRow()
-    #    if cur_row >= 0:
-    #        self.sigSheetRejected.emit(cur_row)
 
     def _emitSheetChanged(self):
         cur_row = self.listWidget.currentRow()
@@ -112,5 +113,7 @@ class ListDock(QtGui.QDockWidget):
             self.tableWidget.setItem(row, 1, codeitem)
 
         self.tableWidget.itemChanged.connect(self._emitSheetChanged)
+
+
 
 

@@ -46,12 +46,12 @@ class Rotor(object):
 
     def Q(self, T):
         if self.type == RotorType.asym:
-            Q_rot_base = (self.param('/A').value *
-                          self.param('/B').value *
-                          self.param('/C').value) ** (-0.5)
+            Q_rot_base = (self.param('A').value *
+                          self.param('B').value *
+                          self.param('C').value) ** (-0.5)
         elif self.type == RotorType.sym:
-            Q_rot_base = (self.param('/A').value *
-                          self.param('/B').value ** 2) ** (-0.5)
+            Q_rot_base = (self.param('A').value *
+                          self.param('B').value ** 2) ** (-0.5)
         else:
             Q_rot_base = 0
 

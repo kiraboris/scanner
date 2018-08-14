@@ -33,6 +33,14 @@ class SimDock(list_dock.ListDock):
             self.sigAddItem.emit(file_name)
 
 
+class RotorParamDock(list_dock.ListDock):
+    def __init__(self):
+        list_dock.ListDock.__init__(self, "Rotor params", flag_table=False)
+
+    def _addButtonClick(self):
+        pass
+
+
 class MainWindow(QtGui.QMainWindow):
 
     #sigClearExpTiggered = QtCore.Signal(object)
@@ -40,17 +48,17 @@ class MainWindow(QtGui.QMainWindow):
     def __init__(self):
         QtGui.QMainWindow.__init__(self)
         self.setWindowTitle('Scanner')
-        self.resize(1200, 600)
+        self.resize(1400, 600)
 
         self.pan = panoram.Panoram()
         self.expDock = ExpDock()
         self.simDock = SimDock()
-        #self.expSettings = table_dialog.TableDialog()
-        #self.simSettings = table_dialog.TableDialog()
+        self.parDock = RotorParamDock()
 
         self.setCentralWidget(self.pan.widget)
         self.addDockWidget(QtCore.Qt.LeftDockWidgetArea, self.expDock)
         self.addDockWidget(QtCore.Qt.LeftDockWidgetArea, self.simDock)
+        self.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.parDock)
 
         self._createMainMenu()
 

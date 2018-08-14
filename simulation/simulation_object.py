@@ -99,16 +99,25 @@ class SimulationObject:
 
     def make_info(self):
         info = {}
-        #info['Method'] = self.qworker.name()
         info['Y Threshold'] = str(self.defaults.threshold) + " PU"
         info['Y Factor'] = str(self.defaults.intensity_factor)
         info['Sigma'] = str(self.defaults.sigma) + " " + str(self.defaults.x_unit_name)
         return info
 
+    def make_rotor_params_info(self):
+        names = []
+        checked = {}
+        for i, (name, param) in enumerate(self.rotor.params.items()):
+            text = name + " = %.6e" % (param.value)
+            names.append(text)
+            checked[i] = param.flag_fit
+
+        return names, checked
+
     def set_params(self, info):
         if isinstance(info, SimulationParams):
             self.defaults = copy.copy(info)
-        else:
+        else:  # dict from ui
             try:
                 self.defaults.intensity_factor = float(info['Y Factor'].strip().split()[0])
             except:

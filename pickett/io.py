@@ -99,8 +99,10 @@ def load_par(str_filename, rotor):
         b = f.readline()
         rotor.extended['pickett_header'] = a + b
         for line in f:
-            param = rotor.param(ParameterConverter.rotor_parameter_name(line))
-            ParameterConverter.par_str_to_obj(line, param)
+            name = ParameterConverter.rotor_parameter_name(line)
+            if name:
+                param = rotor.param(name)
+                ParameterConverter.par_str_to_obj(line, param)
 
 
 def load_var(str_filename, rotor):
@@ -111,8 +113,10 @@ def load_var(str_filename, rotor):
         b = f.readline()
         rotor.extended['pickett_header'] = a + b
         for line in f:
-            param = rotor.param(ParameterConverter.rotor_parameter_name(line))
-            ParameterConverter.var_str_to_obj(line, param)
+            name = ParameterConverter.rotor_parameter_name(line)
+            if name:
+                param = rotor.param(name)
+                ParameterConverter.var_str_to_obj(line, param)
 
 
 def get_quantum_fmt(str_filename):

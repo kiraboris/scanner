@@ -13,7 +13,8 @@ class SimulationGroup(QtCore.QObject, unique_name_holder.UniqueNameHolder):
     sigRemoveRange = QtCore.Signal(int)
     sigLockRanges = QtCore.Signal(bool)
     sigAdded = QtCore.Signal(str)
-    sigInfo = QtCore.Signal(dict)
+    sigInfo  = QtCore.Signal(dict)
+    sigInfo2 = QtCore.Signal(list, dict)
 
     def __init__(self, parent=None):
         QtCore.QObject.__init__(self, parent)
@@ -72,6 +73,10 @@ class SimulationGroup(QtCore.QObject, unique_name_holder.UniqueNameHolder):
     def get_settings(self, index):
         info_dict = self.__objects[index].make_info()
         self.sigInfo.emit(info_dict)
+
+    def get_rotor_params(self, index):
+        info_list, info_dict = self.__objects[index].make_rotor_params_info()
+        self.sigInfo2.emit(info_list, info_dict)
 
     def apply_settings(self, index, new_info):
         old_info = self.__objects[index].make_info()
