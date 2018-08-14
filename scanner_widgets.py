@@ -1,5 +1,5 @@
 
-from gui import panoram, list_dock, table_dialog
+from gui import panoram, list_dock
 from gui.pyqtgraph.Qt import QtGui, QtCore
 
 Application = QtGui.QApplication
@@ -36,9 +36,42 @@ class SimDock(list_dock.ListDock):
 class RotorParamDock(list_dock.ListDock):
     def __init__(self):
         list_dock.ListDock.__init__(self, "Rotor params", flag_table=False)
+        self.addButton.setEnabled(False)
+        self.removeButton.setEnabled(False)
 
     def _addButtonClick(self):
         pass
+
+
+class EngineDock(QtGui.QDockWidget):
+    def __init__(self):
+        QtGui.QDockWidget.__init__(self, "Engine")
+
+        widget = QtGui.QWidget()
+        layout = QtGui.QGridLayout()
+        layout.setMargin(2)
+
+        check1 = QtGui.QCheckBox("Attempt to add rotor params")
+        check1.setChecked(True)
+        layout.addWidget(check1, 0, 0, 1, 2)
+
+        self.fitButton = QtGui.QPushButton('Fit')
+        #self.addButton.clicked.connect(self._addButtonClick)
+        self.undoButton = QtGui.QPushButton('Undo')
+        #self.removeButton.clicked.connect(self._removeButtonClick)
+        layout.addWidget(self.fitButton, 1, 0)
+        layout.addWidget(self.undoButton, 1, 1)
+
+        self.logWidget = QtGui.QPlainTextEdit()
+        self.logWidget.setReadOnly(True)
+        layout.addWidget(self.logWidget, 2, 0, 1, 2)
+
+        widget.setLayout(layout)
+        self.setWidget(widget)
+
+    def log(self, message):
+        self.logWidget.appendPlainText(message)
+        self.logWidget.verticalScrollBar().setValue(self.logWidget.verticalScrollBar().maximum())
 
 
 class MainWindow(QtGui.QMainWindow):
@@ -54,13 +87,16 @@ class MainWindow(QtGui.QMainWindow):
         self.expDock = ExpDock()
         self.simDock = SimDock()
         self.parDock = RotorParamDock()
+        self.fitDock = EngineDock()
 
         self.setCentralWidget(self.pan.widget)
         self.addDockWidget(QtCore.Qt.LeftDockWidgetArea, self.expDock)
         self.addDockWidget(QtCore.Qt.LeftDockWidgetArea, self.simDock)
         self.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.parDock)
+        self.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.fitDock)
 
         self._createMainMenu()
+        self.fitDock.log("Ready.")
 
         #data = 10000 + 15000 * pg.gaussianFilter(np.random.random(size=10000), 10) + 3000 * np.random.random(size=10000)
         #self.pan.plotUpper(data, pen="m")

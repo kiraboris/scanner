@@ -35,12 +35,12 @@ class ListDock(QtGui.QDockWidget):
         if not flag_table:
             self.tableWidget.setVisible(False)
 
-        addButton = QtGui.QPushButton('Add')
-        addButton.clicked.connect(self._addButtonClick)
-        removeButton = QtGui.QPushButton('Remove')
-        removeButton.clicked.connect(self._removeButtonClick)
-        layout.addWidget(addButton, 1, 0)
-        layout.addWidget(removeButton, 1, 1)
+        self.addButton = QtGui.QPushButton('Add')
+        self.addButton.clicked.connect(self._addButtonClick)
+        self.removeButton = QtGui.QPushButton('Remove')
+        self.removeButton.clicked.connect(self._removeButtonClick)
+        layout.addWidget(self.addButton, 1, 0)
+        layout.addWidget(self.removeButton, 1, 1)
 
         layout.addWidget(self.tableWidget, 2, 0, 1, 2)
 
