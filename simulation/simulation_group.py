@@ -1,4 +1,5 @@
 
+#import copy
 import os.path
 
 from gui.pyqtgraph.Qt import QtCore
@@ -57,7 +58,7 @@ class SimulationGroup(QtCore.QObject, unique_name_holder.UniqueNameHolder):
             self.__objects[index].set_params(new_info)
             flag_update_lines = self.__need_update_lines_on_change(old_info, new_info)
             self._emit_spectrum(index, flag_update_lines=flag_update_lines)
-        self.sigInfo.emit(new_info)
+        self.get_settings(index)
 
     @staticmethod
     def __need_update_lines_on_change(old_info, new_info):

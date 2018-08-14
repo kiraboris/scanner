@@ -36,7 +36,7 @@ class SimulationObject:
     def __init__(self, basepath, extension, defaults):
         self.rotor = Rotor()
         self.basepath = basepath
-        self.defaults = defaults
+        self.defaults = copy.copy(defaults)
         self.load_rotor(basepath, extension)
 
     def __setup_qworker(self, extension):

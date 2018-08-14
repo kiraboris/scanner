@@ -37,6 +37,7 @@ win.expDock.sigRemoveItem.connect(exp_ranges.remove)
 win.expDock.sigItemChecked.connect(exp_ranges.set_visibility)
 win.expDock.sigCurrentRowChanged.connect(exp_ranges.get_settings)
 win.expDock.sigSheetRejected.connect(exp_ranges.get_settings)
+win.expDock.sigSheetChanged.connect(exp_ranges.get_settings)
 
 sim.sigUpdateRange.connect(sim_ranges.update)
 sim.sigRemoveRange.connect(sim_ranges.remove)

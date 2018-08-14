@@ -32,7 +32,8 @@ class ListDock(QtGui.QDockWidget):
         self.tableWidget.horizontalHeader().hide()
         self.tableWidget.horizontalHeader().setStretchLastSection(True)
         self.tableWidget.verticalHeader().hide()
-        self.tableWidget.itemChanged.connect(self._enableSheetButtons)
+        #self.tableWidget.itemChanged.connect(self._enableSheetButtons)
+        #self.tableWidget.itemDoubleClicked.connect(self._enableSheetButtons)
 
         addButton = QtGui.QPushButton('Add')
         addButton.clicked.connect(self._addButtonClick)
@@ -49,7 +50,7 @@ class ListDock(QtGui.QDockWidget):
         self.rejectButton.clicked.connect(self._emitSheetRejected)
         layout.addWidget(self.saveButton, 3, 0)
         layout.addWidget(self.rejectButton, 3, 1)
-        self._disableSheetButtons()
+        #self._disableSheetButtons()
 
         widget.setLayout(layout)
         self.setWidget(widget)
@@ -86,15 +87,19 @@ class ListDock(QtGui.QDockWidget):
         self.sigItemNameChanged.emit(row, item.text())
 
     def _emitSheetRejected(self):
-        self.sigSheetRejected.emit(self.listWidget.currentRow())
+        cur_row = self.listWidget.currentRow()
+        if cur_row >= 0:
+            self.sigSheetRejected.emit(cur_row)
 
     def _emitSheetChanged(self):
-        new_props = {}
-        for row in range(0, self.tableWidget.rowCount()):
-            twi0 = self.tableWidget.item(row, 0)
-            twi1 = self.tableWidget.item(row, 1)
-            new_props[twi0.text()] = twi1.text()
-        self.sigSheetChanged.emit(self.listWidget.currentRow(), new_props)
+        cur_row = self.listWidget.currentRow()
+        if cur_row >= 0:
+            new_props = {}
+            for row in range(0, self.tableWidget.rowCount()):
+                twi0 = self.tableWidget.item(row, 0)
+                twi1 = self.tableWidget.item(row, 1)
+                new_props[twi0.text()] = twi1.text()
+            self.sigSheetChanged.emit(cur_row, new_props)
 
     def setSheet(self, props_dict):
         self.tableWidget.clearContents()
@@ -106,13 +111,5 @@ class ListDock(QtGui.QDockWidget):
             codeitem = QtGui.QTableWidgetItem(value)
             self.tableWidget.setItem(row, 0, nameitem)
             self.tableWidget.setItem(row, 1, codeitem)
-        self._disableSheetButtons()
 
-    def _enableSheetButtons(self):
-        self.saveButton.setEnabled(True)
-        self.rejectButton.setEnabled(True)
-
-    def _disableSheetButtons(self):
-        self.saveButton.setEnabled(False)
-        self.rejectButton.setEnabled(False)
 
