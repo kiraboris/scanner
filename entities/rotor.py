@@ -31,6 +31,7 @@ class Rotor(object):
 
         self.exp_lines = []  # assignment
         self.sim_lines = []  # passed from quantum simulation to plot simulation
+        self.flag_changed = False
 
     def param(self, name):
         try:

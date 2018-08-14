@@ -54,7 +54,7 @@ class SimulationObject:
             raise Exception()
 
     def need_update_lines(self, params=None):
-        if self.rotor.needs_update_lines():
+        if self.rotor.flag_changed:
             return True
         if not params:
             params = self.defaults
@@ -78,16 +78,23 @@ class SimulationObject:
                                                            max_freq=max_freq / 1000)
             self.__current_params = copy.copy(self.defaults)
             self.__current_params.max_freq = max_freq
+            self.rotor.flag_changed = False
         else:
             self.rotor.sim_lines = self.qworker.make_lines(self.rotor,
                                                            threshold=params.threshold,
                                                            max_freq=params.max_freq / 1000)
             self.__current_params = copy.copy(params)
+            self.rotor.flag_changed = False
 
     def make_spectrum(self, params=None):
         if self.need_update_lines(params):
             self.update_lines(params)
-        spec = spectrum_tools.make_rotor_spectrum(self.rotor, params)
+
+        if not params:
+            spec = spectrum_tools.make_rotor_spectrum(self.rotor, self.defaults)
+        else:
+            spec = spectrum_tools.make_rotor_spectrum(self.rotor, params)
+
         return spec
 
     def make_info(self):
@@ -113,14 +120,23 @@ class SimulationObject:
             except:
                 pass
             try:
-                self.rotor.mu_A = float(info['u_A'].strip().split()[0])
+                old = self.rotor.mu_A
+                new = float(info['u_A'].strip().split()[0])
+                self.rotor.flag_changed |= (old != new)
+                self.rotor.mu_A = new
             except:
                 pass
             try:
-                self.rotor.mu_B = float(info['u_B'].strip().split()[0])
+                old = self.rotor.mu_B
+                new = float(info['u_B'].strip().split()[0])
+                self.rotor.flag_changed |= (old != new)
+                self.rotor.mu_B = new
             except:
                 pass
             try:
-                self.rotor.mu_C = float(info['u_C'].strip().split()[0])
+                old = self.rotor.mu_C
+                new = float(info['u_C'].strip().split()[0])
+                self.rotor.flag_changed |= (old != new)
+                self.rotor.mu_C = new
             except:
                 pass
