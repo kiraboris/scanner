@@ -14,7 +14,6 @@ class ListDock(QtGui.QDockWidget):
     sigCurrentRowChanged = QtCore.Signal(int)
 
     sigSheetChanged = QtCore.Signal(int, dict)
-    sigSheetRejected = QtCore.Signal(int)
 
     def __init__(self, dock_name):
         QtGui.QDockWidget.__init__(self, dock_name)
@@ -32,8 +31,7 @@ class ListDock(QtGui.QDockWidget):
         self.tableWidget.horizontalHeader().hide()
         self.tableWidget.horizontalHeader().setStretchLastSection(True)
         self.tableWidget.verticalHeader().hide()
-        #self.tableWidget.itemChanged.connect(self._enableSheetButtons)
-        #self.tableWidget.itemDoubleClicked.connect(self._enableSheetButtons)
+        self.tableWidget.itemChanged.connect(self._emitSheetChanged)
 
         addButton = QtGui.QPushButton('Add')
         addButton.clicked.connect(self._addButtonClick)
@@ -44,13 +42,12 @@ class ListDock(QtGui.QDockWidget):
 
         layout.addWidget(self.tableWidget, 2, 0, 1, 2)
 
-        self.saveButton = QtGui.QPushButton('Apply')
-        self.saveButton.clicked.connect(self._emitSheetChanged)
-        self.rejectButton = QtGui.QPushButton('Revert')
-        self.rejectButton.clicked.connect(self._emitSheetRejected)
-        layout.addWidget(self.saveButton, 3, 0)
-        layout.addWidget(self.rejectButton, 3, 1)
-        #self._disableSheetButtons()
+        #self.saveButton = QtGui.QPushButton('Apply')
+        #self.saveButton.clicked.connect(self._emitSheetChanged)
+        #self.rejectButton = QtGui.QPushButton('Revert')
+        #self.rejectButton.clicked.connect(self._emitSheetRejected)
+        #layout.addWidget(self.saveButton, 3, 0)
+        #layout.addWidget(self.rejectButton, 3, 1)
 
         widget.setLayout(layout)
         self.setWidget(widget)
@@ -86,10 +83,10 @@ class ListDock(QtGui.QDockWidget):
         self.sigItemChecked.emit(row, item.checkState() == QtCore.Qt.Checked)
         self.sigItemNameChanged.emit(row, item.text())
 
-    def _emitSheetRejected(self):
-        cur_row = self.listWidget.currentRow()
-        if cur_row >= 0:
-            self.sigSheetRejected.emit(cur_row)
+    #def _emitSheetRejected(self):
+    #    cur_row = self.listWidget.currentRow()
+    #    if cur_row >= 0:
+    #        self.sigSheetRejected.emit(cur_row)
 
     def _emitSheetChanged(self):
         cur_row = self.listWidget.currentRow()
@@ -102,6 +99,8 @@ class ListDock(QtGui.QDockWidget):
             self.sigSheetChanged.emit(cur_row, new_props)
 
     def setSheet(self, props_dict):
+        self.tableWidget.itemChanged.disconnect(self._emitSheetChanged)
+
         self.tableWidget.clearContents()
         self.tableWidget.setRowCount(len(props_dict))
         self.tableWidget.setColumnCount(2)
@@ -111,5 +110,7 @@ class ListDock(QtGui.QDockWidget):
             codeitem = QtGui.QTableWidgetItem(value)
             self.tableWidget.setItem(row, 0, nameitem)
             self.tableWidget.setItem(row, 1, codeitem)
+
+        self.tableWidget.itemChanged.connect(self._emitSheetChanged)
 
 

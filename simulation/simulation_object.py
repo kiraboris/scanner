@@ -102,9 +102,6 @@ class SimulationObject:
         info['Method'] = self.qworker.name()
         info['Y Threshold'] = str(self.defaults.threshold) + " PU"
         info['Y Factor'] = str(self.defaults.intensity_factor)
-        info['u_A'] = str(self.rotor.mu_A) + " D"
-        info['u_B'] = str(self.rotor.mu_B) + " D"
-        info['u_C'] = str(self.rotor.mu_C) + " D"
         return info
 
     def set_params(self, info):
@@ -117,26 +114,5 @@ class SimulationObject:
                 pass
             try:
                 self.defaults.threshold = float(info['Y Threshold'].strip().split()[0])
-            except:
-                pass
-            try:
-                old = self.rotor.mu_A
-                new = float(info['u_A'].strip().split()[0])
-                self.rotor.flag_changed |= (old != new)
-                self.rotor.mu_A = new
-            except:
-                pass
-            try:
-                old = self.rotor.mu_B
-                new = float(info['u_B'].strip().split()[0])
-                self.rotor.flag_changed |= (old != new)
-                self.rotor.mu_B = new
-            except:
-                pass
-            try:
-                old = self.rotor.mu_C
-                new = float(info['u_C'].strip().split()[0])
-                self.rotor.flag_changed |= (old != new)
-                self.rotor.mu_C = new
             except:
                 pass

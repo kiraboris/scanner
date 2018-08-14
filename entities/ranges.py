@@ -238,8 +238,6 @@ class Ranges:
         info['X Min'] = np.min(arr[:, DIM.X])
         info['X Max'] = np.max(arr[:, DIM.X])
         info['X Resolution'] = np.mean(arr[1:, DIM.X] - arr[:-1, DIM.X])
-        y_arr = np.unique(arr[:, DIM.Y])
-        info['Y Resolution'] = round(float(np.mean(y_arr[1:] - y_arr[:-1])), 3)
         return info
 
 
