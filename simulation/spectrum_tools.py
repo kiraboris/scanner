@@ -28,10 +28,10 @@ def make_grid(min_freq, max_freq, resolution):
     return np.arange(min_freq, max_freq, resolution)
 
 
-def make_spectrum(linelist, sigma, xxx, min_freq, max_freq, add_peak_function):
+def make_spectrum(linelist, sigma, xxx, min_freq, max_freq, threshold, add_peak_function):
     yyy = np.zeros(xxx.shape)
     for line in linelist:
-        if min_freq <= line.freq <= max_freq:
+        if min_freq <= line.freq <= max_freq and line.log_I >= threshold:
             add_peak_function(xxx, yyy, line, sigma)
     return yyy
 
@@ -39,5 +39,5 @@ def make_spectrum(linelist, sigma, xxx, min_freq, max_freq, add_peak_function):
 def make_rotor_spectrum(rotor, params):
     xxx = make_grid(params.min_freq, params.max_freq, params.resolution)
     yyy = make_spectrum(rotor.sim_lines, params.sigma, xxx,
-                        params.min_freq, params.max_freq, add_peak_function=add_gauss)
+                        params.min_freq, params.max_freq, params.threshold, add_peak_function=add_gauss)
     return np.column_stack((xxx, yyy * params.intensity_factor))
