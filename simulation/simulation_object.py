@@ -99,9 +99,10 @@ class SimulationObject:
 
     def make_info(self):
         info = {}
-        info['Method'] = self.qworker.name()
+        #info['Method'] = self.qworker.name()
         info['Y Threshold'] = str(self.defaults.threshold) + " PU"
         info['Y Factor'] = str(self.defaults.intensity_factor)
+        info['Sigma'] = str(self.defaults.sigma) + " " + str(self.defaults.x_unit_name)
         return info
 
     def set_params(self, info):
@@ -114,5 +115,9 @@ class SimulationObject:
                 pass
             try:
                 self.defaults.threshold = float(info['Y Threshold'].strip().split()[0])
+            except:
+                pass
+            try:
+                self.defaults.sigma = float(info['Sigma'].strip().split()[0])
             except:
                 pass

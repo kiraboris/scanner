@@ -140,7 +140,10 @@ class Ranges:
         if not self.__arrs:
             return None, None
         else:
-            return min([a[0, DIM.X] for a in self.__arrs]), max([a[-1, DIM.X] for a in self.__arrs])
+            return min([a[0, DIM.X] for a in self.__arrs]), \
+                   max([a[-1, DIM.X] for a in self.__arrs]), \
+                   np.mean([np.mean(arr[1:, DIM.X] - arr[:-1, DIM.X]) for arr in self.__arrs])
+
 
     def slices(self, step, span, nmipmap=0):
         """'span': size of slice,
@@ -230,7 +233,6 @@ class Ranges:
             self.__invisible_indexes.add(index)
         else:
             self.__invisible_indexes.discard(index)
-
 
     def make_info(self, index):
         info = {}

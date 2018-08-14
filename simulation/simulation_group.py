@@ -1,5 +1,5 @@
 
-#import copy
+from math import isclose
 import os.path
 
 from gui.pyqtgraph.Qt import QtCore
@@ -57,8 +57,17 @@ class SimulationGroup(QtCore.QObject, unique_name_holder.UniqueNameHolder):
                 obj.set_params(self.__defaults)
             self._emit_all_spectra()
 
-    def set_boundaries(self, xmin, xmax):
-        self.set_defaults(flag_override=True, min_freq=xmin, max_freq=xmax)
+    def set_boundaries(self, xmin, xmax, xres):
+        kwargs = {}
+        if xmin < self.__defaults.min_freq:
+            kwargs['min_freq'] = xmin
+        if xmax > self.__defaults.max_freq:
+            kwargs['max_freq'] = xmax
+        if not isclose(xres, self.__defaults.resolution):
+            kwargs['resolution'] = xres
+
+        if kwargs:
+            self.set_defaults(flag_override=True, **kwargs)
 
     def get_settings(self, index):
         info_dict = self.__objects[index].make_info()

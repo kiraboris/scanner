@@ -11,7 +11,7 @@ class RangesWrapper(QtCore.QObject, ranges.Ranges, unique_name_holder.UniqueName
     sigUpdated = QtCore.Signal(object)
     sigAdded = QtCore.Signal(list)
     sigInfo = QtCore.Signal(dict)
-    sigBoundaries = QtCore.Signal(float, float)
+    sigBoundaries = QtCore.Signal(float, float, float)
 
     def __init__(self, parent=None, **kwargs):
         QtCore.QObject.__init__(self, parent)
@@ -21,6 +21,7 @@ class RangesWrapper(QtCore.QObject, ranges.Ranges, unique_name_holder.UniqueName
         self.__y_unit_name = "arb"
         self.__x_min = None
         self.__x_max = None
+        self.__x_res = None
         self.__locked = False
 
     @staticmethod
@@ -38,11 +39,12 @@ class RangesWrapper(QtCore.QObject, ranges.Ranges, unique_name_holder.UniqueName
             self.sigUpdated.emit(self.export())
 
     def observe_boundaries_change(self):
-        new_xmin, new_xmax = self.bound_x()
-        if new_xmin != self.__x_min or new_xmax != self.__x_max:
+        new_xmin, new_xmax, new_res = self.bound_x()
+        if new_xmin != self.__x_min or new_xmax != self.__x_max or new_res != self.__x_res:
             self.__x_min = new_xmin
             self.__x_max = new_xmax
-            self.sigBoundaries.emit(new_xmin, new_xmax)
+            self.__x_res = new_res
+            self.sigBoundaries.emit(new_xmin, new_xmax, new_res)
 
     def add_data_files(self, names):
         names = self._purify_names(names)
