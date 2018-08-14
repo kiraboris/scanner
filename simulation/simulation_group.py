@@ -11,6 +11,7 @@ class SimulationGroup(QtCore.QObject, unique_name_holder.UniqueNameHolder):
 
     sigUpdateRange = QtCore.Signal(int, object)
     sigRemoveRange = QtCore.Signal(int)
+    sigLockRanges = QtCore.Signal(bool)
     sigAdded = QtCore.Signal(str)
     sigInfo = QtCore.Signal(dict)
 
@@ -28,7 +29,7 @@ class SimulationGroup(QtCore.QObject, unique_name_holder.UniqueNameHolder):
                 index = len(self.__objects)
                 self._add_unique_names({index: basepath})
                 self.__objects.append(obj)
-                self._emit_spectrum(index, flag_update_lines=True)
+                self._emit_spectrum(index)
                 self.sigAdded.emit(obj.rotor.name)
             except:
                 return
@@ -39,14 +40,25 @@ class SimulationGroup(QtCore.QObject, unique_name_holder.UniqueNameHolder):
             self._remove_unique_name(index)
             self.sigRemoveRange.emit(index)
 
-    def _emit_spectrum(self, index, flag_update_lines=False):
-        if flag_update_lines:
-            self.__objects[index].update_lines()
+    def _emit_spectrum(self, index):
         spec = self.__objects[index].make_spectrum()
         self.sigUpdateRange.emit(index, spec)
 
-    def set_defaults(self, **kwargs):
+    def _emit_all_spectra(self):
+        self.sigLockRanges.emit(True)
+        for index in range(0, len(self.__objects)):
+            self._emit_spectrum(index)
+        self.sigLockRanges.emit(False)
+
+    def set_defaults(self, flag_override=False, **kwargs):
         self.__defaults.set(**kwargs)
+        if flag_override:
+            for obj in self.__objects:
+                obj.set_params(self.__defaults)
+            self._emit_all_spectra()
+
+    def set_boundaries(self, xmin, xmax):
+        self.set_defaults(flag_override=True, min_freq=xmin, max_freq=xmax)
 
     def get_settings(self, index):
         info_dict = self.__objects[index].make_info()
@@ -56,19 +68,5 @@ class SimulationGroup(QtCore.QObject, unique_name_holder.UniqueNameHolder):
         old_info = self.__objects[index].make_info()
         if new_info != old_info:
             self.__objects[index].set_params(new_info)
-            flag_update_lines = self.__need_update_lines_on_change(old_info, new_info)
-            self._emit_spectrum(index, flag_update_lines=flag_update_lines)
+            self._emit_spectrum(index)
         self.get_settings(index)
-
-    @staticmethod
-    def __need_update_lines_on_change(old_info, new_info):
-        if old_info['u_A'] != new_info['u_A']:
-            return True
-        if old_info['u_B'] != new_info['u_B']:
-            return True
-        if old_info['u_C'] != new_info['u_C']:
-            return True
-        if old_info['Y Threshold'] != new_info['Y Threshold']:
-            return True
-
-        return False

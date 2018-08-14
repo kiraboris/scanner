@@ -31,7 +31,7 @@ def _make_intervals(data, flag_fill_gaps=False):
             interval_datasets = [arr[bisect_left(arr[:, DIM.X], prev_edge[1]):bisect_right(arr[:, DIM.X], edge[1]), :]
                                  for i, arr in enumerate(data) if i in open_numbers]
 
-            interval_xvalues = np.unique(np.hstack(interval_datasets)[:, DIM.X])
+            interval_xvalues = np.unique(np.vstack(interval_datasets)[:, DIM.X])
             intervals.append((interval_datasets, interval_xvalues))
         elif flag_fill_gaps:
             insert_x = np.arange(prev_edge[1] + default_step, edge[1], default_step)
@@ -91,14 +91,15 @@ def _avg_data(datasets, xvalues, flag_no_division):
 def _simple_avg_data(data, flag_no_division):
     xvalues = data[0][:, DIM.X]
     other_xvalues = [d[:, DIM.X] for d in data[1:]]
-    if all([np.allclose(xvalues, other_x) for other_x in other_xvalues]):
-        if flag_no_division:
-            yvalues = np.sum([d[:, DIM.Y] for d in data], axis=0)
-        else:
-            yvalues = np.mean([d[:, DIM.Y] for d in data], axis=0)
-        return np.column_stack((xvalues, yvalues))
-    else:
-        return None
+    if all([len(xvalues) == len(other_x) for other_x in other_xvalues]):
+        if all([np.allclose(xvalues, other_x) for other_x in other_xvalues]):
+            if flag_no_division:
+                yvalues = np.sum([d[:, DIM.Y] for d in data], axis=0)
+            else:
+                yvalues = np.mean([d[:, DIM.Y] for d in data], axis=0)
+            return np.column_stack((xvalues, yvalues))
+
+    return None
 
 
 def quick_avg_data(data, flag_fill_gaps=False, flag_no_division=False):
@@ -129,8 +130,17 @@ class Ranges:
         self.__flag_no_division = flag_no_division
 
     def spread_y(self):
-        return max([np.max(a[:, DIM.Y]) - np.min(a[:, DIM.Y])
-                    for a in self.__arrs])
+        if not self.__arrs:
+            return None
+        else:
+            return max([np.max(a[:, DIM.Y]) - np.min(a[:, DIM.Y])
+                        for a in self.__arrs])
+
+    def bound_x(self):
+        if not self.__arrs:
+            return None, None
+        else:
+            return min([a[0, DIM.X] for a in self.__arrs]), max([a[-1, DIM.X] for a in self.__arrs])
 
     def slices(self, step, span, nmipmap=0):
         """'span': size of slice,
@@ -237,7 +247,7 @@ if __name__ == "__main__":
     """unit test"""
 
     x1 = np.linspace(1, 10, 10)
-    x2 = np.linspace(1, 10, 10)
+    x2 = np.linspace(13, 21, 10)
     x3 = np.linspace(25, 34, 10)
     x4 = np.linspace(5, 14, 10)
 

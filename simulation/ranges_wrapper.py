@@ -11,6 +11,7 @@ class RangesWrapper(QtCore.QObject, ranges.Ranges, unique_name_holder.UniqueName
     sigUpdated = QtCore.Signal(object)
     sigAdded = QtCore.Signal(list)
     sigInfo = QtCore.Signal(dict)
+    sigBoundaries = QtCore.Signal(float, float)
 
     def __init__(self, parent=None, **kwargs):
         QtCore.QObject.__init__(self, parent)
@@ -18,6 +19,9 @@ class RangesWrapper(QtCore.QObject, ranges.Ranges, unique_name_holder.UniqueName
         unique_name_holder.UniqueNameHolder.__init__(self)
         self.__x_unit_name = "MHz"
         self.__y_unit_name = "arb"
+        self.__x_min = None
+        self.__x_max = None
+        self.__locked = False
 
     @staticmethod
     def __make_basenames(names):
@@ -30,7 +34,15 @@ class RangesWrapper(QtCore.QObject, ranges.Ranges, unique_name_holder.UniqueName
             self.__y_unit_name = y_name
 
     def emit_updated(self):
-        self.sigUpdated.emit(self.export())
+        if not self.__locked:
+            self.sigUpdated.emit(self.export())
+
+    def observe_boundaries_change(self):
+        new_xmin, new_xmax = self.bound_x()
+        if new_xmin != self.__x_min or new_xmax != self.__x_max:
+            self.__x_min = new_xmin
+            self.__x_max = new_xmax
+            self.sigBoundaries.emit(new_xmin, new_xmax)
 
     def add_data_files(self, names):
         names = self._purify_names(names)
@@ -39,21 +51,25 @@ class RangesWrapper(QtCore.QObject, ranges.Ranges, unique_name_holder.UniqueName
             self._add_unique_names(added_names_dict)
             basenames = self.__make_basenames(added_names_dict.values())
             self.sigAdded.emit(basenames)
+            self.observe_boundaries_change()
             self.emit_updated()
 
     def deserialize(self, stream):
         if ranges.Ranges.deserialize(self, stream):
+            self.observe_boundaries_change()
             self.emit_updated()
 
     def remove(self, index):
         if ranges.Ranges.remove(self, index):
             self._remove_unique_name(index)
+            self.observe_boundaries_change()
             self.emit_updated()
 
     def update(self, index, arr):
         new_index = ranges.Ranges.update(self, index, arr)
         if index != new_index:
             self.sigAdded.emit([])
+        self.observe_boundaries_change()
         self.emit_updated()
 
     def set_visibility(self, index, flag):
@@ -75,5 +91,12 @@ class RangesWrapper(QtCore.QObject, ranges.Ranges, unique_name_holder.UniqueName
         info_dict = self.make_info(index)
         info_dict = self.__add_unit_names(info_dict)
         self.sigInfo.emit(info_dict)
+
+    def lock(self, flag):
+        if flag:
+            self.__locked = True
+        else:
+            self.__locked = False
+            self.emit_updated()
 
 

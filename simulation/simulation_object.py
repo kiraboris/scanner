@@ -37,6 +37,7 @@ class SimulationObject:
         self.rotor = Rotor()
         self.basepath = basepath
         self.defaults = copy.copy(defaults)
+        self.__current_params = None
         self.load_rotor(basepath, extension)
 
     def __setup_qworker(self, extension):
@@ -52,24 +53,46 @@ class SimulationObject:
         except:
             raise Exception()
 
-    def update_lines(self, **kwargs):
-        params = copy.copy(self.defaults)
-        params.set(kwargs)
-        self.rotor.sim_lines = self.qworker.make_lines(self.rotor,
-                                                       threshold=params.threshold,
-                                                       max_freq=params.max_freq)
+    def need_update_lines(self, params=None):
+        if self.rotor.needs_update_lines():
+            return True
+        if not params:
+            params = self.defaults
+        return not self._are_current_params_sufficient(params)
 
-    def make_spectrum(self, **kwargs):
-        params = copy.copy(self.defaults)
-        params.set(kwargs)
-        return spectrum_tools.make_rotor_spectrum(self.rotor, params)
+    def _are_current_params_sufficient(self, params):
+        if not self.__current_params:
+            return False
+        elif self.__current_params.threshold > params.threshold:
+            return False
+        elif self.__current_params.max_freq < params.max_freq:
+            return False
+        else:
+            return True
+
+    def update_lines(self, params=None):
+        if params is None:
+            max_freq = self.defaults.max_freq * 2
+            self.rotor.sim_lines = self.qworker.make_lines(self.rotor,
+                                                           threshold=self.defaults.threshold,
+                                                           max_freq=max_freq / 1000)
+            self.__current_params = copy.copy(self.defaults)
+            self.__current_params.max_freq = max_freq
+        else:
+            self.rotor.sim_lines = self.qworker.make_lines(self.rotor,
+                                                           threshold=params.threshold,
+                                                           max_freq=params.max_freq / 1000)
+            self.__current_params = copy.copy(params)
+
+    def make_spectrum(self, params=None):
+        if self.need_update_lines(params):
+            self.update_lines(params)
+        spec = spectrum_tools.make_rotor_spectrum(self.rotor, params)
+        return spec
 
     def make_info(self):
         info = {}
         info['Method'] = self.qworker.name()
-        #info['X Resolution'] = str(self.params.resolution) + ' ' + str(self.params.x_unit_name)
-        #info['X Min'] = str(self.params.min_freq) + ' ' + str(self.params.x_unit_name)
-        #info['X Max'] = str(self.params.max_freq) + ' ' + str(self.params.x_unit_name)
         info['Y Threshold'] = str(self.defaults.threshold) + " PU"
         info['Y Factor'] = str(self.defaults.intensity_factor)
         info['u_A'] = str(self.rotor.mu_A) + " D"
@@ -78,35 +101,26 @@ class SimulationObject:
         return info
 
     def set_params(self, info):
-        # try:
-        #     self.params.resolution = float(info['X Resolution'].strip().split()[0])
-        # except:
-        #     pass
-        # try:
-        #     self.params.min_freq = float(info['X Min'].strip().split()[0])
-        # except:
-        #     pass
-        # try:
-        #     self.params.max_freq = float(info['X Max'].strip().split()[0])
-        # except:
-        #     pass
-        try:
-            self.defaults.intensity_factor = float(info['Y Factor'].strip().split()[0])
-        except:
-            pass
-        try:
-            self.defaults.threshold = float(info['Y Threshold'].strip().split()[0])
-        except:
-            pass
-        try:
-            self.rotor.mu_A = float(info['u_A'].strip().split()[0])
-        except:
-            pass
-        try:
-            self.rotor.mu_B = float(info['u_B'].strip().split()[0])
-        except:
-            pass
-        try:
-            self.rotor.mu_C = float(info['u_C'].strip().split()[0])
-        except:
-            pass
+        if isinstance(info, SimulationParams):
+            self.defaults = copy.copy(info)
+        else:
+            try:
+                self.defaults.intensity_factor = float(info['Y Factor'].strip().split()[0])
+            except:
+                pass
+            try:
+                self.defaults.threshold = float(info['Y Threshold'].strip().split()[0])
+            except:
+                pass
+            try:
+                self.rotor.mu_A = float(info['u_A'].strip().split()[0])
+            except:
+                pass
+            try:
+                self.rotor.mu_B = float(info['u_B'].strip().split()[0])
+            except:
+                pass
+            try:
+                self.rotor.mu_C = float(info['u_C'].strip().split()[0])
+            except:
+                pass
