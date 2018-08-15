@@ -9,8 +9,8 @@ class Panoram:
         self.__p2 = self.widget.addPlot(row=2, col=0)
         self.__p3 = self.widget.addPlot(row=3, col=0)
 
-        self.widget.centralWidget.layout.setRowStretchFactor(2, 3)
-        self.widget.centralWidget.layout.setRowStretchFactor(3, 3)
+        self.widget.centralWidget.layout.setRowStretchFactor(2, 4)
+        self.widget.centralWidget.layout.setRowStretchFactor(3, 4)
 
         self.__region = pg.LinearRegionItem()
         self.__region.setZValue(10)

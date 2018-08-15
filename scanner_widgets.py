@@ -82,7 +82,7 @@ class MainWindow(QtGui.QMainWindow):
     def __init__(self):
         QtGui.QMainWindow.__init__(self)
         self.setWindowTitle('Scanner')
-        self.resize(1400, 600)
+        self.resize(1400, 700)
 
         self.pan = panoram.Panoram()
         self.expDock = ExpDock()
