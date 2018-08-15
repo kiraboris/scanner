@@ -1,5 +1,5 @@
 
-from gui import panoram, list_dock
+from gui import panoram, list_dock, table_dock
 from gui.pyqtgraph.Qt import QtGui, QtCore
 
 Application = QtGui.QApplication
@@ -20,6 +20,9 @@ class ExpDock(list_dock.ListDock):
 
 
 class SimDock(list_dock.ListDock):
+
+    sigApplySettings = QtCore.Signal(int, dict)
+
     def __init__(self):
         list_dock.ListDock.__init__(self, "Models")
 
@@ -32,10 +35,14 @@ class SimDock(list_dock.ListDock):
         if file_name:
             self.sigAddItem.emit(file_name)
 
+    def apply_settings_proxy(self, params_dict):
+        self.sigApplySettings.emit(self.currentRow(), params_dict)
+
+
 
 class RotorParamDock(list_dock.ListDock):
     def __init__(self):
-        list_dock.ListDock.__init__(self, "Rotor params", flag_table=False)
+        list_dock.ListDock.__init__(self, "Rotor params")
         self.addButton.setEnabled(False)
         self.removeButton.setEnabled(False)
 
@@ -51,23 +58,27 @@ class AutofitDock(QtGui.QDockWidget):
         layout = QtGui.QGridLayout()
         layout.setMargin(2)
 
-        check1 = QtGui.QCheckBox("Auto choose rotor params to float")
+        check1 = QtGui.QCheckBox("Auto select transitions to fit")
         check1.setChecked(False)
         layout.addWidget(check1, 0, 0, 1, 2)
 
-        check1 = QtGui.QCheckBox("Attempt to auto add rotor params")
-        check1.setChecked(False)
-        layout.addWidget(check1, 1, 0, 1, 2)
+        check2 = QtGui.QCheckBox("Auto choose rotor params to float")
+        check2.setChecked(False)
+        layout.addWidget(check2, 1, 0, 1, 2)
+
+        check3 = QtGui.QCheckBox("Auto add rotor params")
+        check3.setChecked(False)
+        layout.addWidget(check3, 2, 0, 1, 2)
 
         self.fitButton = QtGui.QPushButton('Fit')
         #self.addButton.clicked.connect(self._addButtonClick)
         self.undoButton = QtGui.QPushButton('Undo')
         #self.removeButton.clicked.connect(self._removeButtonClick)
-        layout.addWidget(self.fitButton, 2, 0)
-        layout.addWidget(self.undoButton, 2, 1)
+        layout.addWidget(self.fitButton, 3, 0)
+        layout.addWidget(self.undoButton, 3, 1)
 
         self.chooseWidget = QtGui.QListWidget()
-        layout.addWidget(self.chooseWidget, 3, 0, 1, 2)
+        layout.addWidget(self.chooseWidget, 4, 0, 1, 2)
 
         widget.setLayout(layout)
         self.setWidget(widget)
@@ -94,6 +105,12 @@ class LogDock(QtGui.QDockWidget):
         self.logWidget.repaint()
 
 
+class SimSettingsDock(table_dock.TableDock):
+
+    def __init__(self):
+        table_dock.TableDock.__init__(self, "Simulation settings")
+
+
 class MainWindow(QtGui.QMainWindow):
 
     #sigClearExpTiggered = QtCore.Signal(object)
@@ -109,10 +126,12 @@ class MainWindow(QtGui.QMainWindow):
         self.parDock = RotorParamDock()
         self.fitDock = AutofitDock()
         self.logDock = LogDock()
+        self.stgDock = SimSettingsDock()
 
         self.setCentralWidget(self.pan.widget)
         self.addDockWidget(QtCore.Qt.LeftDockWidgetArea, self.expDock)
         self.addDockWidget(QtCore.Qt.LeftDockWidgetArea, self.simDock)
+        self.addDockWidget(QtCore.Qt.LeftDockWidgetArea, self.stgDock)
         self.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.parDock)
         self.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.fitDock)
         self.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.logDock)
@@ -160,6 +179,9 @@ class MainWindow(QtGui.QMainWindow):
         action = QtGui.QAction("&Log", self)
         action.triggered.connect(self.logDock.show)
         winMenu.addAction(action)
+
+    def log(self, message):
+        self.logDock.log(message)
 
         #simMenu = menu.addMenu("&Simulation")
 

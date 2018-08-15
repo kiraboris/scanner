@@ -29,31 +29,29 @@ sim.set_defaults(resolution=0.025, min_freq=150000.0, max_freq=200000.0,
 
 
 # connect components
+exp_ranges.log.connect(win.log)
 exp_ranges.sigUpdated.connect(win.pan.plotUpper)
 exp_ranges.sigAdded.connect(win.expDock.addItems)
 exp_ranges.sigInfo.connect(win.expDock.setSheet)
 exp_ranges.sigBoundaries.connect(sim.set_boundaries)
-exp_ranges.log.connect(win.logDock.log)
 win.expDock.sigAddItems.connect(exp_ranges.add_data_files)
 win.expDock.sigRemoveItem.connect(exp_ranges.remove)
 win.expDock.sigItemChecked.connect(exp_ranges.set_visibility)
-win.expDock.sigCurrentRowChanged.connect(exp_ranges.get_settings)
-win.expDock.sigSheetChanged.connect(exp_ranges.get_settings)
 
+sim.log.connect(win.log)
 sim.sigUpdateRange.connect(sim_ranges.update)
 sim.sigRemoveRange.connect(sim_ranges.remove)
 sim.sigLockRanges.connect(sim_ranges.lock)
 sim.sigAdded.connect(win.simDock.addItem)
 sim.sigInfo.connect(win.simDock.setSheet)
 sim.sigInfo2.connect(win.parDock.setItems)
-sim.log.connect(win.logDock.log)
 sim_ranges.sigUpdated.connect(win.pan.plotLower)
 win.simDock.sigAddItem.connect(sim.add_rotor)
 win.simDock.sigRemoveItem.connect(sim.remove_rotor)
 win.simDock.sigCurrentRowChanged.connect(sim.get_settings)
 win.simDock.sigCurrentRowChanged.connect(sim.get_rotor_params)
 win.simDock.sigItemChecked.connect(sim_ranges.set_visibility)
-win.simDock.sigSheetChanged.connect(sim.apply_settings)
+win.stgDock.sigSheetChanged.connect(sim.apply_settings_proxy)
 
 
 # execute

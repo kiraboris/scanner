@@ -15,7 +15,7 @@ class ListDock(QtGui.QDockWidget):
 
     sigSheetChanged = QtCore.Signal(int, dict)
 
-    def __init__(self, dock_name, flag_table=True):
+    def __init__(self, dock_name):
         QtGui.QDockWidget.__init__(self, dock_name)
         widget = QtGui.QWidget()
         layout = QtGui.QGridLayout()
@@ -26,15 +26,6 @@ class ListDock(QtGui.QDockWidget):
         self.listWidget.currentRowChanged.connect(self.sigCurrentRowChanged)
         layout.addWidget(self.listWidget, 0, 0, 1, 2)
 
-        self.tableWidget = QtGui.QTableWidget()
-        self.tableWidget.setShowGrid(True)
-        self.tableWidget.horizontalHeader().hide()
-        self.tableWidget.horizontalHeader().setStretchLastSection(True)
-        self.tableWidget.verticalHeader().hide()
-        self.tableWidget.itemChanged.connect(self._emitSheetChanged)
-        if not flag_table:
-            self.tableWidget.setVisible(False)
-
         self.addButton = QtGui.QPushButton('Add')
         self.addButton.clicked.connect(self._addButtonClick)
         self.removeButton = QtGui.QPushButton('Remove')
@@ -42,10 +33,11 @@ class ListDock(QtGui.QDockWidget):
         layout.addWidget(self.addButton, 1, 0)
         layout.addWidget(self.removeButton, 1, 1)
 
-        layout.addWidget(self.tableWidget, 2, 0, 1, 2)
-
         widget.setLayout(layout)
         self.setWidget(widget)
+
+    def currentRow(self):
+        return self.listWidget.currentRow()
 
     @abstractmethod
     def _addButtonClick(self):
@@ -88,32 +80,5 @@ class ListDock(QtGui.QDockWidget):
         row = self.listWidget.row(item)
         self.sigItemChecked.emit(row, item.checkState() == QtCore.Qt.Checked)
         self.sigItemNameChanged.emit(row, item.text())
-
-    def _emitSheetChanged(self):
-        cur_row = self.listWidget.currentRow()
-        if cur_row >= 0:
-            new_props = {}
-            for row in range(0, self.tableWidget.rowCount()):
-                twi0 = self.tableWidget.item(row, 0)
-                twi1 = self.tableWidget.item(row, 1)
-                new_props[twi0.text()] = twi1.text()
-            self.sigSheetChanged.emit(cur_row, new_props)
-
-    def setSheet(self, props_dict):
-        self.tableWidget.itemChanged.disconnect(self._emitSheetChanged)
-
-        self.tableWidget.clearContents()
-        self.tableWidget.setRowCount(len(props_dict))
-        self.tableWidget.setColumnCount(2)
-        for row, (key, value) in enumerate(props_dict.items()):
-            nameitem = QtGui.QTableWidgetItem(key)
-            nameitem.setFlags(nameitem.flags() ^ QtCore.Qt.ItemIsEditable)
-            codeitem = QtGui.QTableWidgetItem(value)
-            self.tableWidget.setItem(row, 0, nameitem)
-            self.tableWidget.setItem(row, 1, codeitem)
-
-        self.tableWidget.itemChanged.connect(self._emitSheetChanged)
-
-
 
 
