@@ -43,28 +43,47 @@ class RotorParamDock(list_dock.ListDock):
         pass
 
 
-class EngineDock(QtGui.QDockWidget):
+class AutofitDock(QtGui.QDockWidget):
     def __init__(self):
-        QtGui.QDockWidget.__init__(self, "Engine && Autofit")
+        QtGui.QDockWidget.__init__(self, "Autofit")
 
         widget = QtGui.QWidget()
         layout = QtGui.QGridLayout()
         layout.setMargin(2)
 
-        check1 = QtGui.QCheckBox("Attempt to add rotor params")
-        check1.setChecked(True)
+        check1 = QtGui.QCheckBox("Auto choose rotor params to float")
+        check1.setChecked(False)
         layout.addWidget(check1, 0, 0, 1, 2)
+
+        check1 = QtGui.QCheckBox("Attempt to auto add rotor params")
+        check1.setChecked(False)
+        layout.addWidget(check1, 1, 0, 1, 2)
 
         self.fitButton = QtGui.QPushButton('Fit')
         #self.addButton.clicked.connect(self._addButtonClick)
         self.undoButton = QtGui.QPushButton('Undo')
         #self.removeButton.clicked.connect(self._removeButtonClick)
-        layout.addWidget(self.fitButton, 1, 0)
-        layout.addWidget(self.undoButton, 1, 1)
+        layout.addWidget(self.fitButton, 2, 0)
+        layout.addWidget(self.undoButton, 2, 1)
+
+        self.chooseWidget = QtGui.QListWidget()
+        layout.addWidget(self.chooseWidget, 3, 0, 1, 2)
+
+        widget.setLayout(layout)
+        self.setWidget(widget)
+
+
+class LogDock(QtGui.QDockWidget):
+    def __init__(self):
+        QtGui.QDockWidget.__init__(self, "Log")
+
+        widget = QtGui.QWidget()
+        layout = QtGui.QGridLayout()
+        layout.setMargin(2)
 
         self.logWidget = QtGui.QPlainTextEdit()
         self.logWidget.setReadOnly(True)
-        layout.addWidget(self.logWidget, 2, 0, 1, 2)
+        layout.addWidget(self.logWidget, 0, 0)
 
         widget.setLayout(layout)
         self.setWidget(widget)
@@ -88,13 +107,15 @@ class MainWindow(QtGui.QMainWindow):
         self.expDock = ExpDock()
         self.simDock = SimDock()
         self.parDock = RotorParamDock()
-        self.fitDock = EngineDock()
+        self.fitDock = AutofitDock()
+        self.logDock = LogDock()
 
         self.setCentralWidget(self.pan.widget)
         self.addDockWidget(QtCore.Qt.LeftDockWidgetArea, self.expDock)
         self.addDockWidget(QtCore.Qt.LeftDockWidgetArea, self.simDock)
         self.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.parDock)
         self.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.fitDock)
+        self.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.logDock)
 
         self._createMainMenu()
 
@@ -133,8 +154,11 @@ class MainWindow(QtGui.QMainWindow):
         action = QtGui.QAction("&Rotor params", self)
         action.triggered.connect(self.parDock.show)
         winMenu.addAction(action)
-        action = QtGui.QAction("Engine && &Autofit", self)
+        action = QtGui.QAction("&Autofit", self)
         action.triggered.connect(self.fitDock.show)
+        winMenu.addAction(action)
+        action = QtGui.QAction("&Log", self)
+        action.triggered.connect(self.logDock.show)
         winMenu.addAction(action)
 
         #simMenu = menu.addMenu("&Simulation")
