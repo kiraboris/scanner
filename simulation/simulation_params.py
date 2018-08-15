@@ -1,4 +1,6 @@
 
+from entities.rotor import RotorType
+
 class SimulationParams:
     def __init__(self, sigma=None, resolution=None, min_freq=None, max_freq=None, threshold=None, intensity_factor=None):
         self.intensity_factor = intensity_factor
@@ -14,9 +16,9 @@ class SimulationParams:
         self.J_min = 0
         self.J_max = 50
         self.Ka_min = 0
-        self.Ka_max = 25
+        self.Ka_max = 50
         self.Kc_min = 0
-        self.Kc_max = 25
+        self.Kc_max = 50
 
     def set(self, sigma=None, resolution=None, min_freq=None, max_freq=None, threshold=None, intensity_factor=None,
                   flag_Atype=None, flag_Btype=None, flag_Ctype=None, J_min=None, J_max=None,
@@ -85,15 +87,40 @@ class SimulationParams:
             self.J_max = int(info['J max'].strip().split()[0])
         except:
             pass
+        try:
+            self.Ka_min = int(info['Ka min'].strip().split()[0])
+        except:
+            pass
+        try:
+            self.Ka_max = int(info['Ka max'].strip().split()[0])
+        except:
+            pass
+        try:
+            self.Kc_min = int(info['Kc min'].strip().split()[0])
+        except:
+            pass
+        try:
+            self.Kc_max = int(info['Kc max'].strip().split()[0])
+        except:
+            pass
 
-    def make_ui_dict(self):
+
+    def make_ui_dict(self, rotor):
         info = {}
-        info['Y Threshold'] = str(self.threshold) + " PU"
         info['Y Factor'] = str(self.intensity_factor)
+        info['Y Threshold'] = str(self.threshold) + " PU"
         info['Sigma'] = str(self.sigma) + " " + str(self.x_unit_name)
-        info['A-type'] = self.flag_Atype
-        info['B-type'] = self.flag_Btype
-        info['C-type'] = self.flag_Ctype
-        info['J min'] = str(self.J_min)
+        if rotor.mu_A:
+            info['A-type'] = self.flag_Atype
+        if rotor.mu_B:
+            info['B-type'] = self.flag_Btype
+        if rotor.mu_C:
+            info['C-type'] = self.flag_Ctype
+        #info['J min'] = str(self.J_min)
         info['J max'] = str(self.J_max)
+        if rotor.type == RotorType.asym:
+            #info['Ka min'] = str(self.Ka_min)
+            info['Ka max'] = str(self.Ka_max)
+            #info['Kc min'] = str(self.Kc_min)
+            info['Kc max'] = str(self.Kc_max)
         return info

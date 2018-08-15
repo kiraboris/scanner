@@ -33,7 +33,13 @@ def conditions_match(line, params):
     if not line.log_I >= params.threshold:
         return False
     J_upper = line.q_upper.get('J', line.q_upper.get('N', None))
-    if J_upper and not (J_upper >= params.J_min and J_upper <= params.J_max):
+    if J_upper and not (params.J_min <= J_upper <= params.J_max):
+        return False
+    Ka_upper = line.q_upper.get('Ka', line.q_upper.get('K', None))
+    if Ka_upper and not (params.Ka_min <= Ka_upper <= params.Ka_max):
+        return False
+    Kc_upper = line.q_upper.get('Kc', line.q_upper.get('K', None))
+    if Kc_upper and not (params.Kc_min <= Kc_upper <= params.Kc_max):
         return False
     return True
 

@@ -3,6 +3,13 @@ from .pyqtgraph.Qt import QtCore, QtGui
 from abc import ABC, abstractmethod
 
 
+class SpecialListDelegate(QtGui.QItemDelegate):
+    def sizeHint(self, option, index):
+        sz = QtGui.QItemDelegate.sizeHint(self, option, index)
+        sz.setHeight(sz.height() * 1.5)
+        return sz
+
+
 class ListDock(QtGui.QDockWidget):
 
     sigAddItem = QtCore.Signal(str)
@@ -26,6 +33,7 @@ class ListDock(QtGui.QDockWidget):
         self.listWidget.itemChanged.connect(self._itemChanged)
         self.listWidget.currentRowChanged.connect(self.sigCurrentRowChanged)
         self.listWidget.currentTextChanged.connect(self.sigCurrentTextChanged)
+        self.listWidget.setItemDelegate(SpecialListDelegate())
         layout.addWidget(self.listWidget, 0, 0, 1, 2)
 
         self.addButton = QtGui.QPushButton('Add')

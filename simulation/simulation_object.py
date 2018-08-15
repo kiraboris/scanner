@@ -74,8 +74,8 @@ class SimulationObject:
             spec = spectrum_tools.make_rotor_spectrum(self.rotor, params)
         return spec
 
-    def make_info(self):
-        return self.__defaults.make_ui_dict()
+    def make_sim_settings_info(self):
+        return self.__defaults.make_ui_dict(self.rotor)
 
     def make_rotor_params_info(self):
         names = []
