@@ -85,6 +85,6 @@ class SimulationGroup(QtCore.QObject, unique_name_holder.UniqueNameHolder):
     def apply_settings(self, index, new_info):
         old_info = self.__objects[index].make_info()
         if new_info != old_info:
-            self.__objects[index].set_params(new_info)
+            self.__objects[index].set_defaults(new_info)
             self._emit_spectrum(index)
         self.get_settings(index)

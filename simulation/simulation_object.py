@@ -55,7 +55,7 @@ class SimulationObject:
             params = copy.copy(self.__defaults)
             params.threshold = self.__defaults.threshold
             params.max_freq = self.__defaults.max_freq * 1.5
-            params.J_max = int(self.__defaults.max_J * 1.5)
+            params.J_max = int(self.__defaults.J_max * 1.5)
             params.J_min = 0
         self.rotor.sim_lines = self.qworker.make_lines(self.rotor,
                                                        inten=params.threshold,

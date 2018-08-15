@@ -12,11 +12,11 @@ class SimulationParams:
         self.flag_Btype = True
         self.flag_Ctype = True
         self.J_min = 0
-        self.J_max = 100
+        self.J_max = 50
         self.Ka_min = 0
-        self.Ka_max = 50
+        self.Ka_max = 25
         self.Kc_min = 0
-        self.Kc_max = 50
+        self.Kc_max = 25
 
     def set(self, sigma=None, resolution=None, min_freq=None, max_freq=None, threshold=None, intensity_factor=None,
                   flag_Atype=None, flag_Btype=None, flag_Ctype=None, J_min=None, J_max=None,
