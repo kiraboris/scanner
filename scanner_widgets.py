@@ -39,15 +39,17 @@ class SimDock(list_dock.ListDock):
         self.sigApplySettings.emit(self.currentRow(), params_dict)
 
 
-
 class RotorParamDock(list_dock.ListDock):
     def __init__(self):
-        list_dock.ListDock.__init__(self, "Rotor params")
-        self.addButton.setEnabled(False)
-        self.removeButton.setEnabled(False)
+        list_dock.ListDock.__init__(self, "Rotor")
+        self.addButton.setVisible(False)
+        self.removeButton.setVisible(False)
 
     def _addButtonClick(self):
         pass
+
+    def setTitle(self, name):
+        self.setWindowTitle('Rotor: ' + name)
 
 
 class AutofitDock(QtGui.QDockWidget):
@@ -83,6 +85,10 @@ class AutofitDock(QtGui.QDockWidget):
         widget.setLayout(layout)
         self.setWidget(widget)
 
+    def setTitle(self, name):
+        self.setWindowTitle('Autofit: ' + name)
+
+
 
 class LogDock(QtGui.QDockWidget):
     def __init__(self):
@@ -108,7 +114,10 @@ class LogDock(QtGui.QDockWidget):
 class SimSettingsDock(table_dock.TableDock):
 
     def __init__(self):
-        table_dock.TableDock.__init__(self, "Simulation settings")
+        table_dock.TableDock.__init__(self, "Simulation")
+
+    def setTitle(self, name):
+        self.setWindowTitle('Simulation: ' + name)
 
 
 class MainWindow(QtGui.QMainWindow):
@@ -172,6 +181,9 @@ class MainWindow(QtGui.QMainWindow):
         winMenu.addAction(action)
         action = QtGui.QAction("&Rotor params", self)
         action.triggered.connect(self.parDock.show)
+        winMenu.addAction(action)
+        action = QtGui.QAction("&Simulation params", self)
+        action.triggered.connect(self.stgDock.show)
         winMenu.addAction(action)
         action = QtGui.QAction("&Autofit", self)
         action.triggered.connect(self.fitDock.show)

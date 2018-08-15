@@ -12,6 +12,7 @@ class ListDock(QtGui.QDockWidget):
     sigItemChecked = QtCore.Signal(int, bool)
     sigItemNameChanged = QtCore.Signal(int, str)
     sigCurrentRowChanged = QtCore.Signal(int)
+    sigCurrentTextChanged = QtCore.Signal(str)
 
     sigSheetChanged = QtCore.Signal(int, dict)
 
@@ -24,6 +25,7 @@ class ListDock(QtGui.QDockWidget):
         self.listWidget = QtGui.QListWidget()
         self.listWidget.itemChanged.connect(self._itemChanged)
         self.listWidget.currentRowChanged.connect(self.sigCurrentRowChanged)
+        self.listWidget.currentTextChanged.connect(self.sigCurrentTextChanged)
         layout.addWidget(self.listWidget, 0, 0, 1, 2)
 
         self.addButton = QtGui.QPushButton('Add')
