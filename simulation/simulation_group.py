@@ -3,6 +3,7 @@ from math import isclose
 import os.path
 
 from gui.pyqtgraph.Qt import QtCore
+from . import simulation_params
 from . import simulation_object
 from . import unique_name_holder
 
@@ -21,7 +22,7 @@ class SimulationGroup(QtCore.QObject, unique_name_holder.UniqueNameHolder):
         QtCore.QObject.__init__(self, parent)
         unique_name_holder.UniqueNameHolder.__init__(self)
         self.__objects = []
-        self.__defaults = simulation_object.SimulationParams()
+        self.__defaults = simulation_params.SimulationParams()
 
     def add_rotor(self, filename):
         basepath, extension = os.path.splitext(filename)
@@ -58,7 +59,7 @@ class SimulationGroup(QtCore.QObject, unique_name_holder.UniqueNameHolder):
         self.__defaults.set(**kwargs)
         if flag_override:
             for obj in self.__objects:
-                obj.set_params(self.__defaults)
+                obj.set_defaults(self.__defaults)
             self._emit_all_spectra()
 
     def set_boundaries(self, xmin, xmax, xres):

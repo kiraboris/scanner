@@ -5,8 +5,8 @@ import subprocess
 from .io import *
 
 
-def make_lines(rotor, folder="./temp/", basename="temp", threshold=-15.0, max_freq=2000.0):
-    write_rotor(folder=folder, rotor=rotor, threshold=threshold, max_freq=max_freq, basename=basename)
+def make_lines(rotor, folder="./temp/", basename="temp", **kwargs):
+    write_rotor(folder=folder, rotor=rotor, basename=basename, **kwargs)
     __run_spcat(folder=folder, rotor=rotor, basename=basename)
     lines = __read_lines(folder=folder, rotor=rotor, basename=basename)
     return lines

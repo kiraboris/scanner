@@ -234,7 +234,8 @@ def load_rotor(rotor, basepath, files=db.MODEL_EXTENSIONS):
             pass
 
 
-def write_rotor(rotor, folder, threshold, max_freq, basename="temp", files = db.MODEL_EXTENSIONS):
+def write_rotor(rotor, folder, J_min=0, J_max=100, inten=-15.0, max_freq=150.0, temperature=300.0,
+                basename="temp", files=db.MODEL_EXTENSIONS):
     if not os.path.exists(folder):
         os.makedirs(folder)
     if '.var' in files:
@@ -245,4 +246,4 @@ def write_rotor(rotor, folder, threshold, max_freq, basename="temp", files = db.
         save_par(parfile, rotor)
     if '.int' in files:
         intfile = make_filename(folder, '.int', basename)
-        save_int(intfile, rotor, inten=threshold, max_freq=max_freq)
+        save_int(intfile, rotor, J_min=J_min, J_max=J_max, inten=inten, max_freq=max_freq)

@@ -10,8 +10,7 @@ def add_gauss(xxx, yyy, line, sigma):
 
     peak = lineshapes.gaussian(x=xxx[index_left:index_right],
                                center=line.freq, sigma=sigma,
-                               #amplitude=np.sqrt(2 * np.pi) * max(1.e-15, sigma))
-                               amplitude=np.exp(line.log_I))
+                               amplitude=np.exp(line.log_I))  #amplitude=np.sqrt(2 * np.pi) * max(1.e-15, sigma))
 
     yyy[index_left:index_right] = yyy[index_left:index_right] + peak
 
@@ -28,16 +27,25 @@ def make_grid(min_freq, max_freq, resolution):
     return np.arange(min_freq, max_freq, resolution)
 
 
-def make_spectrum(linelist, sigma, xxx, min_freq, max_freq, threshold, add_peak_function):
+def conditions_match(line, params):
+    if not (params.min_freq <= line.freq <= params.max_freq):
+        return False
+    if not line.log_I >= params.threshold:
+        return False
+    J_upper = line.q_upper.get('J', line.q_upper.get('N', None))
+    if J_upper and not (J_upper >= params.J_min and J_upper <= params.J_max):
+        return False
+    return True
+
+def make_spectrum(linelist, xxx, params, add_peak_function):
     yyy = np.zeros(xxx.shape)
     for line in linelist:
-        if min_freq <= line.freq <= max_freq and line.log_I >= threshold:
-            add_peak_function(xxx, yyy, line, sigma)
+        if conditions_match(line, params):
+            add_peak_function(xxx, yyy, line, params.sigma)
     return yyy
 
 
 def make_rotor_spectrum(rotor, params):
     xxx = make_grid(params.min_freq, params.max_freq, params.resolution)
-    yyy = make_spectrum(rotor.sim_lines, params.sigma, xxx,
-                        params.min_freq, params.max_freq, params.threshold, add_peak_function=add_gauss)
+    yyy = make_spectrum(rotor.sim_lines, xxx, params, add_peak_function=add_gauss)
     return np.column_stack((xxx, yyy * params.intensity_factor))

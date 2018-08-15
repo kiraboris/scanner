@@ -29,7 +29,10 @@ class TableDock(QtGui.QDockWidget):
         for row in range(0, self.tableWidget.rowCount()):
             twi0 = self.tableWidget.item(row, 0)
             twi1 = self.tableWidget.item(row, 1)
-            new_props[twi0.text()] = twi1.text()
+            if twi1.flags() & QtCore.Qt.ItemIsUserCheckable:
+                new_props[twi0.text()] = (twi1.checkState() == QtCore.Qt.Checked)
+            else:
+                new_props[twi0.text()] = twi1.text()
         self.sigSheetChanged.emit(new_props)
 
     def setSheet(self, props_dict):
@@ -41,7 +44,16 @@ class TableDock(QtGui.QDockWidget):
         for row, (key, value) in enumerate(props_dict.items()):
             nameitem = QtGui.QTableWidgetItem(key)
             nameitem.setFlags(nameitem.flags() ^ QtCore.Qt.ItemIsEditable)
-            codeitem = QtGui.QTableWidgetItem(value)
+            codeitem = QtGui.QTableWidgetItem()
+            if isinstance(value, bool):
+                codeitem.setFlags(codeitem.flags() ^ QtCore.Qt.ItemIsEditable | QtCore.Qt.ItemIsUserCheckable)
+                if value:
+                    codeitem.setCheckState(QtCore.Qt.Checked)
+                else:
+                    codeitem.setCheckState(QtCore.Qt.Unchecked)
+            else:
+                codeitem.setFlags(codeitem.flags() ^ QtCore.Qt.ItemIsUserCheckable | QtCore.Qt.ItemIsEditable )
+                codeitem.setText(value)
             self.tableWidget.setItem(row, 0, nameitem)
             self.tableWidget.setItem(row, 1, codeitem)
 
