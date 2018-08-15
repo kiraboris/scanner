@@ -45,7 +45,7 @@ class RotorParamDock(list_dock.ListDock):
 
 class EngineDock(QtGui.QDockWidget):
     def __init__(self):
-        QtGui.QDockWidget.__init__(self, "Engine")
+        QtGui.QDockWidget.__init__(self, "Engine && Autofit")
 
         widget = QtGui.QWidget()
         layout = QtGui.QGridLayout()
@@ -72,6 +72,7 @@ class EngineDock(QtGui.QDockWidget):
     def log(self, message):
         self.logWidget.appendPlainText(message)
         self.logWidget.verticalScrollBar().setValue(self.logWidget.verticalScrollBar().maximum())
+        self.logWidget.repaint()
 
 
 class MainWindow(QtGui.QMainWindow):
@@ -96,7 +97,6 @@ class MainWindow(QtGui.QMainWindow):
         self.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.fitDock)
 
         self._createMainMenu()
-        self.fitDock.log("Ready.")
 
         #data = 10000 + 15000 * pg.gaussianFilter(np.random.random(size=10000), 10) + 3000 * np.random.random(size=10000)
         #self.pan.plotUpper(data, pen="m")
@@ -113,7 +113,7 @@ class MainWindow(QtGui.QMainWindow):
         openAction = QtGui.QAction("&Open project...", self)
         saveAction = QtGui.QAction("&Save project", self)
         saveAsAction = QtGui.QAction("Save project as...", self)
-        exitAction = QtGui.QAction("&Exit", self)
+        exitAction = QtGui.QAction("E&xit", self)
         exitAction.triggered.connect(self.close)
         fileMenu.addAction(newAction)
         fileMenu.addAction(openAction)
@@ -124,14 +124,18 @@ class MainWindow(QtGui.QMainWindow):
 
 
         winMenu = menu.addMenu("&Window")
-        action = QtGui.QAction("&Experiments", self)
+        action = QtGui.QAction("E&xperiments", self)
         action.triggered.connect(self.expDock.show)
         winMenu.addAction(action)
         action = QtGui.QAction("&Models", self)
         action.triggered.connect(self.simDock.show)
         winMenu.addAction(action)
-
-
+        action = QtGui.QAction("&Rotor params", self)
+        action.triggered.connect(self.parDock.show)
+        winMenu.addAction(action)
+        action = QtGui.QAction("Engine && &Autofit", self)
+        action.triggered.connect(self.fitDock.show)
+        winMenu.addAction(action)
 
         #simMenu = menu.addMenu("&Simulation")
 
