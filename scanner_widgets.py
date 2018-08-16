@@ -44,6 +44,9 @@ class RotorParamDock(list_dock.ListDock):
         list_dock.ListDock.__init__(self, "Rotor")
         self.addButton.setVisible(False)
         self.removeButton.setVisible(False)
+        font = QtGui.QFont("Monospace")
+        font.setStyleHint(QtGui.QFont.Monospace)
+        self.listWidget.setFont(font)
 
     def _addButtonClick(self):
         pass
@@ -62,14 +65,17 @@ class AutofitDock(QtGui.QDockWidget):
 
         check1 = QtGui.QCheckBox("Auto select transitions to fit")
         check1.setChecked(False)
+        check1.stateChanged.connect(self._setOption1)
         layout.addWidget(check1, 0, 0, 1, 2)
 
         check2 = QtGui.QCheckBox("Auto choose rotor params to float")
         check2.setChecked(False)
+        check2.stateChanged.connect(self._setOption2)
         layout.addWidget(check2, 1, 0, 1, 2)
 
         check3 = QtGui.QCheckBox("Auto add rotor params")
         check3.setChecked(False)
+        check3.stateChanged.connect(self._setOption3)
         layout.addWidget(check3, 2, 0, 1, 2)
 
         self.fitButton = QtGui.QPushButton('Fit')

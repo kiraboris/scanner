@@ -80,10 +80,18 @@ class SimulationObject:
     def make_rotor_params_info(self):
         names = []
         checked = {}
+        infos = {}
         for i, (name, param) in enumerate(self.rotor.params.items()):
-            text = name + " = %.6e" % param.value
-            names.append(text)
+            info = ("%.6e" % param.value)
+                    #' (' + ("%.4f" % (100.0 - param.error / param.value * 100)).rstrip('0').rstrip('.') + "%)")
+            names.append(name)
             checked[i] = param.flag_fit
+            infos[i] = info
+        max_len = max([len(name) for name in names])
+        for i, name in enumerate(names):
+            cur_len = len(name)
+            spaces = " " * int((max_len - cur_len) + 4 + (0 if infos[i][0] == '-' else 1))
+            names[i] = name + spaces + infos[i]
         return names, checked
 
     def set_defaults(self, obj):

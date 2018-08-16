@@ -34,6 +34,7 @@ class ListDock(QtGui.QDockWidget):
         self.listWidget.currentRowChanged.connect(self.sigCurrentRowChanged)
         self.listWidget.currentTextChanged.connect(self.sigCurrentTextChanged)
         self.listWidget.setItemDelegate(SpecialListDelegate())
+        self.listWidget.setMouseTracking(True)
         layout.addWidget(self.listWidget, 0, 0, 1, 2)
 
         self.addButton = QtGui.QPushButton('Add')
@@ -45,6 +46,7 @@ class ListDock(QtGui.QDockWidget):
 
         widget.setLayout(layout)
         self.setWidget(widget)
+        self.__infos = None
 
     def currentRow(self):
         return self.listWidget.currentRow()
@@ -72,16 +74,17 @@ class ListDock(QtGui.QDockWidget):
         if self.listWidget.currentRow() < 0:
             self.listWidget.setCurrentRow(0)
 
-    def addItems(self, names, checked_dict=None):
+    def addItems(self, names, checked_dict=None, info_dict=None):
+        self.__infos = info_dict
         for i, name in enumerate(names):
             if checked_dict:
                 self.addItem(name, checked_dict.get(i, False))
             else:
                 self.addItem(name)
 
-    def setItems(self, names, checked_dict=None):
+    def setItems(self, names, checked_dict=None, info_dict=None):
         self.listWidget.clear()
-        self.addItems(names, checked_dict)
+        self.addItems(names, checked_dict, info_dict)
 
     def removeItem(self, row):
         self.sigRemoveItem.emit(row)
@@ -90,5 +93,4 @@ class ListDock(QtGui.QDockWidget):
         row = self.listWidget.row(item)
         self.sigItemChecked.emit(row, item.checkState() == QtCore.Qt.Checked)
         self.sigItemNameChanged.emit(row, item.text())
-
 

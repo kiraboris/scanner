@@ -1,6 +1,7 @@
 
 from entities.rotor import RotorType
 
+
 class SimulationParams:
     def __init__(self, sigma=None, resolution=None, min_freq=None, max_freq=None, threshold=None, intensity_factor=None):
         self.intensity_factor = intensity_factor

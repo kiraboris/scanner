@@ -79,8 +79,8 @@ class SimulationGroup(QtCore.QObject, unique_name_holder.UniqueNameHolder):
         self.sigInfo.emit(info_dict)
 
     def get_rotor_params(self, index):
-        info_list, info_dict = self.__objects[index].make_rotor_params_info()
-        self.sigInfo2.emit(info_list, info_dict)
+        names, checked = self.__objects[index].make_rotor_params_info()
+        self.sigInfo2.emit(names, checked)
 
     def apply_settings(self, index, new_info):
         old_info = self.__objects[index].make_sim_settings_info()
