@@ -49,7 +49,7 @@ class RangesWrapper(QtCore.QObject, ranges.Ranges, unique_name_holder.UniqueName
 
     def add_data_files(self, names):
         names = self._purify_names(names)
-        self.log.emit('Ranges: loading data files...')
+        self.log.emit('Loading data files...')
         added_names_dict = ranges.Ranges.add_data_files(self, names)
         if added_names_dict:
             self._add_unique_names(added_names_dict)
@@ -57,7 +57,7 @@ class RangesWrapper(QtCore.QObject, ranges.Ranges, unique_name_holder.UniqueName
             self.sigAdded.emit(basenames)
             self.observe_boundaries_change()
             self.emit_updated()
-        self.log.emit('Ranges: done')
+        self.log.emit("-1")
 
     def deserialize(self, stream):
         if ranges.Ranges.deserialize(self, stream):

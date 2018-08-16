@@ -44,10 +44,10 @@ class SimulationGroup(QtCore.QObject, unique_name_holder.UniqueNameHolder):
             self.sigRemoveRange.emit(index)
 
     def _emit_spectrum(self, index):
-        self.log.emit('SimulationGroup: making spectrum...')
+        self.log.emit('Making spectrum...')
         spec = self.__objects[index].make_spectrum()
         self.sigUpdateRange.emit(index, spec)
-        self.log.emit('SimulationGroup: done')
+        self.log.emit('-1')
 
     def _emit_all_spectra(self):
         self.sigLockRanges.emit(True)

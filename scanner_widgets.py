@@ -61,76 +61,31 @@ class AutofitDock(QtGui.QDockWidget):
 
         widget = QtGui.QWidget()
         layout = QtGui.QGridLayout()
-        layout.setMargin(2)
+        layout.setMargin(4)
 
-        self.check1 = QtGui.QCheckBox("Auto select transitions to fit")
-        self.check1.stateChanged.connect(self._setOption1)
-#        check1.setChecked(False)
-        layout.addWidget(self.check1, 0, 0, 1, 2)
+        self.transitionsButton = QtGui.QPushButton("Suggest transitions")
+        layout.addWidget(self.transitionsButton, 0, 0)
 
-        #self.label1 = QtGui.QLabel()
-        #self.label1.setWordWrap(True)
-        #layout.addWidget(self.label1, 1, 0, 1, 2)
-        self.check1.setCheckState(QtCore.Qt.Checked)
+        self.assignButton = QtGui.QPushButton('Auto assign')
+        layout.addWidget(self.assignButton, 1, 0)
 
-        self.check2 = QtGui.QCheckBox("Auto choose rotor params to float")
-        self.check2.stateChanged.connect(self._setOption2)
-        layout.addWidget(self.check2, 2, 0, 1, 2)
+        self.distortionsButton = QtGui.QPushButton('Auto try distortions')
+        layout.addWidget(self.distortionsButton, 1, 1)
 
-        ##elf.label2 = QtGui.QLabel()
-        #self.label2.setWordWrap(True)
-        #layout.addWidget(self.label2, 3, 0, 1, 2)
-        self.check2.setCheckState(QtCore.Qt.Checked)
-
-        self.check3 = QtGui.QCheckBox("Auto add distortions")
-        self.check3.stateChanged.connect(self._setOption3)
-        layout.addWidget(self.check3, 4, 0, 1, 2)
-
-        #self.label3 = QtGui.QLabel()
-        #self.label3.setWordWrap(True)
-        #layout.addWidget(self.label3, 5, 0, 1, 2)
-        self.check3.setCheckState(QtCore.Qt.Checked)
-
-        self.fitButton = QtGui.QPushButton('Fit')
-        #self.addButton.clicked.connect(self._addButtonClick)
-        self.undoButton = QtGui.QPushButton('Undo')
-        #self.removeButton.clicked.connect(self._removeButtonClick)
-        layout.addWidget(self.fitButton, 6, 0)
-        layout.addWidget(self.undoButton, 6, 1)
+        self.floatButton = QtGui.QPushButton('Suggest float params')
+        layout.addWidget(self.floatButton, 0, 1)
 
         self.chooseWidget = QtGui.QListWidget()
-        layout.addWidget(self.chooseWidget, 7, 0, 1, 2)
+        layout.addWidget(self.chooseWidget, 4, 0, 1, 2)
+        self.undoButton = QtGui.QPushButton('Undo apply result')
+        self.undoButton.setEnabled(False)
+        layout.addWidget(self.undoButton, 5, 0, 1, 2)
 
         widget.setLayout(layout)
         self.setWidget(widget)
 
     def setTitle(self, name):
         self.setWindowTitle('Autofit: ' + name)
-
-    def _setOption1(self, state):
-        checked = (state == QtCore.Qt.Checked)
-        if checked:
-            self.check1.setToolTip("J-groups and K-groups of transitions will be selected and assigned automatically.\n"
-                                "Manual selection will be ignored. J, K will be increased gradually.")
-        else:
-            self.check1.setToolTip("Manual selection from Simulation and Transitions panes will be used for\n"
-                                " automatic assignment (what you see is what you get).")
-
-    def _setOption2(self, state):
-        checked = (state == QtCore.Qt.Checked)
-        if checked:
-            self.check2.setToolTip("A test will be run to see which parameters\ndo affect selected transitions.")
-        else:
-            self.check2.setToolTip("Manual selection from the Rotor pane will be used.")
-
-    def _setOption3(self, state):
-        checked = (state == QtCore.Qt.Checked)
-        if checked:
-            self.check3.setToolTip("Based on resiual trends, higher order distortion parameters will be\npossibly added "
-                                "automatically.")
-        else:
-            self.check3.setToolTip("Distortions are not added automatically.\n"
-                                "You can add them manually in the Rotor pane.")
 
 
 class LogDock(QtGui.QDockWidget):
@@ -149,9 +104,12 @@ class LogDock(QtGui.QDockWidget):
         self.setWidget(widget)
 
     def log(self, message):
-        self.logWidget.appendPlainText(message)
-        self.logWidget.verticalScrollBar().setValue(self.logWidget.verticalScrollBar().maximum())
-        self.logWidget.repaint()
+        if message == '-1':
+            self.logWidget.undo()
+        else:
+            self.logWidget.appendPlainText(message)
+            self.logWidget.verticalScrollBar().setValue(self.logWidget.verticalScrollBar().maximum())
+            self.logWidget.repaint()
 
 
 class SimSettingsDock(table_dock.TableDock):
