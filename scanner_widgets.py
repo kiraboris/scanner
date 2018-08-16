@@ -64,29 +64,43 @@ class AutofitDock(QtGui.QDockWidget):
         layout.setMargin(2)
 
         check1 = QtGui.QCheckBox("Auto select transitions to fit")
-        check1.setChecked(False)
         check1.stateChanged.connect(self._setOption1)
+#        check1.setChecked(False)
         layout.addWidget(check1, 0, 0, 1, 2)
 
+        self.label1 = QtGui.QLabel()
+        self.label1.setWordWrap(True)
+        layout.addWidget(self.label1, 1, 0, 1, 2)
+        check1.setCheckState(QtCore.Qt.Checked)
+
+
         check2 = QtGui.QCheckBox("Auto choose rotor params to float")
-        check2.setChecked(False)
         check2.stateChanged.connect(self._setOption2)
-        layout.addWidget(check2, 1, 0, 1, 2)
+        layout.addWidget(check2, 2, 0, 1, 2)
+
+        self.label2 = QtGui.QLabel()
+        self.label2.setWordWrap(True)
+        layout.addWidget(self.label2, 3, 0, 1, 2)
+        check2.setCheckState(QtCore.Qt.Checked)
 
         check3 = QtGui.QCheckBox("Auto add rotor params")
-        check3.setChecked(False)
         check3.stateChanged.connect(self._setOption3)
-        layout.addWidget(check3, 2, 0, 1, 2)
+        layout.addWidget(check3, 4, 0, 1, 2)
+
+        self.label3 = QtGui.QLabel()
+        self.label3.setWordWrap(True)
+        layout.addWidget(self.label3, 5, 0, 1, 2)
+        check3.setCheckState(QtCore.Qt.Checked)
 
         self.fitButton = QtGui.QPushButton('Fit')
         #self.addButton.clicked.connect(self._addButtonClick)
         self.undoButton = QtGui.QPushButton('Undo')
         #self.removeButton.clicked.connect(self._removeButtonClick)
-        layout.addWidget(self.fitButton, 3, 0)
-        layout.addWidget(self.undoButton, 3, 1)
+        layout.addWidget(self.fitButton, 6, 0)
+        layout.addWidget(self.undoButton, 6, 1)
 
         self.chooseWidget = QtGui.QListWidget()
-        layout.addWidget(self.chooseWidget, 4, 0, 1, 2)
+        layout.addWidget(self.chooseWidget, 7, 0, 1, 2)
 
         widget.setLayout(layout)
         self.setWidget(widget)
@@ -94,6 +108,30 @@ class AutofitDock(QtGui.QDockWidget):
     def setTitle(self, name):
         self.setWindowTitle('Autofit: ' + name)
 
+    def _setOption1(self, state):
+        checked = (state == QtCore.Qt.Checked)
+        if checked:
+            self.label1.setText("J-groups and K-groups of transitions will be selected and assigned automatically. "
+                                "Manual selection will be ignored. J, K will be increased gradually.")
+        else:
+            self.label1.setText("Manual selection from Simulation and Transitions panes will be used for"
+                                " automatic assignment (what you see is what you get).")
+
+    def _setOption2(self, state):
+        checked = (state == QtCore.Qt.Checked)
+        if checked:
+            self.label2.setText("A test will be run to see which parameters do affect selected transitions.")
+        else:
+            self.label2.setText("Manual selection from the Rotor pane will be used.")
+
+    def _setOption3(self, state):
+        checked = (state == QtCore.Qt.Checked)
+        if checked:
+            self.label3.setText("Based on resiual trends, higher order distortion parameters will be possibly added "
+                                "automatically.")
+        else:
+            self.label3.setText("Distortions are not added automatically. "
+                                "You can add them manually in the Rotor pane.")
 
 
 class LogDock(QtGui.QDockWidget):
