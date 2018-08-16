@@ -10,7 +10,7 @@ class ExpDock(list_dock.ListDock):
         list_dock.ListDock.__init__(self, "Experiments")
 
     def _addButtonClick(self):
-        filter = "Plain data (*.dat, *.txt);;All files (*.*)"
+        filter = "Plain data (*.dat;*.txt);;All files (*.*)"
         file_names = QtGui.QFileDialog.getOpenFileNames(self,
                                                         'Add experimetal data file(s)...',
                                                         filter=filter)
@@ -27,7 +27,7 @@ class SimDock(list_dock.ListDock):
         list_dock.ListDock.__init__(self, "Models")
 
     def _addButtonClick(self):
-        filter = "Pickett (*.par, *.var, *.int);;All files (*.*)"
+        filter = "Pickett (*.par;*.var;*.int);;All files (*.*)"
         file_name = QtGui.QFileDialog.getOpenFileName(self,
                                                       'Add quantum model...',
                                                       filter=filter)
@@ -63,34 +63,33 @@ class AutofitDock(QtGui.QDockWidget):
         layout = QtGui.QGridLayout()
         layout.setMargin(2)
 
-        check1 = QtGui.QCheckBox("Auto select transitions to fit")
-        check1.stateChanged.connect(self._setOption1)
+        self.check1 = QtGui.QCheckBox("Auto select transitions to fit")
+        self.check1.stateChanged.connect(self._setOption1)
 #        check1.setChecked(False)
-        layout.addWidget(check1, 0, 0, 1, 2)
+        layout.addWidget(self.check1, 0, 0, 1, 2)
 
-        self.label1 = QtGui.QLabel()
-        self.label1.setWordWrap(True)
-        layout.addWidget(self.label1, 1, 0, 1, 2)
-        check1.setCheckState(QtCore.Qt.Checked)
+        #self.label1 = QtGui.QLabel()
+        #self.label1.setWordWrap(True)
+        #layout.addWidget(self.label1, 1, 0, 1, 2)
+        self.check1.setCheckState(QtCore.Qt.Checked)
 
+        self.check2 = QtGui.QCheckBox("Auto choose rotor params to float")
+        self.check2.stateChanged.connect(self._setOption2)
+        layout.addWidget(self.check2, 2, 0, 1, 2)
 
-        check2 = QtGui.QCheckBox("Auto choose rotor params to float")
-        check2.stateChanged.connect(self._setOption2)
-        layout.addWidget(check2, 2, 0, 1, 2)
+        ##elf.label2 = QtGui.QLabel()
+        #self.label2.setWordWrap(True)
+        #layout.addWidget(self.label2, 3, 0, 1, 2)
+        self.check2.setCheckState(QtCore.Qt.Checked)
 
-        self.label2 = QtGui.QLabel()
-        self.label2.setWordWrap(True)
-        layout.addWidget(self.label2, 3, 0, 1, 2)
-        check2.setCheckState(QtCore.Qt.Checked)
+        self.check3 = QtGui.QCheckBox("Auto add distortions")
+        self.check3.stateChanged.connect(self._setOption3)
+        layout.addWidget(self.check3, 4, 0, 1, 2)
 
-        check3 = QtGui.QCheckBox("Auto add rotor params")
-        check3.stateChanged.connect(self._setOption3)
-        layout.addWidget(check3, 4, 0, 1, 2)
-
-        self.label3 = QtGui.QLabel()
-        self.label3.setWordWrap(True)
-        layout.addWidget(self.label3, 5, 0, 1, 2)
-        check3.setCheckState(QtCore.Qt.Checked)
+        #self.label3 = QtGui.QLabel()
+        #self.label3.setWordWrap(True)
+        #layout.addWidget(self.label3, 5, 0, 1, 2)
+        self.check3.setCheckState(QtCore.Qt.Checked)
 
         self.fitButton = QtGui.QPushButton('Fit')
         #self.addButton.clicked.connect(self._addButtonClick)
@@ -111,26 +110,26 @@ class AutofitDock(QtGui.QDockWidget):
     def _setOption1(self, state):
         checked = (state == QtCore.Qt.Checked)
         if checked:
-            self.label1.setText("J-groups and K-groups of transitions will be selected and assigned automatically. "
+            self.check1.setToolTip("J-groups and K-groups of transitions will be selected and assigned automatically.\n"
                                 "Manual selection will be ignored. J, K will be increased gradually.")
         else:
-            self.label1.setText("Manual selection from Simulation and Transitions panes will be used for"
+            self.check1.setToolTip("Manual selection from Simulation and Transitions panes will be used for\n"
                                 " automatic assignment (what you see is what you get).")
 
     def _setOption2(self, state):
         checked = (state == QtCore.Qt.Checked)
         if checked:
-            self.label2.setText("A test will be run to see which parameters do affect selected transitions.")
+            self.check2.setToolTip("A test will be run to see which parameters\ndo affect selected transitions.")
         else:
-            self.label2.setText("Manual selection from the Rotor pane will be used.")
+            self.check2.setToolTip("Manual selection from the Rotor pane will be used.")
 
     def _setOption3(self, state):
         checked = (state == QtCore.Qt.Checked)
         if checked:
-            self.label3.setText("Based on resiual trends, higher order distortion parameters will be possibly added "
+            self.check3.setToolTip("Based on resiual trends, higher order distortion parameters will be\npossibly added "
                                 "automatically.")
         else:
-            self.label3.setText("Distortions are not added automatically. "
+            self.check3.setToolTip("Distortions are not added automatically.\n"
                                 "You can add them manually in the Rotor pane.")
 
 
