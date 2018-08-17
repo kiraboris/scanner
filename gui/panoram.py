@@ -1,13 +1,21 @@
 
 from . import pyqtgraph as pg
+from gui.pyqtgraph.Qt import QtGui, QtCore
+
 
 class Panoram:
-    def __init__(self, parent=None):
+    def __init__(self, config, parent=None):
+        self.setConfig(config)
         self.widget = pg.GraphicsLayoutWidget(parent)
 
         self.__p1 = self.widget.addPlot(row=1, col=0)
         self.__p2 = self.widget.addPlot(row=2, col=0)
         self.__p3 = self.widget.addPlot(row=3, col=0)
+
+        font = QtGui.QFont()
+        font.setPixelSize(14)
+        self.__p2.getAxis('bottom').tickFont=font
+        self.__p2.getAxis('bottom').setStyle(tickTextOffset=7)
 
         self.widget.centralWidget.layout.setRowStretchFactor(2, 4)
         self.widget.centralWidget.layout.setRowStretchFactor(3, 4)
@@ -21,6 +29,10 @@ class Panoram:
         self._setupMasterPlot(self.__p1)
         self._setupSlavePlot(self.__p2)
         self._setupSlavePlot(self.__p3)
+
+    def setConfig(self, config):
+        pg.setConfigOption('background', colors['plot_background'])
+        pg.setConfigOption('foreground', colors['plot_axes'])
 
     def _setupSlavePlot(self, plot):
         plot.setAutoVisible(y=True)
@@ -36,7 +48,7 @@ class Panoram:
     def plotUpper(self, data):
         self.clearUpper()
         if data is not None:
-            self.__p1.plot(data)
+            self.__p1.plot(data, color='k')
             self.__p1.getViewBox().autoRange()
             self.__p2.plot(data)
 
