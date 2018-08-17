@@ -53,10 +53,10 @@ class Panoram:
             self.__p1.getViewBox().autoRange()
             self.__p2.plot(data, pen=pen)
 
-    def plotLower(self, data):
+    def plotLower(self, data, pen="ccc"):
         self.clearLower()
         if data is not None:
-            self.__p3.plot(data)
+            self.__p3.plot(data, pen=pen)
 
     def clearUpper(self):
         self.__p1.clearPlots()

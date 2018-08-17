@@ -20,10 +20,11 @@ class SimulationParams:
         self.Ka_max = 50
         self.Kc_min = 0
         self.Kc_max = 50
+        self.color = 'ddd'
 
     def set(self, sigma=None, resolution=None, min_freq=None, max_freq=None, threshold=None, intensity_factor=None,
                   flag_Atype=None, flag_Btype=None, flag_Ctype=None, J_min=None, J_max=None,
-                  Ka_min=None, Ka_max=None, Kc_min=None, Kc_max=None):
+                  Ka_min=None, Ka_max=None, Kc_min=None, Kc_max=None, color=None):
         if intensity_factor:
             self.intensity_factor = intensity_factor
         if resolution:
@@ -54,6 +55,8 @@ class SimulationParams:
             self.Kc_min = Kc_min
         if Kc_max:
             self.Kc_max = Kc_max
+        if color:
+            self.color = color
 
     def set_from_ui_dict(self, info):
         try:
@@ -104,10 +107,14 @@ class SimulationParams:
             self.Kc_max = int(info['Kc max'].strip().split()[0])
         except:
             pass
-
+        try:
+            self.color = info['Color']
+        except:
+            pass
 
     def make_ui_dict(self, rotor):
         info = {}
+        info['Color'] = self.color
         info['Y Factor'] = str(self.intensity_factor)
         info['Y Threshold'] = str(self.threshold) + " PU"
         info['Sigma'] = str(self.sigma) + " " + str(self.x_unit_name)
