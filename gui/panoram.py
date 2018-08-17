@@ -4,8 +4,7 @@ from gui.pyqtgraph.Qt import QtGui, QtCore
 
 
 class Panoram:
-    def __init__(self, config, parent=None):
-        self.setConfig(config)
+    def __init__(self, parent=None):
         self.widget = pg.GraphicsLayoutWidget(parent)
 
         self.__p1 = self.widget.addPlot(row=1, col=0)
@@ -31,8 +30,10 @@ class Panoram:
         self._setupSlavePlot(self.__p3)
 
     def setConfig(self, config):
-        pg.setConfigOption('background', colors['plot_background'])
-        pg.setConfigOption('foreground', colors['plot_axes'])
+        self.widget.setBackground(config['plot_background_color'])
+        for plot in [self.__p1, self.__p2, self.__p3]:
+            plot.getAxis('bottom').setPen(color=config['plot_axes_color'])
+            plot.getAxis('left').setPen(color=config['plot_axes_color'])
 
     def _setupSlavePlot(self, plot):
         plot.setAutoVisible(y=True)
@@ -45,12 +46,12 @@ class Panoram:
         plot.setMenuEnabled(enableMenu=False, enableViewBoxMenu=True)
         plot.getViewBox().sigMouseClick.connect(self._setRegionCenter)
 
-    def plotUpper(self, data):
+    def plotUpper(self, data, pen="ccc"):
         self.clearUpper()
         if data is not None:
-            self.__p1.plot(data, color='k')
+            self.__p1.plot(data, pen=pen)
             self.__p1.getViewBox().autoRange()
-            self.__p2.plot(data)
+            self.__p2.plot(data, pen=pen)
 
     def plotLower(self, data):
         self.clearLower()

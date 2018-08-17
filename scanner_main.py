@@ -12,9 +12,14 @@ sim_ranges = RangesWrapper(flag_no_division=True)
 sim = SimulationGroup()
 # engine = ScannerEngine(sim_ranges, exp_ranges)
 
+sim_defaults= {"resolution":0.025, "min_freq":90000.0, "max_freq":140000.0,
+                 "threshold":-4.0, "intensity_factor":1.0, "sigma":0.2}
+
+pan_defaults= {"plot_background_color": 'k', "plot_axes_color": 'ddd'}
+
 # set defaults
-sim.set_defaults(resolution=0.025, min_freq=90000.0, max_freq=140000.0,
-                 threshold=-4.0, intensity_factor=1.0, sigma=0.2)
+sim.set_defaults(**sim_defaults)
+win.pan.setConfig(pan_defaults)
 
 # open and save project routines
 # def open_project(filename):
