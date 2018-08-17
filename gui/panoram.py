@@ -30,6 +30,7 @@ class Panoram:
         self._setupSlavePlot(self.__p3)
 
     def setConfig(self, config):
+        self.__default_plot_color = config['plot_pen_color']
         self.widget.setBackground(config['plot_background_color'])
         for plot in [self.__p1, self.__p2, self.__p3]:
             plot.getAxis('bottom').setPen(color=config['plot_axes_color'])
@@ -46,15 +47,19 @@ class Panoram:
         plot.setMenuEnabled(enableMenu=False, enableViewBoxMenu=True)
         plot.getViewBox().sigMouseClick.connect(self._setRegionCenter)
 
-    def plotUpper(self, data, pen="ccc"):
+    def plotUpper(self, data, pen=None):
         self.clearUpper()
+        if pen is None:
+            pen = self.__default_plot_color
         if data is not None:
             self.__p1.plot(data, pen=pen)
             self.__p1.getViewBox().autoRange()
             self.__p2.plot(data, pen=pen)
 
-    def plotLower(self, data, pen="ccc"):
+    def plotLower(self, data, pen=None):
         self.clearLower()
+        if pen is None:
+            pen = self.__default_plot_color
         if data is not None:
             self.__p3.plot(data, pen=pen)
 

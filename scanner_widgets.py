@@ -75,11 +75,14 @@ class AutofitDock(QtGui.QDockWidget):
         self.floatButton = QtGui.QPushButton('Suggest float params')
         layout.addWidget(self.floatButton, 0, 1)
 
+        layout.addWidget(QtGui.QLabel("Choose and apply result here:"), 4, 0, 1, 2)
+
         self.chooseWidget = QtGui.QListWidget()
-        layout.addWidget(self.chooseWidget, 4, 0, 1, 2)
+        layout.addWidget(self.chooseWidget, 5, 0, 1, 2)
+
         self.undoButton = QtGui.QPushButton('Undo apply result')
         self.undoButton.setEnabled(False)
-        layout.addWidget(self.undoButton, 5, 0, 1, 2)
+        layout.addWidget(self.undoButton, 6, 0, 1, 2)
 
         widget.setLayout(layout)
         self.setWidget(widget)

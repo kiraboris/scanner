@@ -15,7 +15,8 @@ sim = SimulationGroup()
 sim_defaults= {"resolution":0.025, "min_freq":90000.0, "max_freq":140000.0,
                  "threshold":-4.0, "intensity_factor":1.0, "sigma":0.2}
 
-pan_defaults= {"plot_background_color": 'k', "plot_axes_color": 'ddd'}
+pan_defaults= {"plot_background_color": 'ddd', "plot_axes_color": 'k',
+               'plot_pen_color': 'k'}
 
 # set defaults
 sim.set_defaults(**sim_defaults)

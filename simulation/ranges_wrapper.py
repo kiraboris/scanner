@@ -24,7 +24,6 @@ class RangesWrapper(QtCore.QObject, ranges.Ranges, unique_name_holder.UniqueName
         self.__x_max = None
         self.__x_res = None
         self.__locked = False
-        self.__colors=
 
     @staticmethod
     def __make_basenames(names):
